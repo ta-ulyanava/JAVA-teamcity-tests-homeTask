@@ -28,5 +28,5 @@ public class Specifications {
         reqBuilder.addFilters(List.of(new RequestLoggingFilter(), new ResponseLoggingFilter()));
         return reqBuilder;
     }
-    //https://youtu.be/Sj4RDSWyl-g?t=1177
+
 }
