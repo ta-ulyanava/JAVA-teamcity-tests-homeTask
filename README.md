@@ -16,7 +16,7 @@ The tests cover API, UI, and core functional scenarios of TeamCity.
 
 ## 📂 Project Structure  
 📦 teamcity-automation-tests
- ┣ 📂 requests-examples       # HTTP request examples for future automation
+ ┣ 📂 requests-examples       # HTTP request examples
  ┣ 📂 src
  ┃ ┣ 📂 test/java/org/example  # Automated tests
  ┃ ┗ 📂 resources             # Configurations and test data
