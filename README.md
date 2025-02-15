@@ -31,6 +31,7 @@ The tests cover API, UI, and core functional scenarios of TeamCity.
 ```sh
 git clone https://github.com/ta-ulyanava/teamcity-automation-tests.git
 cd teamcity-automation-tests
+```
 
 
 
