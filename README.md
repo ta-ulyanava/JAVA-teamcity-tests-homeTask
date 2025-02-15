@@ -15,15 +15,14 @@ The tests cover API, UI, and core functional scenarios of TeamCity.
 - **Docker** – isolated test environment  
 
 ## 📂 Project Structure  
-📦 teamcity-automation-tests
- ┣ 📂 requests-examples       # HTTP request examples
- ┣ 📂 src
- ┃ ┣ 📂 test/java/org/example  # Automated tests
- ┃ ┗ 📂 resources             # Configurations and test data
- ┣ 📄 pom.xml                 # Maven configuration
- ┣ 📄 README.md               # Project documentation
- ┗ 📄 .gitignore              # Ignored files
-
+teamcity-automation-tests/
+├── requests-examples/        # HTTP request examples for future automation
+├── src/
+│   ├── test/java/org/example/  # Automated tests
+│   ├── resources/             # Configurations and test data
+├── pom.xml                    # Maven configuration
+├── README.md                  # Project documentation
+└── .gitignore                 # Ignored files
 
 
 ## 🚀 Installation & Running Tests
