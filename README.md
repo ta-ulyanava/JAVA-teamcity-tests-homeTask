@@ -29,13 +29,14 @@ The tests cover API, UI, and core functional scenarios of TeamCity.
 ## 🚀 Installation & Running Tests
 ### 1️⃣ Clone the repository
 ```sh
-git clone https://github.com/ta-ulyanava/teamcity-autotests.git
-cd teamcity-autotests
+git clone https://github.com/ta-ulyanava/teamcity-automation-tests.git
+cd teamcity-automation-tests
+
 
 
 2️⃣ Run tests using Maven
-```sh
 mvn clean test
+
 
 
 3️⃣ Run tests with Allure reporting
