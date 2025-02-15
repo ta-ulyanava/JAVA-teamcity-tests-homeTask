@@ -31,9 +31,13 @@ The tests cover API, UI, and core functional scenarios of TeamCity.
 ```sh
 git clone https://github.com/ta-ulyanava/teamcity-autotests.git
 cd teamcity-autotests
+
+
 2️⃣ Run tests using Maven
 ```sh
 mvn clean test
+
+
 3️⃣ Run tests with Allure reporting
 ```sh
 mvn clean test allure:serve
