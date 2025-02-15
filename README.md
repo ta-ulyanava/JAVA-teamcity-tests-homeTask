@@ -24,3 +24,9 @@ The tests cover API, UI, and core functional scenarios of TeamCity.
  ┣ 📄 README.md  # Project documentation  
  ┗ 📄 .gitignore  # Ignored files  
 
+
+## 🚀 Installation & Running Tests
+### 1️⃣ Clone the repository
+git clone https://github.com/ta-ulyanava/teamcity-autotests.git
+cd teamcity-autotests
+
