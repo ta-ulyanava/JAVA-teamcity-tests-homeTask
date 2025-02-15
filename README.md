@@ -14,7 +14,8 @@ The tests cover API, UI, and core functional scenarios of TeamCity.
 - **Allure** – test reporting  
 - **Docker** – isolated test environment  
 
-## 📂 Project Structure  
+## 📂 Project Structure
+```plaintext
 teamcity-automation-tests/
 ├── requests-examples/        # HTTP request examples for future automation
 ├── src/
@@ -23,6 +24,7 @@ teamcity-automation-tests/
 ├── pom.xml                    # Maven configuration
 ├── README.md                  # Project documentation
 └── .gitignore                 # Ignored files
+
 
 
 ## 🚀 Installation & Running Tests
