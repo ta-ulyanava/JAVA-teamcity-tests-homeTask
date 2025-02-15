@@ -8,7 +8,7 @@ The tests cover API, UI, and core functional scenarios of TeamCity.
 ## 🛠 Tech Stack  
 - **Java 23** – main programming language  
 - **Maven** – dependency and build management  
-- **JUnit** – test framework  
+- **TestNG** – test framework  
 - **RestAssured** – API testing for TeamCity  
 - **Selenide** – UI testing  
 - **Allure** – test reporting  
