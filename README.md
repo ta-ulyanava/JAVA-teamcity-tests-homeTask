@@ -39,7 +39,8 @@ mvn clean test
 ```
 3️⃣ Run tests with Allure reporting
 ```sh
-mvn clean test allure:serve
+mvn clean test
+allure serve target/allure-results
 ```
 ⚙ Configuration
 Before running tests, set up environment variables or a .env file:
