@@ -24,7 +24,7 @@ teamcity-automation-tests/
 ├── pom.xml                    # Maven configuration
 ├── README.md                  # Project documentation
 └── .gitignore                 # Ignored files
-
+```
 
 
 ## 🚀 Installation & Running Tests
