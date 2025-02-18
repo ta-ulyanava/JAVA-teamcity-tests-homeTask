@@ -1,9 +1,8 @@
 package com.example.teamcity.api;
 
+import com.example.teamcity.api.models.User;
+import com.example.teamcity.api.spec.Specifications;
 import io.restassured.RestAssured;
-import io.restassured.filter.log.RequestLoggingFilter;
-import io.restassured.filter.log.ResponseLoggingFilter;
-import io.restassured.http.ContentType;
 import org.testng.annotations.Test;
 
 import java.util.List;
@@ -13,9 +12,25 @@ public class DummyTest extends BaseApiTest{
     public void userShouldBeAbleToGetAllProjects(){
         RestAssured
                 .given()
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .filters(List.of(new RequestLoggingFilter(),new ResponseLoggingFilter()))
-                .get("http://admin:admin@192.168.1.34:8111/app/rest/projects");
+//Метод .spec() используется в Rest Assured для добавления спецификации запроса (RequestSpecification).
+                .spec(Specifications.getSpec() //– получаем уникальный экземпляр Specifications (Singleton)
+//                        Создаёт объект User с логином admin и паролем admin.
+//                                Вызывает метод .authSpec(user), который добавляет Basic Auth.
+//                                В итоге, Rest Assured отправляет запрос с заголовком авторизации
+//                                (Authorization: Basic <base64-encoded admin:admin>).
+//                        Как это работает?
+//
+//                                Получает объект User, у которого есть user (логин) и password.
+//                                Создаёт объект BasicAuthScheme, который добавляет Basic Authentication.
+//                                Вызывает reqBuilder() – базовую спецификацию (baseUri, Content-Type и т.д.).
+//                                Добавляет .setAuth(basicAuthScheme), чтобы запрос автоматически включал логин и пароль.
+//                                Возвращает готовую спецификацию RequestSpecification.
+                        .authSpec(User.builder()
+                                .user("admin").password("admin")
+                                .build()))
+                .when()
+                .get("/app/rest/projects")
+                .then()
+                .statusCode(200);
     }
 }
