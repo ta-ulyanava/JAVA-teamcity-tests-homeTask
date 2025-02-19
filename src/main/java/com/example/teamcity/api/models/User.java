@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor // конструктор со всеми аргументами
 @NoArgsConstructor // конструктор без аргументов
 
-public class User {
+public class User extends BaseModel{
     private String user;
     private String password;
 /* Т.к используем ломбок то можно закаментить
