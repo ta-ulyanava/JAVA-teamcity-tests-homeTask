@@ -23,6 +23,7 @@ public class User extends BaseModel{
     private String username;
     @Random
     private String password;
+    private Roles roles;
 
 
 /* Т.к используем ломбок то можно закаментить
