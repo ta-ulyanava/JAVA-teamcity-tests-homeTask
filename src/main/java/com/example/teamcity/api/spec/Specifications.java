@@ -85,7 +85,7 @@ public static RequestSpecification authSpec(User user){
     return requestBuilder.build();
 }
 
-public static RequestSpecification superUserAuth(){
+public static RequestSpecification superUserAuthSpec(){
     var requestBuilder=reqBuilder();
     requestBuilder.setBaseUri("http://:%s@%s".formatted(Config.getProperty("superUserToken"), Config.getProperty("host")));
     return requestBuilder.build();
