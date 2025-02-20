@@ -22,16 +22,6 @@ import java.util.List;
 public class Specifications {
     private static Specifications spec;
 
-    private Specifications() {
-
-    }
-
-    public static Specifications getSpec() {
-        if (spec == null) {
-            spec = new Specifications();
-        }
-        return spec;
-    }
 /* Какие спецификации и реквесты нужны?
     // Как минимум базовая спека кот содержит фильтры, контент тайпы
     // Используем билдер, реализованный по паттерну строитель в библиотеке Rest assured
@@ -46,7 +36,7 @@ public class Specifications {
     /**
      * Метод создает базовую спецификацию с помощью RequestSpecBuilder - класса Rest Assured
      */
-    private RequestSpecBuilder reqBuilder() {
+    private static RequestSpecBuilder reqBuilder() {
         // создаем сам билдер
         RequestSpecBuilder reqBuilder = new RequestSpecBuilder();
         //Устанавливает базовый URL с помощью метода setBaseUri
@@ -72,13 +62,14 @@ public class Specifications {
 //    Добавляет Content-Type: JSON (формат данных).
 //    Включает логирование запросов и ответов.
 
-    public RequestSpecification unauthSpec() {
+    public static RequestSpecification unauthSpec() {
+        var requestBuilder=reqBuilder();
         return reqBuilder()
 // Вызывает .build(), что создаёт готовую спецификацию.
                 .build();
     }
 
-    public RequestSpecification authSpec(User user) {
+    /*public RequestSpecification authSpec(User user) {
         //Создаёт объект BasicAuthScheme (это класс для Basic Authentication)
         BasicAuthScheme basicAuthScheme = new BasicAuthScheme();
         //Устанавливает логин и пароль пользователя
@@ -88,5 +79,18 @@ public class Specifications {
         return reqBuilder()
                 .setAuth(basicAuthScheme)
                 .build();
-    }
+    }*/
+public static RequestSpecification authSpec(User user){
+    var requestBuilder=reqBuilder();
+    // ???
+    requestBuilder.setBaseUri("http://%s:%s@%s".formatted(user.getName(), user.getPassword(), Config.getProperty("host")));
+    return requestBuilder.build();
+}
+
+public static RequestSpecification superUserAuth(){
+    var requestBuilder=reqBuilder();
+    requestBuilder.setBaseUri("http://%s:%s@%s".formatted("", Config.getProperty("superUserToken"), Config.getProperty("host")));
+    return requestBuilder.build();
+}
+
 }

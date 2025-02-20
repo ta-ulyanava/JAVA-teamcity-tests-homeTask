@@ -1,5 +1,7 @@
 package com.example.teamcity.api.models;
 
+import com.example.teamcity.api.annotations.Random;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,10 +17,14 @@ import lombok.NoArgsConstructor;
 // билдер позволяет инициализировать не все поля
 @AllArgsConstructor // конструктор со всеми аргументами
 @NoArgsConstructor // конструктор без аргументов
-
+@JsonIgnoreProperties(ignoreUnknown = true)// чтобы не падать когда приходят проперти, которые мы не описывали
 public class User extends BaseModel{
-    private String user;
+    @Random
+    private String name;
+    @Random
     private String password;
+
+
 /* Т.к используем ломбок то можно закаментить
     public User(String user, String password){
         this.user=user;

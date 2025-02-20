@@ -5,13 +5,14 @@ import io.restassured.specification.RequestSpecification;
 
 // Класс, в который мы вынесли все меняющиеся параметры запросов (Базовая логика работы с Rest Assured):
 // 1 эндпоинты
-// 2 саму меняющуюся сущность
+// 2 саму меняющуюся сущность (model)
 // 3 спецификацию тк в ней указано кто отправил запрос (админ, гость и тп) тк в ней есть метод авторизации
+/**
+ * Request - это класс, описывающий меняющиеся параметры запроса,
+ * такие как: спецификация, эндпоинд (relative URL, model)
+ */
 public class Request {
-    /**
-     * Request - это класс, описывающий меняющиеся параметры запроса,
-     * такие как: спецификация, эндпоинд (relative URL, model)
-     */
+
     protected final RequestSpecification spec;
     protected final Endpoint endpoint;
 

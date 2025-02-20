@@ -1,7 +1,12 @@
 package com.example.teamcity.api;
 
+import com.example.teamcity.api.enums.Endpoint;
+import com.example.teamcity.api.models.User;
+import com.example.teamcity.api.requests.checked.CheckedBase;
+import com.example.teamcity.api.spec.Specifications;
 import org.testng.annotations.Test;
 
+import static com.example.teamcity.api.generators.TestDataGenerator.generate;
 import static io.qameta.allure.Allure.step;
 @Test(groups = {"Regression"})
 public class BuildTypeTest extends BaseApiTest {
@@ -10,7 +15,16 @@ public class BuildTypeTest extends BaseApiTest {
     @Test(description = "User should be able to create Build Type", groups = {"Positive", "CRUD"})
     public void userCreatesBuildTypeTest() {
         // Не используем захардкоженные данные а гениеруем все нужное сами!
-        step("Create user");
+        step("Create user", ()-> {
+          /*  var user=  User.builder()
+                    .name(RandomData.getString())
+                    .password(RandomData.getString())
+                    .build();*/
+            var user=generate(User.class);
+            // Создаем шаблон-риквестер
+            var requester=new CheckedBase<User>(Specifications.superUserAuth(), Endpoint.USERS );
+            requester.create(user);
+        });
         step("Create Project");
         step("Create BuildType");
         step("Check BuildType was created successfully with correct data");
