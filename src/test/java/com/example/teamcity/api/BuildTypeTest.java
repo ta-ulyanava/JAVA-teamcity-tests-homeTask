@@ -4,7 +4,7 @@ import com.example.teamcity.api.enums.Endpoint;
 import com.example.teamcity.api.models.BuildType;
 import com.example.teamcity.api.models.Project;
 import com.example.teamcity.api.models.User;
-import com.example.teamcity.api.requests.checked.CheckedBase;
+import com.example.teamcity.api.requests.CheckedRequests;
 import com.example.teamcity.api.spec.Specifications;
 import org.testng.annotations.Test;
 
@@ -21,19 +21,18 @@ public class BuildTypeTest extends BaseApiTest {
     public void userCreatesBuildTypeTest() {
         // Не используем захардкоженные данные а гениеруем все нужное сами!
         var user = generate(User.class);
-        var userRequester = new CheckedBase<User>(Specifications.superUserAuthSpec(), Endpoint.USERS);
-
-        userRequester.create(user);
+        // Создаем юзера, отправляя запрос
+        superUserCheckRequests.getRequest(Endpoint.USERS).create(user);
+        var userCheckRequests = new CheckedRequests(Specifications.authSpec(user));
 
         var project = generate(Project.class);
-        var projectRequester = new CheckedBase<Project>(Specifications.authSpec(user), Endpoint.PROJECTS);
-        project = projectRequester.create(project);
+
+        project = userCheckRequests.<Project>getRequest(Endpoint.PROJECTS).create(project);
 
         var buildType = generate(Arrays.asList(project), BuildType.class);
-        var buildTypeRequester = new CheckedBase<BuildType>(Specifications.authSpec(user), Endpoint.BUILD_TYPES);
 
-        buildTypeRequester.create(buildType);
-        var createdBuildType = buildTypeRequester.read(buildType.getId());
+        userCheckRequests.getRequest(Endpoint.BUILD_TYPES).create(buildType);
+        var createdBuildType = userCheckRequests.<BuildType>getRequest(Endpoint.BUILD_TYPES).read(buildType.getId());
 
         // будем ассертить софт ассертами
         softy.assertEquals(buildType.getName(), createdBuildType.getName(), "Build type name is not correct");

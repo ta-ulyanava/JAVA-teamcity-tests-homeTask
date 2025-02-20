@@ -1,6 +1,7 @@
 package com.example.teamcity.api.requests;
 
 import com.example.teamcity.api.enums.Endpoint;
+import com.example.teamcity.api.models.BaseModel;
 import com.example.teamcity.api.requests.checked.CheckedBase;
 import io.restassured.specification.RequestSpecification;
 
@@ -16,7 +17,7 @@ public class CheckedRequests {
             requests.put(endpoint, new CheckedBase(spec, endpoint));
         }
     }
-    public CheckedBase getRequest(Endpoint endpoint){
-        return requests.get(endpoint);
+    public <T extends BaseModel> CheckedBase<T> getRequest(Endpoint endpoint){
+        return (CheckedBase<T>) requests.get(endpoint);
     }
 }
