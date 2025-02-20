@@ -20,7 +20,7 @@ import lombok.NoArgsConstructor;
 @JsonIgnoreProperties(ignoreUnknown = true)// чтобы не падать когда приходят проперти, которые мы не описывали
 public class User extends BaseModel{
     @Random
-    private String name;
+    private String username;
     @Random
     private String password;
 

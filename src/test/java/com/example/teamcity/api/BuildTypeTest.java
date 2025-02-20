@@ -1,6 +1,7 @@
 package com.example.teamcity.api;
 
 import com.example.teamcity.api.enums.Endpoint;
+import com.example.teamcity.api.models.Project;
 import com.example.teamcity.api.models.User;
 import com.example.teamcity.api.requests.checked.CheckedBase;
 import com.example.teamcity.api.spec.Specifications;
@@ -15,17 +16,24 @@ public class BuildTypeTest extends BaseApiTest {
     @Test(description = "User should be able to create Build Type", groups = {"Positive", "CRUD"})
     public void userCreatesBuildTypeTest() {
         // Не используем захардкоженные данные а гениеруем все нужное сами!
+        var user=generate(User.class);
         step("Create user", ()-> {
           /*  var user=  User.builder()
                     .name(RandomData.getString())
                     .password(RandomData.getString())
                     .build();*/
-            var user=generate(User.class);
+
             // Создаем шаблон-риквестер
             var requester=new CheckedBase<User>(Specifications.superUserAuth(), Endpoint.USERS );
             requester.create(user);
         });
-        step("Create Project");
+        var project =generate(Project.class);
+        step("Create Project by user"), ()-> {
+            var requester=new CheckedBase<Project>(Specifications.authSpec(user), Endpoint.PROJECTS);
+            requester.create(project);
+        };
+
+
         step("Create BuildType");
         step("Check BuildType was created successfully with correct data");
     }

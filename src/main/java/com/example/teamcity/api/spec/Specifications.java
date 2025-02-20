@@ -2,13 +2,11 @@ package com.example.teamcity.api.spec;
 
 import com.example.teamcity.api.config.Config;
 import com.example.teamcity.api.models.User;
-import io.restassured.authentication.BasicAuthScheme;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.filter.log.RequestLoggingFilter;
 import io.restassured.filter.log.ResponseLoggingFilter;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
-import org.apache.http.client.methods.RequestBuilder;
 
 import java.util.List;
 // Спека нужна для параметризации параметров, которые задаются в зависимости от конкретного запроса
@@ -83,13 +81,13 @@ public class Specifications {
 public static RequestSpecification authSpec(User user){
     var requestBuilder=reqBuilder();
     // ???
-    requestBuilder.setBaseUri("http://%s:%s@%s".formatted(user.getName(), user.getPassword(), Config.getProperty("host")));
+    requestBuilder.setBaseUri("http://%s:%s@%s".formatted(user.getUsername(), user.getPassword(), Config.getProperty("host")));
     return requestBuilder.build();
 }
 
 public static RequestSpecification superUserAuth(){
     var requestBuilder=reqBuilder();
-    requestBuilder.setBaseUri("http://%s:%s@%s".formatted("", Config.getProperty("superUserToken"), Config.getProperty("host")));
+    requestBuilder.setBaseUri("http://:%s@%s".formatted(Config.getProperty("superUserToken"), Config.getProperty("host")));
     return requestBuilder.build();
 }
 

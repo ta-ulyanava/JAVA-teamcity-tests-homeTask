@@ -31,9 +31,9 @@ public class Config {
 
     //Метод, который читаем саму пропертю
     public static String getProperty(String key){
-        getConfig().properties.getProperty(key);
-        return key;
+        return getConfig().properties.getProperty(key); // ✅ Теперь возвращает значение из конфига
     }
+
 
 // Метод, который читает заданный файл и вычленяет из него проперти
     private void loadProperties(String filename) {

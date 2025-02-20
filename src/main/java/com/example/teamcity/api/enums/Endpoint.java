@@ -19,9 +19,9 @@ import lombok.Getter;
  */
 public enum Endpoint {
     // BuildType.Class -> Ссылка на класс, а не на объект
-    BUILD_TYPES("/api/rest/buildTypes", BuildType.class),
-    PROJECTS("/api/rest/projects", Project.class),
-    USERS("/api/rest/users", User.class);
+    BUILD_TYPES("/app/rest/buildTypes", BuildType.class),
+    PROJECTS("/app/rest/projects", Project.class),
+    USERS("/app/rest/users", User.class);
 
 
     private final String url;
