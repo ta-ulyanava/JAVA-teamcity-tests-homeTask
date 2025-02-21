@@ -25,22 +25,14 @@ public class BuildTypeTest extends BaseApiTest {
     @Test(description = "User should be able to create Build Type", groups = {"Positive", "CRUD"})
     public void userCreatesBuildTypeTest() {
         // Не используем захардкоженные данные а гениеруем все нужное сами!
-        var user = generate(User.class);
         // Создаем юзера, отправляя запрос
-        superUserCheckRequests.getRequest(Endpoint.USERS).create(user);
-        var userCheckRequests = new CheckedRequests(Specifications.authSpec(user));
-
-        var project = generate(Project.class);
-
-        project = userCheckRequests.<Project>getRequest(Endpoint.PROJECTS).create(project);
-
-        var buildType = generate(Arrays.asList(project), BuildType.class);
-
-        userCheckRequests.getRequest(Endpoint.BUILD_TYPES).create(buildType);
-        var createdBuildType = userCheckRequests.<BuildType>getRequest(Endpoint.BUILD_TYPES).read(buildType.getId());
-
+        superUserCheckRequests.getRequest(Endpoint.USERS).create(testData.getUser());
+        var userCheckRequests = new CheckedRequests(Specifications.authSpec(testData.getUser()));
+        userCheckRequests.<Project>getRequest(Endpoint.PROJECTS).create(testData.getProject());
+        userCheckRequests.getRequest(Endpoint.BUILD_TYPES).create(testData.getBuildType());
+        var createdBuildType = userCheckRequests.<BuildType>getRequest(Endpoint.BUILD_TYPES).read(testData.getBuildType().getId());
         // будем ассертить софт ассертами
-        softy.assertEquals(buildType.getName(), createdBuildType.getName(), "Build type name is not correct");
+        softy.assertEquals(testData.getBuildType().getName(), createdBuildType.getName(), "Build type name is not correct");
 
 
     }
@@ -48,22 +40,19 @@ public class BuildTypeTest extends BaseApiTest {
     @Test(description = "User cannot create two build types with same id", groups = {"Negative", "CRUD"})
     public void userCreatesTwoBuildTypesWithTheSameIdTest() {
         //Создаем BuildType1
-        var user = generate(User.class);
-        superUserCheckRequests.getRequest(Endpoint.USERS).create(user);
-        var userCheckRequests = new CheckedRequests(Specifications.authSpec(user));
-        var project = generate(Project.class);
-        project = userCheckRequests.<Project>getRequest(Endpoint.PROJECTS).create(project);
-        var buildType1 = generate(Arrays.asList(project), BuildType.class);
+        superUserCheckRequests.getRequest(Endpoint.USERS).create(testData.getUser());
+        var userCheckRequests = new CheckedRequests(Specifications.authSpec(testData.getUser()));
+        userCheckRequests.<Project>getRequest(Endpoint.PROJECTS).create(testData.getProject());
 
         //BuildType 2
-        var buildType2 = generate(Arrays.asList(project), BuildType.class,buildType1.getId());
-        userCheckRequests.getRequest(Endpoint.BUILD_TYPES).create(buildType1);
+        var buildTypeWithSameId = generate(Arrays.asList(testData.getProject()), BuildType.class, testData.getBuildType().getId());
+        userCheckRequests.getRequest(Endpoint.BUILD_TYPES).create(testData.getBuildType());
         //Это негативный тест, поэтому мы не ожидаем никаких проверок и должны использовать Unchecked
         //        step("Create BuildType2 with same Id as BuildType1");
-     new UncheckedBase(Specifications.authSpec(user),Endpoint.BUILD_TYPES)
-             .create(buildType2)
-                     .then().assertThat().statusCode(HttpStatus.SC_BAD_REQUEST)
-                     .body(Matchers.containsString("The build configuration / template ID \"%s\" is already used by another configuration or template".formatted(buildType1.getId())));
+        new UncheckedBase(Specifications.authSpec(testData.getUser()), Endpoint.BUILD_TYPES)
+                .create(buildTypeWithSameId)
+                .then().assertThat().statusCode(HttpStatus.SC_BAD_REQUEST)
+                .body(Matchers.containsString("The build configuration / template ID \"%s\" is already used by another configuration or template".formatted(testData.getBuildType().getId())));
 
         step("Check BuildType2 was not created with bad request code");
     }
