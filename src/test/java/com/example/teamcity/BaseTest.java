@@ -1,5 +1,6 @@
 package com.example.teamcity;
 
+import com.example.teamcity.api.generators.TestDataStorage;
 import com.example.teamcity.api.models.TestData;
 import com.example.teamcity.api.requests.CheckedRequests;
 import com.example.teamcity.api.spec.Specifications;
@@ -27,5 +28,6 @@ public void beforeTest() {
     public void afterTest(){
         //накопили ассерты и можем падать
         softy.assertAll();
+        TestDataStorage.getInstance().deleteCreatedEntities();
     }
 }
