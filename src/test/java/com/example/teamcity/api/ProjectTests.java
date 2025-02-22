@@ -481,7 +481,16 @@ public class ProjectTests extends BaseTest {
                 .body("name", Matchers.notNullValue()); // Проверяем, что имя не осталось пустым
     }
 
+    @Test(description = "User should not be able to create a Project without specifying a name", groups = {"Negative", "Validation"})
+    public void userCannotCreateProjectWithoutNameTest() {
+        var projectWithoutName = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), null);
 
+        var response = projectController.createInvalidProject(projectWithoutName);
+
+        response.then().assertThat()
+                .statusCode(HttpStatus.SC_BAD_REQUEST)
+                .body(Matchers.containsString("Project name cannot be empty"));
+    }
 
 
     @Test(description = "User should not be able to create a project without authentication", groups = {"Negative", "Auth"})
