@@ -59,18 +59,14 @@ public class ProjectTests extends BaseTest {
     public void userCreatesSecondProjectWithParentProjectTest() {
         projectController.createProject(testData.getProject());
 
-        var secondProject = generate(
-                Arrays.asList(testData.getProject()),
-                Project.class,
-                RandomData.getString(),
-                RandomData.getString(),
-                generate(Arrays.asList(testData.getProject()), ParentProject.class, testData.getProject().getId())
-        );
+        // Создаем вложенные проекты (1 проект с родителем testData.getProject())
+        var nestedProjects = projectController.createNestedProjects(testData.getProject().getId(), 1);
+        var secondProject = nestedProjects.get(0); // Берем созданный проект
 
-        projectController.createProject(secondProject);
         var createdSecondProject = projectController.getProject(secondProject.getId());
 
         softy.assertEquals(createdSecondProject.getParentProject().getId(), testData.getProject().getId(), "Parent project ID is incorrect");
         softy.assertAll();
     }
+
 }

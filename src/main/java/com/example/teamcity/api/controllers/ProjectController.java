@@ -1,10 +1,16 @@
 package com.example.teamcity.api.controllers;
 
 import com.example.teamcity.api.enums.Endpoint;
+import com.example.teamcity.api.models.ParentProject;
 import com.example.teamcity.api.models.Project;
 import com.example.teamcity.api.requests.CheckedRequest;
 import com.example.teamcity.api.requests.UncheckedRequest;
+import com.example.teamcity.api.generators.RandomData;
+import com.example.teamcity.api.generators.TestDataGenerator;
 import io.restassured.specification.RequestSpecification;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ProjectController {
     private final CheckedRequest checkedRequest;
@@ -35,4 +41,27 @@ public class ProjectController {
         uncheckedRequests.getRequest(Endpoint.PROJECTS).create(project)
                 .then().assertThat().statusCode(400);
     }
+
+    /** ✅ Создание вложенных проектов */
+    public List<Project> createNestedProjects(String rootProjectId, int count) {
+        List<Project> nestedProjects = new ArrayList<>();
+        String parentProjectId = rootProjectId;
+
+        for (int i = 0; i < count; i++) {
+            var nestedProject = TestDataGenerator.generate(
+                    List.of(), // Никакие другие проекты не участвуют в генерации
+                    Project.class,
+                    RandomData.getString(), // Новый ID проекта
+                    RandomData.getString(), // Новое имя проекта
+                    new ParentProject(parentProjectId, null) // Родитель — предыдущий проект
+            );
+
+            createProject(nestedProject);
+            nestedProjects.add(nestedProject);
+            parentProjectId = nestedProject.getId(); // Делаем новый проект родителем следующего
+        }
+
+        return nestedProjects;
+    }
+
 }
