@@ -12,6 +12,7 @@ import io.restassured.specification.RequestSpecification;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.IntStream;
 
 public class ProjectController {
     private final CheckedRequest checkedRequest;
@@ -22,47 +23,56 @@ public class ProjectController {
         this.uncheckedRequests = new UncheckedRequest(spec);
     }
 
-    /** ✅ Создание проекта (позитивный сценарий) */
     public void createProject(Project project) {
         checkedRequest.<Project>getRequest(Endpoint.PROJECTS).create(project);
     }
 
-    /** ✅ Чтение проекта (позитивный сценарий) */
     public Project getProject(String projectId) {
         return checkedRequest.<Project>getRequest(Endpoint.PROJECTS).read(projectId);
     }
 
-    /** ✅ Удаление проекта (позитивный сценарий) */
     public void deleteProject(String projectId) {
         checkedRequest.getRequest(Endpoint.PROJECTS).delete(projectId);
     }
 
-    /** ❌ Попытка создать проект с некорректными данными (негативный сценарий) */
-    /** ❌ Попытка создать проект с некорректными данными (негативный сценарий) */
     public Response createInvalidProject(Project project) {
         return uncheckedRequests.getRequest(Endpoint.PROJECTS).create(project);
     }
 
-    /** ✅ Создание вложенных проектов */
     public List<Project> createNestedProjects(String rootProjectId, int count) {
         List<Project> nestedProjects = new ArrayList<>();
         String parentProjectId = rootProjectId;
 
         for (int i = 0; i < count; i++) {
             var nestedProject = TestDataGenerator.generate(
-                    List.of(), // Никакие другие проекты не участвуют в генерации
+                    List.of(),
                     Project.class,
-                    RandomData.getString(), // Новый ID проекта
-                    RandomData.getString(), // Новое имя проекта
-                    new ParentProject(parentProjectId, null) // Родитель — предыдущий проект
+                    RandomData.getString(),
+                    RandomData.getString(),
+                    new ParentProject(parentProjectId, null)
             );
 
             createProject(nestedProject);
             nestedProjects.add(nestedProject);
-            parentProjectId = nestedProject.getId(); // Делаем новый проект родителем следующего
+            parentProjectId = nestedProject.getId();
         }
 
         return nestedProjects;
     }
 
+    public List<Project> createSiblingProjects(String parentProjectId, int count) {
+        List<Project> siblingProjects = IntStream.range(0, count)
+                .mapToObj(i -> TestDataGenerator.generate(
+                        List.of(),
+                        Project.class,
+                        RandomData.getString(),
+                        RandomData.getString(),
+                        new ParentProject(parentProjectId, null)
+                ))
+                .toList();
+
+        siblingProjects.forEach(this::createProject);
+
+        return siblingProjects;
+    }
 }

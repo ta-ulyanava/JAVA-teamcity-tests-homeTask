@@ -83,6 +83,34 @@ public class ProjectTests extends BaseTest {
                 .body(Matchers.containsString("Project cannot be found by external id 'non_existent_locator'"));
     }
 
+    @Test(description = "User should be able to create a project in Root and nest 20 projects inside it", groups = {"Positive", "CRUD"})
+    public void userCreatesProjectInRootWith20NestedProjectsTest() {
+        var rootProject = generate(List.of(), Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("_Root", null));
+        projectController.createProject(rootProject);
+
+        var nestedProjects = projectController.createNestedProjects(rootProject.getId(), 20);
+        var lastNestedProject = nestedProjects.get(nestedProjects.size() - 1);
+        var createdLastNestedProject = projectController.getProject(lastNestedProject.getId());
+
+        softy.assertEquals(createdLastNestedProject.getParentProject().getId(), nestedProjects.get(nestedProjects.size() - 2).getId(), "Parent project ID is incorrect");
+        softy.assertAll();
+    }
+    @Test(description = "User should be able to create 20 sibling projects under the same parent", groups = {"Positive", "CRUD"})
+    public void userCreates20SiblingProjectsTest() {
+        projectController.createProject(testData.getProject());
+
+        var siblingProjects = projectController.createSiblingProjects(testData.getProject().getId(), 20);
+
+        softy.assertEquals(siblingProjects.size(), 20, "The number of created sibling projects is incorrect");
+
+        siblingProjects.forEach(project -> {
+            var createdProject = projectController.getProject(project.getId());
+            softy.assertEquals(createdProject.getParentProject().getId(), testData.getProject().getId(),
+                    "Parent project ID is incorrect for project " + project.getId());
+        });
+
+        softy.assertAll();
+    }
 
 
     @Test(description = "User should not be able to create Project with empty name", groups = {"Negative", "CRUD"})
