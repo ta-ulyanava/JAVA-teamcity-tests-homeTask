@@ -164,7 +164,17 @@ public class ProjectTests extends BaseTest {
                 .statusCode(HttpStatus.SC_UNAUTHORIZED)
                 .body(Matchers.containsString("Authentication required"));
     }
+    @Test(description = "User should not be able to create a Project with an XSS payload in name", groups = {"Negative", "Security"})
+    public void userCannotCreateProjectWithXSSInNameTest() {
+        var xssPayload = "<script>alert('XSS')</script>";
+        var invalidProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), xssPayload);
 
+        var response = projectController.createInvalidProject(invalidProject);
+
+        response.then().assertThat()
+                .statusCode(HttpStatus.SC_BAD_REQUEST)
+                .body(Matchers.containsString("Invalid project name"));
+    }
 
 
 }
