@@ -54,7 +54,7 @@ public class ProjectTests extends BaseTest {
     @Test(description = "User should be able to create a project with the minimum required fields", groups = {"Positive", "CRUD"})
     public void userCreatesProjectWithMandatoryFieldsTest() {
         projectController.createProject(testData.getProject());
-        var createdProject = projectController.getProject(testData.getProject().getId());
+        var createdProject = projectController.getProjectById(testData.getProject().getId());
         softy.assertEquals(testData.getProject().getId(), createdProject.getId(), "Project id is not correct");
         softy.assertEquals(testData.getProject().getName(), createdProject.getName(), "Project name is not correct");
         softy.assertAll();
@@ -64,7 +64,7 @@ public class ProjectTests extends BaseTest {
     public void userCreatesProjectWithCopyAllAssociatedSettingsTest() {
         var projectWithCopyAll = generate(Arrays.asList(testData.getProject()), Project.class, testData.getProject().getId(), testData.getProject().getName(), null, true);
         projectController.createProject(projectWithCopyAll);
-        var createdProject = projectController.getProject(projectWithCopyAll.getId());
+        var createdProject = projectController.getProjectById(projectWithCopyAll.getId());
         softy.assertEquals(projectWithCopyAll.getId(), createdProject.getId(), "Project ID does not match");
         softy.assertEquals(projectWithCopyAll.getName(), createdProject.getName(), "Project name does not match");
         softy.assertAll();
@@ -75,7 +75,7 @@ public class ProjectTests extends BaseTest {
         projectController.createProject(testData.getProject());
         var nestedProjects = projectController.createNestedProjects(testData.getProject().getId(), 1);
         var secondProject = nestedProjects.get(0);
-        var createdSecondProject = projectController.getProject(secondProject.getId());
+        var createdSecondProject = projectController.getProjectById(secondProject.getId());
         softy.assertEquals(createdSecondProject.getParentProject().getId(), testData.getProject().getId(), "Parent project ID is incorrect");
         softy.assertAll();
     }
@@ -87,7 +87,7 @@ public class ProjectTests extends BaseTest {
         var nestedProjects = projectController.createNestedProjects(testData.getProject().getId(), maxNestedProjects);
         softy.assertEquals(nestedProjects.size(), maxNestedProjects, "The number of nested projects is incorrect");
         for (int i = 1; i < nestedProjects.size(); i++) {
-            var parentProject = projectController.getProject(nestedProjects.get(i).getParentProject().getId());
+            var parentProject = projectController.getProjectById(nestedProjects.get(i).getParentProject().getId());
             softy.assertEquals(parentProject.getId(), nestedProjects.get(i - 1).getId(), "Parent project ID is incorrect for project " + nestedProjects.get(i).getId());
         }
         softy.assertAll();
@@ -101,7 +101,7 @@ public class ProjectTests extends BaseTest {
 
         var nestedProjects = projectController.createNestedProjects(rootProject.getId(), 20);
         var lastNestedProject = nestedProjects.get(nestedProjects.size() - 1);
-        var createdLastNestedProject = projectController.getProject(lastNestedProject.getId());
+        var createdLastNestedProject = projectController.getProjectById(lastNestedProject.getId());
 
         softy.assertEquals(createdLastNestedProject.getParentProject().getId(), nestedProjects.get(nestedProjects.size() - 2).getId(), "Parent project ID is incorrect");
         softy.assertAll();
@@ -116,7 +116,7 @@ public class ProjectTests extends BaseTest {
         softy.assertEquals(siblingProjects.size(), 20, "The number of created sibling projects is incorrect");
 
         siblingProjects.forEach(project -> {
-            var createdProject = projectController.getProject(project.getId());
+            var createdProject = projectController.getProjectById(project.getId());
             softy.assertEquals(createdProject.getParentProject().getId(), testData.getProject().getId(),
                     "Parent project ID is incorrect for project " + project.getId());
         });
@@ -151,7 +151,7 @@ public class ProjectTests extends BaseTest {
         var validProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), maxLengthName);
 
         projectController.createProject(validProject);
-        var createdProject = projectController.getProject(validProject.getId());
+        var createdProject = projectController.getProjectById(validProject.getId());
 
         softy.assertEquals(createdProject.getName(), validProject.getName(), "Project name is incorrect");
         softy.assertAll();
@@ -163,7 +163,7 @@ public class ProjectTests extends BaseTest {
         var validProject = TestDataGenerator.generate(List.of(), Project.class, maxLengthId, RandomData.getString());
 
         projectController.createProject(validProject);
-        var createdProject = projectController.getProject(validProject.getId());
+        var createdProject = projectController.getProjectById(validProject.getId());
 
         softy.assertEquals(createdProject.getId(), validProject.getId(), "Project ID is incorrect");
         softy.assertAll();
@@ -188,7 +188,7 @@ public class ProjectTests extends BaseTest {
         var validProject = TestDataGenerator.generate(List.of(), Project.class, "A", RandomData.getString());
 
         projectController.createProject(validProject);
-        var createdProject = projectController.getProject(validProject.getId());
+        var createdProject = projectController.getProjectById(validProject.getId());
 
         softy.assertEquals(createdProject.getId(), validProject.getId(), "Project ID is incorrect");
         softy.assertEquals(createdProject.getName(), validProject.getName(), "Project name is incorrect");
@@ -200,7 +200,7 @@ public class ProjectTests extends BaseTest {
         var validProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), "A");
 
         projectController.createProject(validProject);
-        var createdProject = projectController.getProject(validProject.getId());
+        var createdProject = projectController.getProjectById(validProject.getId());
 
         softy.assertEquals(createdProject.getId(), validProject.getId(), "Project ID is incorrect");
         softy.assertEquals(createdProject.getName(), validProject.getName(), "Project name is incorrect");
@@ -212,7 +212,7 @@ public class ProjectTests extends BaseTest {
     public void userCreatesProjectWithSpecialCharactersInNameTest() {
         var project = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), RandomData.getFullSpecialCharacterString());
         projectController.createProject(project);
-        var createdProject = projectController.getProject(project.getId());
+        var createdProject = projectController.getProjectById(project.getId());
 
         softy.assertEquals(createdProject.getId(), project.getId(), "Project ID is incorrect");
         softy.assertEquals(createdProject.getName(), project.getName(), "Project name is incorrect");
@@ -224,7 +224,7 @@ public class ProjectTests extends BaseTest {
         var validProject = TestDataGenerator.generate(List.of(), Project.class, "test_project_123", RandomData.getString());
 
         projectController.createProject(validProject);
-        var createdProject = projectController.getProject(validProject.getId());
+        var createdProject = projectController.getProjectById(validProject.getId());
 
         softy.assertEquals(createdProject.getId(), validProject.getId(), "Project ID is incorrect");
         softy.assertEquals(createdProject.getName(), validProject.getName(), "Project name is incorrect");
@@ -235,7 +235,7 @@ public class ProjectTests extends BaseTest {
     public void userCreatesProjectWithLocalizedNameTest() {
         var localizedProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), RandomData.getFullLocalizationString());
         projectController.createProject(localizedProject);
-        var createdProject = projectController.getProject(localizedProject.getId());
+        var createdProject = projectController.getProjectById(localizedProject.getId());
 
         softy.assertEquals(createdProject.getName(), localizedProject.getName(), "Localized project name is incorrect");
         softy.assertAll();
@@ -375,7 +375,7 @@ public class ProjectTests extends BaseTest {
         var validProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), "123456");
 
         projectController.createProject(validProject);
-        var createdProject = projectController.getProject(validProject.getId());
+        var createdProject = projectController.getProjectById(validProject.getId());
 
         softy.assertEquals(createdProject.getName(), validProject.getName(), "Project name is incorrect");
         softy.assertAll();
@@ -394,6 +394,83 @@ public class ProjectTests extends BaseTest {
                 .body(Matchers.containsString("Project ID \"%s\" is invalid".formatted(invalidId)))
                 .body(Matchers.containsString("ID should start with a latin letter and contain only latin letters, digits and underscores"));
     }
+    //Fix bug 500 (Internal Server Error).
+    @Test(description = "User should not be able to create a Project with spaces in the middle of the ID",
+            groups = {"Negative", "CRUD", "KnownBugs"})
+    public void userCannotCreateProjectWithSpacesInIdTest() {
+        var invalidProject = TestDataGenerator.generate(List.of(), Project.class, "invalid id", RandomData.getString());
+
+        var response = projectController.createInvalidProject(invalidProject);
+
+        response.then().assertThat()
+                .statusCode(HttpStatus.SC_BAD_REQUEST)
+                .body(Matchers.containsString("Project ID \"invalid id\" is invalid"))
+                .body(Matchers.containsString("ID should start with a latin letter and contain only latin letters, digits and underscores"));
+    }
+
+    @Test(description = "User should be able to create a Project with spaces in the middle of the name",
+            groups = {"Positive", "CRUD"})
+    public void userCreatesProjectWithSpacesInNameTest() {
+        var validProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), "valid name with spaces");
+
+        projectController.createProject(validProject);
+        var createdProject = projectController.getProjectById(validProject.getId());
+
+        softy.assertEquals(createdProject.getId(), validProject.getId(), "Project ID is incorrect");
+        softy.assertEquals(createdProject.getName(), validProject.getName(), "Project name is incorrect");
+        softy.assertAll();
+    }
+    @Test(description = "User should be able to create a Project with an ID containing Latin letters, digits, and underscores",
+            groups = {"Positive", "CRUD"})
+    public void userCreatesProjectWithValidIdCharactersTest() {
+        var validProject = TestDataGenerator.generate(List.of(), Project.class, "valid_123_ID", RandomData.getString());
+
+        projectController.createProject(validProject);
+        var createdProject = projectController.getProjectById(validProject.getId());
+
+        softy.assertEquals(createdProject.getId(), validProject.getId(), "Project ID is incorrect");
+        softy.assertEquals(createdProject.getName(), validProject.getName(), "Project name is incorrect");
+        softy.assertAll();
+    }
+    @Test(description = "User should not be able to create a Project without an ID",
+            groups = {"Negative", "Validation"})
+    public void userCannotCreateProjectWithoutIdTest() {
+        var invalidProject = TestDataGenerator.generate(List.of(), Project.class, null, RandomData.getString());
+
+        var response = projectController.createInvalidProject(invalidProject);
+
+        response.then().assertThat()
+                .statusCode(HttpStatus.SC_BAD_REQUEST)
+                .body(Matchers.containsString("Project ID cannot be empty"));
+    }
+    @Test(description = "User should be able to create a Project with an empty ID",
+            groups = {"Positive", "CRUD"})
+    public void userCreatesProjectWithEmptyIdTest() {
+        var projectWithEmptyId = TestDataGenerator.generate(List.of(), Project.class, "", RandomData.getString());
+
+        projectController.createProject(projectWithEmptyId);
+        var createdProject = projectController.getProjectById(projectWithEmptyId.getId());
+
+        softy.assertEquals(createdProject.getId(), projectWithEmptyId.getId(), "Project ID is incorrect");
+        softy.assertEquals(createdProject.getName(), projectWithEmptyId.getName(), "Project name is incorrect");
+        softy.assertAll();
+    }
+    @Test(description = "User should be able to create a Project without specifying an ID", groups = {"Positive", "CRUD"})
+    public void userCreatesProjectWithoutIdTest() {
+        var projectName = RandomData.getString();
+        var projectWithoutId = TestDataGenerator.generate(List.of(), Project.class, null, projectName);
+
+        var response = projectController.createInvalidProject(projectWithoutId);
+
+        response.then().assertThat()
+                .statusCode(HttpStatus.SC_OK)
+                .body("name", Matchers.equalTo(projectName));
+    }
+
+
+
+
+
 
     @Test(description = "User should not be able to create a project without authentication", groups = {"Negative", "Auth"})
     public void userCannotCreateProjectWithoutAuthTest() {
@@ -412,7 +489,7 @@ public class ProjectTests extends BaseTest {
         var projectWithXSS = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), xssPayload);
 
         projectController.createProject(projectWithXSS);
-        var createdProject = projectController.getProject(projectWithXSS.getId());
+        var createdProject = projectController.getProjectById(projectWithXSS.getId());
 
         softy.assertEquals(createdProject.getName(), xssPayload, "XSS payload was modified or blocked");
         softy.assertAll();
@@ -424,7 +501,7 @@ public class ProjectTests extends BaseTest {
         var projectWithSQL = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), sqlPayload);
 
         projectController.createProject(projectWithSQL);
-        var createdProject = projectController.getProject(projectWithSQL.getId());
+        var createdProject = projectController.getProjectById(projectWithSQL.getId());
 
         softy.assertEquals(createdProject.getName(), sqlPayload, "SQL injection payload was modified or blocked");
         softy.assertAll();

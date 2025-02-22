@@ -29,8 +29,11 @@ public class ProjectController {
         TestDataStorage.getInstance().addCreatedEntity(Endpoint.PROJECTS, project);
     }
 
-    public Project getProject(String projectId) {
+    public Project getProjectById(String projectId) {
         return checkedRequest.<Project>getRequest(Endpoint.PROJECTS).read(projectId);
+    }
+    public Project getProjectByName(String projectName) {
+        return checkedRequest.<Project>getRequest(Endpoint.PROJECTS).read(projectName);
     }
 
     public void deleteProject(String projectId) {
