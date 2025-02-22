@@ -3,12 +3,18 @@ package com.example.teamcity.api;
 import com.example.teamcity.BaseTest;
 import com.example.teamcity.api.controllers.ProjectController;
 import com.example.teamcity.api.enums.Endpoint;
+import com.example.teamcity.api.generators.RandomData;
+import com.example.teamcity.api.generators.TestDataGenerator;
 import com.example.teamcity.api.models.Project;
 import com.example.teamcity.api.spec.Specifications;
+import io.restassured.response.Response;
+import org.apache.http.HttpStatus;
+import org.hamcrest.Matchers;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.util.Arrays;
+import java.util.List;
 
 import static com.example.teamcity.api.generators.TestDataGenerator.generate;
 
@@ -81,6 +87,40 @@ public class ProjectTests extends BaseTest {
 
         softy.assertAll();
     }
+
+    @Test(description = "User should not be able to create Project with empty name", groups = {"Negative", "CRUD"})
+    public void userCannotCreateProjectWithEmptyNameTest() {
+        var invalidProject = TestDataGenerator.generate(
+                List.of(), // В этом тесте нет зависимости от других проектов
+                Project.class,
+                RandomData.getString(), // Генерируем ID
+                "" // Пустое имя проекта
+        );
+
+        Response response = projectController.createInvalidProject(invalidProject); // Теперь метод возвращает Response
+
+        response.then().assertThat()
+                .statusCode(HttpStatus.SC_BAD_REQUEST)
+                .body(Matchers.containsString("Project name cannot be empty"));
+
+    }
+
+    @Test(description = "User should not be able to create Project with empty id", groups = {"Negative", "CRUD"})
+    public void userCannotCreateProjectWithEmptyIdTest() {
+        var invalidProject = TestDataGenerator.generate(
+                List.of(), // В этом тесте нет зависимости от других проектов
+                Project.class,
+                "", // ❌ Пустой `id`
+                RandomData.getString() // ✅ Генерируем `name`
+        );
+
+        Response response = projectController.createInvalidProject(invalidProject); // Метод теперь возвращает Response
+
+        response.then().assertThat()
+                .statusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR)
+                .body(Matchers.containsString("Project ID cannot be empty")); // Ошибка должна быть корректной
+    }
+
 
 
 }

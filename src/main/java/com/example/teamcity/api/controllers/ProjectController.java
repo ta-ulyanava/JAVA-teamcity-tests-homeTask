@@ -7,6 +7,7 @@ import com.example.teamcity.api.requests.CheckedRequest;
 import com.example.teamcity.api.requests.UncheckedRequest;
 import com.example.teamcity.api.generators.RandomData;
 import com.example.teamcity.api.generators.TestDataGenerator;
+import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 
 import java.util.ArrayList;
@@ -37,9 +38,9 @@ public class ProjectController {
     }
 
     /** ❌ Попытка создать проект с некорректными данными (негативный сценарий) */
-    public void createInvalidProject(Project project) {
-        uncheckedRequests.getRequest(Endpoint.PROJECTS).create(project)
-                .then().assertThat().statusCode(400);
+    /** ❌ Попытка создать проект с некорректными данными (негативный сценарий) */
+    public Response createInvalidProject(Project project) {
+        return uncheckedRequests.getRequest(Endpoint.PROJECTS).create(project);
     }
 
     /** ✅ Создание вложенных проектов */
