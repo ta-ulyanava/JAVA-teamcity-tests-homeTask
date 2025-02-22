@@ -154,4 +154,5 @@ public final class TestDataGenerator {
     public static <T extends BaseModel> T generate(Class<T> generatorClass, Object... parameters) {
         return generate(Collections.emptyList(), generatorClass, parameters);
     }
+
 }

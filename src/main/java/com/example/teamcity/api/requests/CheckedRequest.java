@@ -8,11 +8,11 @@ import io.restassured.specification.RequestSpecification;
 import java.util.EnumMap;
 /** Паттерн Фасад
  */
-public class CheckedRequests {
+public class CheckedRequest {
 
     private final EnumMap<Endpoint, CheckedBase> requests = new EnumMap<>(Endpoint.class);
 
-    public CheckedRequests(RequestSpecification spec) {
+    public CheckedRequest(RequestSpecification spec) {
         for (var endpoint: Endpoint.values()) {
             requests.put(endpoint, new CheckedBase(spec, endpoint));
         }

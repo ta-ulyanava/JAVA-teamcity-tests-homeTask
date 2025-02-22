@@ -3,7 +3,7 @@ package com.example.teamcity.api;
 import com.example.teamcity.api.enums.Endpoint;
 import com.example.teamcity.api.models.BuildType;
 import com.example.teamcity.api.models.Project;
-import com.example.teamcity.api.requests.CheckedRequests;
+import com.example.teamcity.api.requests.CheckedRequest;
 import com.example.teamcity.api.requests.unchecked.UncheckedBase;
 import com.example.teamcity.api.spec.Specifications;
 import org.apache.http.HttpStatus;
@@ -17,15 +17,18 @@ import static io.qameta.allure.Allure.step;
 
 @Test(groups = {"Regression"})
 public class BuildTypeTest extends BaseApiTest {
-
+    // ?? как пользоваться группами в TestNg
+    // ?? Где можно писать Теги TestNg
     @Test(description = "User should be able to create Build Type", groups = {"Positive", "CRUD"})
     public void userCreatesBuildTypeTest() {
-
+        // Не используем захардкоженные данные а гениеруем все нужное сами!
+        // Создаем юзера, отправляя запрос
         superUserCheckRequests.getRequest(Endpoint.USERS).create(testData.getUser());
-        var userCheckRequests = new CheckedRequests(Specifications.authSpec(testData.getUser()));
+        var userCheckRequests = new CheckedRequest(Specifications.authSpec(testData.getUser()));
         userCheckRequests.<Project>getRequest(Endpoint.PROJECTS).create(testData.getProject());
         userCheckRequests.getRequest(Endpoint.BUILD_TYPES).create(testData.getBuildType());
         var createdBuildType = userCheckRequests.<BuildType>getRequest(Endpoint.BUILD_TYPES).read(testData.getBuildType().getId());
+        // будем ассертить софт ассертами
         softy.assertEquals(testData.getBuildType().getName(), createdBuildType.getName(), "Build type name is not correct");
 
 
@@ -33,14 +36,16 @@ public class BuildTypeTest extends BaseApiTest {
 
     @Test(description = "User cannot create two build types with same id", groups = {"Negative", "CRUD"})
     public void userCreatesTwoBuildTypesWithTheSameIdTest() {
-
+        //Создаем BuildType1
         superUserCheckRequests.getRequest(Endpoint.USERS).create(testData.getUser());
-        var userCheckRequests = new CheckedRequests(Specifications.authSpec(testData.getUser()));
+        var userCheckRequests = new CheckedRequest(Specifications.authSpec(testData.getUser()));
         userCheckRequests.<Project>getRequest(Endpoint.PROJECTS).create(testData.getProject());
 
+        //BuildType 2
         var buildTypeWithSameId = generate(Arrays.asList(testData.getProject()), BuildType.class, testData.getBuildType().getId());
         userCheckRequests.getRequest(Endpoint.BUILD_TYPES).create(testData.getBuildType());
-
+        //Это негативный тест, поэтому мы не ожидаем никаких проверок и должны использовать Unchecked
+        //        step("Create BuildType2 with same Id as BuildType1");
         new UncheckedBase(Specifications.authSpec(testData.getUser()), Endpoint.BUILD_TYPES)
                 .create(buildTypeWithSameId)
                 .then().assertThat().statusCode(HttpStatus.SC_BAD_REQUEST)
