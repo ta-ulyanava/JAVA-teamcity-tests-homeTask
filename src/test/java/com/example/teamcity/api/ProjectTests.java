@@ -44,6 +44,20 @@ public class ProjectTests extends BaseTest {
         softy.assertEquals(projectWithCopyAll.getName(), createdProject.getName(), "Project name does not match");
 
     }
+    @Test(description = "User should be able to create a second Project with parentProject locator set to the first project's ID", groups = {"Positive", "CRUD"})
+    public void userCreatesSecondProjectWithParentProjectTest() {
+        superUserCheckRequests.getRequest(Endpoint.USERS).create(testData.getUser());
+        var userCheckRequests = new CheckedRequests(Specifications.authSpec(testData.getUser()));
+        userCheckRequests.<Project>getRequest(Endpoint.PROJECTS).create(testData.getProject());
+        var secondProject = generate(Arrays.asList(testData.getProject()), Project.class, RandomData.getString(), RandomData.getString(),
+                generate(Arrays.asList(testData.getProject()), ParentProject.class, testData.getProject().getId()));
+        userCheckRequests.<Project>getRequest(Endpoint.PROJECTS).create(secondProject);
+        var createdSecondProject = userCheckRequests.<Project>getRequest(Endpoint.PROJECTS).read(secondProject.getId());
+        softy.assertEquals(createdSecondProject.getParentProject().getId(), testData.getProject().getId(), "Parent project ID is incorrect");
+        softy.assertAll();
+    }
+
+
 
 
 }
