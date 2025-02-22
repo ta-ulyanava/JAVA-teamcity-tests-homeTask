@@ -468,18 +468,6 @@ public class ProjectTests extends BaseTest {
     }
 
 
-    @Test(description = "User should be able to create a Project without specifying a name", groups = {"Positive", "CRUD"})
-    public void userCreatesProjectWithoutNameTest() {
-        var projectId = RandomData.getString();
-        var projectWithoutName = TestDataGenerator.generate(List.of(), Project.class, projectId, null);
-
-        var response = projectController.createInvalidProject(projectWithoutName);
-
-        response.then().assertThat()
-                .statusCode(HttpStatus.SC_OK)
-                .body("id", Matchers.equalTo(projectId))
-                .body("name", Matchers.notNullValue()); // Проверяем, что имя не осталось пустым
-    }
 
     @Test(description = "User should not be able to create a Project without specifying a name", groups = {"Negative", "CRUD"})
     public void userCannotCreateProjectWithoutNameTest() {
@@ -491,6 +479,29 @@ public class ProjectTests extends BaseTest {
                 .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .body(Matchers.containsString("Project name cannot be empty"));
     }
+    @Test(description = "User should not be able to create a Project if parent project locator is not provided", groups = {"Negative", "CRUD"})
+    public void userCannotCreateProjectWithoutParentProjectLocatorTest() {
+        var invalidProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), RandomData.getString(), new ParentProject(null, null));
+
+        var response = projectController.createInvalidProject(invalidProject);
+
+        response.then().assertThat()
+                .statusCode(HttpStatus.SC_BAD_REQUEST)
+                .body(Matchers.containsString("No project specified"))
+                .body(Matchers.containsString("Either 'id', 'internalId' or 'locator' attribute should be present"));
+    }
+    @Test(description = "User should not be able to create a Project if parent project locator is empty", groups = {"Negative", "CRUD"})
+    public void userCannotCreateProjectWithEmptyParentProjectLocatorTest() {
+        var invalidProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("", null));
+
+        var response = projectController.createInvalidProject(invalidProject);
+
+        response.then().assertThat()
+                .statusCode(HttpStatus.SC_NOT_FOUND)
+                .body(Matchers.containsString("No project found by locator 'count:1,id:'"))
+                .body(Matchers.containsString("Project cannot be found by external id ''"));
+    }
+
 
 
     @Test(description = "User should not be able to create a project without authentication", groups = {"Negative", "Auth"})
