@@ -43,6 +43,7 @@ public class ProjectTests extends BaseTest {
     public Object[][] nonLatinIdProviderForId() {
         return new Object[][]{{"проект"}, {"项目"}, {"プロジェクト"}, {"مشروع"}, {"παράδειγμα"}, {"नमूना"}, {"בדיקה"}};
     }
+
     @DataProvider
     public Object[][] invalidIdStartId() {
         return new Object[][]{
@@ -61,8 +62,18 @@ public class ProjectTests extends BaseTest {
     }
 
     @Test(description = "User should be able to create Project with copyAllAssociatedSettings set to true", groups = {"Positive", "CRUD"})
-    public void userCreatesProjectWithCopyAllAssociatedSettingsTest() {
+    public void userCreatesProjectWithCopyAllAssociatedSettingsTrueTest() {
         var projectWithCopyAll = generate(Arrays.asList(testData.getProject()), Project.class, testData.getProject().getId(), testData.getProject().getName(), null, true);
+        projectController.createProject(projectWithCopyAll);
+        var createdProject = projectController.getProjectById(projectWithCopyAll.getId());
+        softy.assertEquals(projectWithCopyAll.getId(), createdProject.getId(), "Project ID does not match");
+        softy.assertEquals(projectWithCopyAll.getName(), createdProject.getName(), "Project name does not match");
+        softy.assertAll();
+    }
+
+    @Test(description = "User should be able to create Project with copyAllAssociatedSettings set to false", groups = {"Positive", "CRUD"})
+    public void userCreatesProjectWithCopyAllAssociatedSettingsFalseTest() {
+        var projectWithCopyAll = generate(Arrays.asList(testData.getProject()), Project.class, testData.getProject().getId(), testData.getProject().getName(), null, false);
         projectController.createProject(projectWithCopyAll);
         var createdProject = projectController.getProjectById(projectWithCopyAll.getId());
         softy.assertEquals(projectWithCopyAll.getId(), createdProject.getId(), "Project ID does not match");
@@ -168,6 +179,7 @@ public class ProjectTests extends BaseTest {
         softy.assertEquals(createdProject.getId(), validProject.getId(), "Project ID is incorrect");
         softy.assertAll();
     }
+
     //To fix 500 (Internal Server Error).
     @Test(description = "User should not be able to create a Project with an ID longer than 225 characters", groups = {"Negative", "CRUD", "KnownBugs", "CornerCase"})
     public void userCannotCreateProjectWithTooLongIdTest() {
@@ -180,7 +192,6 @@ public class ProjectTests extends BaseTest {
                 .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .body(Matchers.containsString("Project ID \"%s\" is invalid: it is 226 characters long while the maximum length is 225.".formatted(tooLongId)));
     }
-
 
 
     @Test(description = "User should be able to create a Project with an ID of length 1", groups = {"Positive", "CRUD"})
@@ -276,7 +287,8 @@ public class ProjectTests extends BaseTest {
                 .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .body(Matchers.containsString("Project name cannot be empty"));
     }
-// Need to fix a bug 500 (Internal Server Error).
+
+    // Need to fix a bug 500 (Internal Server Error).
     @Test(description = "User should not be able to create Project with empty id", groups = {"Negative", "CRUD", "KnownBugs"})
     public void userCannotCreateProjectWithEmptyIdTest() {
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, "", RandomData.getString());
@@ -335,6 +347,7 @@ public class ProjectTests extends BaseTest {
                 .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .body(Matchers.containsString("Project with this name already exists: %s".formatted(testData.getProject().getName())));
     }
+
     @Test(description = "User should not be able to create a Project with an existing name in a different case", groups = {"Negative", "CRUD"})
     public void userCannotCreateProjectWithExistingNameDifferentCaseTest() {
         projectController.createProject(testData.getProject());
@@ -359,6 +372,7 @@ public class ProjectTests extends BaseTest {
                 .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .body(Matchers.containsString("Project ID \"%s\" is already used by another project".formatted(duplicateId)));
     }
+
     @Test(description = "User should not be able to create a Project with an ID consisting only of digits", groups = {"Negative", "CRUD", "KnownBugs"})
     public void userCannotCreateProjectWithDigitsOnlyIdTest() {
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, "123456", RandomData.getString());
@@ -370,6 +384,7 @@ public class ProjectTests extends BaseTest {
                 .body(Matchers.containsString("Project ID \"123456\" is invalid"))
                 .body(Matchers.containsString("ID should start with a latin letter and contain only latin letters, digits and underscores"));
     }
+
     @Test(description = "User should be able to create a Project with a name consisting only of digits", groups = {"Positive", "CRUD"})
     public void userCreatesProjectWithDigitsOnlyNameTest() {
         var validProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), "123456");
@@ -394,6 +409,7 @@ public class ProjectTests extends BaseTest {
                 .body(Matchers.containsString("Project ID \"%s\" is invalid".formatted(invalidId)))
                 .body(Matchers.containsString("ID should start with a latin letter and contain only latin letters, digits and underscores"));
     }
+
     //Fix bug 500 (Internal Server Error).
     @Test(description = "User should not be able to create a Project with spaces in the middle of the ID",
             groups = {"Negative", "CRUD", "KnownBugs"})
@@ -420,6 +436,7 @@ public class ProjectTests extends BaseTest {
         softy.assertEquals(createdProject.getName(), validProject.getName(), "Project name is incorrect");
         softy.assertAll();
     }
+
     @Test(description = "User should be able to create a Project with an ID containing Latin letters, digits, and underscores",
             groups = {"Positive", "CRUD"})
     public void userCreatesProjectWithValidIdCharactersTest() {
@@ -432,6 +449,7 @@ public class ProjectTests extends BaseTest {
         softy.assertEquals(createdProject.getName(), validProject.getName(), "Project name is incorrect");
         softy.assertAll();
     }
+
     @Test(description = "User should not be able to create a Project without an ID",
             groups = {"Negative", "CRUD"})
     public void userCannotCreateProjectWithoutIdTest() {
@@ -443,6 +461,7 @@ public class ProjectTests extends BaseTest {
                 .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .body(Matchers.containsString("Project ID cannot be empty"));
     }
+
     @Test(description = "User should be able to create a Project with an empty ID",
             groups = {"Positive", "CRUD"})
     public void userCreatesProjectWithEmptyIdTest() {
@@ -455,6 +474,7 @@ public class ProjectTests extends BaseTest {
         softy.assertEquals(createdProject.getName(), projectWithEmptyId.getName(), "Project name is incorrect");
         softy.assertAll();
     }
+
     @Test(description = "User should be able to create a Project without specifying an ID", groups = {"Positive", "CRUD"})
     public void userCreatesProjectWithoutIdTest() {
         var projectName = RandomData.getString();
@@ -468,7 +488,6 @@ public class ProjectTests extends BaseTest {
     }
 
 
-
     @Test(description = "User should not be able to create a Project without specifying a name", groups = {"Negative", "CRUD"})
     public void userCannotCreateProjectWithoutNameTest() {
         var projectWithoutName = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), null);
@@ -479,6 +498,7 @@ public class ProjectTests extends BaseTest {
                 .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .body(Matchers.containsString("Project name cannot be empty"));
     }
+
     @Test(description = "User should not be able to create a Project if parent project locator is not provided", groups = {"Negative", "CRUD"})
     public void userCannotCreateProjectWithoutParentProjectLocatorTest() {
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), RandomData.getString(), new ParentProject(null, null));
@@ -490,6 +510,7 @@ public class ProjectTests extends BaseTest {
                 .body(Matchers.containsString("No project specified"))
                 .body(Matchers.containsString("Either 'id', 'internalId' or 'locator' attribute should be present"));
     }
+
     @Test(description = "User should not be able to create a Project if parent project locator is empty", groups = {"Negative", "CRUD"})
     public void userCannotCreateProjectWithEmptyParentProjectLocatorTest() {
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("", null));
@@ -501,7 +522,6 @@ public class ProjectTests extends BaseTest {
                 .body(Matchers.containsString("No project found by locator 'count:1,id:'"))
                 .body(Matchers.containsString("Project cannot be found by external id ''"));
     }
-
 
 
     @Test(description = "User should not be able to create a project without authentication", groups = {"Negative", "Auth"})
