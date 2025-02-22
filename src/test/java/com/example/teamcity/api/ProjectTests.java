@@ -339,6 +339,17 @@ public class ProjectTests extends BaseTest {
                 .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .body(Matchers.containsString("Project with this name already exists: %s".formatted(duplicateName)));
     }
+    @Test(description = "User should not be able to create a Project with an existing ID in a different case", groups = {"Negative", "CRUD"})
+    public void userCannotCreateProjectWithExistingIdDifferentCaseTest() {
+        projectController.createProject(testData.getProject());
+
+        var duplicateId = testData.getProject().getId().toUpperCase();
+        var response = projectController.createInvalidProject(TestDataGenerator.generate(List.of(), Project.class, duplicateId, RandomData.getString()));
+
+        response.then().assertThat()
+                .statusCode(HttpStatus.SC_BAD_REQUEST)
+                .body(Matchers.containsString("Project ID \"%s\" is already used by another project".formatted(duplicateId)));
+    }
 
 
 
