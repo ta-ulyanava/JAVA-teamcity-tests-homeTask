@@ -31,12 +31,14 @@ public class ProjectTests extends BaseTest {
         superUserCheckRequests.getRequest(Endpoint.USERS).create(testData.getUser());
         projectController = new ProjectController(Specifications.authSpec(testData.getUser()));
     }
+
     @DataProvider(name = "invalidSpecialCharactersForId")
     public static Object[][] invalidSpecialCharactersForId() {
         return "!@#$%^&*()+-={}[]:\\".chars()
                 .mapToObj(c -> new Object[]{String.valueOf((char) c)})
                 .toArray(Object[][]::new);
     }
+
     @DataProvider
     public Object[][] nonLatinIdProviderForId() {
         return new Object[][]{{"проект"}, {"项目"}, {"プロジェクト"}, {"مشروع"}, {"παράδειγμα"}, {"नमूना"}, {"בדיקה"}};
@@ -138,7 +140,7 @@ public class ProjectTests extends BaseTest {
 
     @Test(description = "User should be able to create a Project with a name of maximum allowed length", groups = {"Positive", "CRUD"})
     public void userCreatesProjectWithMaxLengthNameTest() {
-        var maxLengthName = "A".repeat(255);
+        var maxLengthName = "A".repeat(500);
         var validProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), maxLengthName);
 
         projectController.createProject(validProject);
@@ -148,10 +150,9 @@ public class ProjectTests extends BaseTest {
         softy.assertAll();
     }
 
-    // Need to fix bug: 500 server error
-    @Test(description = "User should be able to create a Project with an ID of maximum allowed length", groups = {"Positive", "CRUD", "KnownBugs"})
+    @Test(description = "User should be able to create a Project with an ID of maximum allowed length", groups = {"Positive", "CRUD"})
     public void userCreatesProjectWithMaxLengthIdTest() {
-        var maxLengthId = "A".repeat(255);
+        var maxLengthId = "A".repeat(225);
         var validProject = TestDataGenerator.generate(List.of(), Project.class, maxLengthId, RandomData.getString());
 
         projectController.createProject(validProject);
@@ -160,6 +161,21 @@ public class ProjectTests extends BaseTest {
         softy.assertEquals(createdProject.getId(), validProject.getId(), "Project ID is incorrect");
         softy.assertAll();
     }
+    //To fix 500 (Internal Server Error).
+    @Test(description = "User should not be able to create a Project with an ID longer than 225 characters", groups = {"Negative", "CRUD", "KnownBugs"})
+    public void userCannotCreateProjectWithTooLongIdTest() {
+        var tooLongId = "A".repeat(226);
+        var invalidProject = TestDataGenerator.generate(List.of(), Project.class, tooLongId, RandomData.getString());
+
+        var response = projectController.createInvalidProject(invalidProject);
+
+        response.then().assertThat()
+                .statusCode(HttpStatus.SC_BAD_REQUEST)
+                .body(Matchers.containsString("Project ID \"%s\" is invalid: it is 226 characters long while the maximum length is 225.".formatted(tooLongId)));
+    }
+
+
+
     @Test(description = "User should be able to create a Project with an ID of length 1", groups = {"Positive", "CRUD"})
     public void userCreatesProjectWithOneCharacterIdTest() {
         var validProject = TestDataGenerator.generate(List.of(), Project.class, "A", RandomData.getString());
@@ -171,6 +187,7 @@ public class ProjectTests extends BaseTest {
         softy.assertEquals(createdProject.getName(), validProject.getName(), "Project name is incorrect");
         softy.assertAll();
     }
+
     @Test(description = "User should be able to create a Project with a name of length 1", groups = {"Positive", "CRUD"})
     public void userCreatesProjectWithOneCharacterNameTest() {
         var validProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), "A");
@@ -184,7 +201,6 @@ public class ProjectTests extends BaseTest {
     }
 
 
-
     @Test(description = "User should be able to create a Project with special characters in name", groups = {"Positive", "CRUD"})
     public void userCreatesProjectWithSpecialCharactersInNameTest() {
         var project = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), RandomData.getFullSpecialCharacterString());
@@ -195,6 +211,7 @@ public class ProjectTests extends BaseTest {
         softy.assertEquals(createdProject.getName(), project.getName(), "Project name is incorrect");
         softy.assertAll();
     }
+
     @Test(description = "User should be able to create a Project with an ID containing an underscore", groups = {"Positive", "CRUD"})
     public void userCreatesProjectWithUnderscoreInIdTest() {
         var validProject = TestDataGenerator.generate(List.of(), Project.class, "test_project_123", RandomData.getString());
@@ -206,6 +223,7 @@ public class ProjectTests extends BaseTest {
         softy.assertEquals(createdProject.getName(), validProject.getName(), "Project name is incorrect");
         softy.assertAll();
     }
+
     @Test(description = "User should be able to create a Project with a localized name", groups = {"Positive", "Validation"})
     public void userCreatesProjectWithLocalizedNameTest() {
         var localizedProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), RandomData.getFullLocalizationString());
@@ -216,7 +234,7 @@ public class ProjectTests extends BaseTest {
         softy.assertAll();
     }
 
-// Need to fix 500 server Error
+    // Need to fix 500 server Error
     @Test(description = "User should not be able to create a Project with special characters in ID",
             groups = {"Negative", "CRUD", "KnownBugs"},
             dataProvider = "invalidSpecialCharactersForId")
@@ -230,7 +248,8 @@ public class ProjectTests extends BaseTest {
                 .body(Matchers.containsString("Project ID \"test_%s\" is invalid".formatted(specialChar)))
                 .body(Matchers.containsString("ID should start with a latin letter and contain only latin letters, digits and underscores"));
     }
-//Need to fix 500 error
+
+    //Need to fix 500 error
     @Test(description = "User should not be able to create a Project with a non-Latin ID", groups = {"Negative", "CRUD", "KnownBugs"}, dataProvider = "nonLatinIdProviderForId")
     public void userCannotCreateProjectWithNonLatinIdTest(String invalidId) {
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, invalidId, RandomData.getString());
@@ -250,8 +269,8 @@ public class ProjectTests extends BaseTest {
                 .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .body(Matchers.containsString("Project name cannot be empty"));
     }
-
-    @Test(description = "User should not be able to create Project with empty id", groups = {"Negative", "CRUD"})
+// Need to fix a bug 500 (Internal Server Error).
+    @Test(description = "User should not be able to create Project with empty id", groups = {"Negative", "CRUD", "KnownBugs"})
     public void userCannotCreateProjectWithEmptyIdTest() {
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, "", RandomData.getString());
         Response response = projectController.createInvalidProject(invalidProject);
@@ -259,8 +278,9 @@ public class ProjectTests extends BaseTest {
                 .statusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR)
                 .body(Matchers.containsString("Project ID cannot be empty"));
     }
+
     // Need to fix bug: 500 server error
-    @Test(description = "User should not be able to create a Project with a space as ID", groups = {"Negative", "Validation"})
+    @Test(description = "User should not be able to create a Project with a space as ID", groups = {"Negative", "CRUD", "KnownBugs"})
     public void userCannotCreateProjectWithSpaceAsIdTest() {
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, " ", RandomData.getString());
 
@@ -270,8 +290,9 @@ public class ProjectTests extends BaseTest {
                 .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .body(Matchers.containsString("Project ID must not be empty"));
     }
+
     // Need to fix bug: 500 server error
-    @Test(description = "User should not be able to create a Project with a space as name", groups = {"Negative", "Validation"})
+    @Test(description = "User should not be able to create a Project with a space as name", groups = {"Negative", "CRUD", "KnownBugs"})
     public void userCannotCreateProjectWithSpaceAsNameTest() {
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), " ");
 
@@ -281,6 +302,7 @@ public class ProjectTests extends BaseTest {
                 .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .body(Matchers.containsString("Given project name is empty"));
     }
+
     @Test(description = "User should not be able to create a Project with an existing ID", groups = {"Negative", "CRUD"})
     public void userCannotCreateProjectWithExistingIdTest() {
         projectController.createProject(testData.getProject());
