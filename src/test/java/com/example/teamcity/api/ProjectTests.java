@@ -175,6 +175,16 @@ public class ProjectTests extends BaseTest {
                 .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .body(Matchers.containsString("Invalid project name"));
     }
+    @Test(description = "User should not be able to create a Project with an SQL injection payload in name", groups = {"Negative", "Security"})
+    public void userCannotCreateProjectWithSQLInjectionTest() {
+        var sqlPayload = "'; DROP TABLE projects; --";
+        var invalidProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), sqlPayload);
 
+        var response = projectController.createInvalidProject(invalidProject);
+
+        response.then().assertThat()
+                .statusCode(HttpStatus.SC_BAD_REQUEST)
+                .body(Matchers.containsString("Invalid project name"));
+    }
 
 }
