@@ -74,8 +74,6 @@ public class ProjectTests extends BaseTest {
     }
 
 
-
-
     @Test(description = "User should be able to create a project in Root and nest 20 projects inside it", groups = {"Positive", "CRUD"})
     public void userCreatesProjectInRootWith20NestedProjectsTest() {
         var rootProject = generate(List.of(), Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("_Root", null));
@@ -88,6 +86,7 @@ public class ProjectTests extends BaseTest {
         softy.assertEquals(createdLastNestedProject.getParentProject().getId(), nestedProjects.get(nestedProjects.size() - 2).getId(), "Parent project ID is incorrect");
         softy.assertAll();
     }
+
     @Test(description = "User should be able to create 20 sibling projects under the same parent", groups = {"Positive", "CRUD"})
     public void userCreates20SiblingProjectsTest() {
         projectController.createProject(testData.getProject());
@@ -104,6 +103,7 @@ public class ProjectTests extends BaseTest {
 
         softy.assertAll();
     }
+
     @Test(description = "User should not be able to create a Project with a non-existent parentProject locator", groups = {"Negative", "CRUD"})
     public void userCannotCreateProjectWithNonExistentParentProjectTest() {
         var response = projectController.createInvalidProject(generate(List.of(), Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("non_existent_locator", null)));
@@ -112,6 +112,7 @@ public class ProjectTests extends BaseTest {
                 .statusCode(HttpStatus.SC_NOT_FOUND)
                 .body(Matchers.containsString("Project cannot be found by external id 'non_existent_locator'"));
     }
+
     @Test(description = "User should not be able to create a Project with the same ID as its parent ID", groups = {"Negative", "Validation"})
     public void userCannotCreateProjectWithSameParentIdTest() {
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, testData.getProject().getId(), RandomData.getString(), new ParentProject(testData.getProject().getId(), null));
@@ -122,7 +123,6 @@ public class ProjectTests extends BaseTest {
                 .statusCode(HttpStatus.SC_NOT_FOUND)
                 .body(Matchers.containsString("Project cannot be found by external id '%s'".formatted(testData.getProject().getId())));
     }
-
 
 
     @Test(description = "User should be able to create a Project with a name of maximum allowed length", groups = {"Positive", "CRUD"})
@@ -136,6 +136,7 @@ public class ProjectTests extends BaseTest {
         softy.assertEquals(createdProject.getName(), validProject.getName(), "Project name is incorrect");
         softy.assertAll();
     }
+
     // Need to fix bug: 500 server error
     @Test(description = "User should be able to create a Project with an ID of maximum allowed length", groups = {"Positive", "CRUD"})
     public void userCreatesProjectWithMaxLengthIdTest() {
@@ -146,6 +147,17 @@ public class ProjectTests extends BaseTest {
         var createdProject = projectController.getProject(validProject.getId());
 
         softy.assertEquals(createdProject.getId(), validProject.getId(), "Project ID is incorrect");
+        softy.assertAll();
+    }
+    @Test(description = "User should be able to create a Project with an ID of length 1", groups = {"Positive", "Validation"})
+    public void userCreatesProjectWithOneCharacterIdTest() {
+        var validProject = TestDataGenerator.generate(List.of(), Project.class, "A", RandomData.getString());
+
+        projectController.createProject(validProject);
+        var createdProject = projectController.getProject(validProject.getId());
+
+        softy.assertEquals(createdProject.getId(), validProject.getId(), "Project ID is incorrect");
+        softy.assertEquals(createdProject.getName(), validProject.getName(), "Project name is incorrect");
         softy.assertAll();
     }
 
@@ -166,6 +178,7 @@ public class ProjectTests extends BaseTest {
                 .statusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR)
                 .body(Matchers.containsString("Project ID cannot be empty"));
     }
+
     @Test(description = "User should not be able to create a Project with an existing ID", groups = {"Negative", "CRUD"})
     public void userCannotCreateProjectWithExistingIdTest() {
         projectController.createProject(testData.getProject());
@@ -178,6 +191,7 @@ public class ProjectTests extends BaseTest {
                 .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .body(Matchers.containsString("Project ID \"%s\" is already used by another project".formatted(testData.getProject().getId())));
     }
+
     @Test(description = "User should not be able to create a Project with an existing name", groups = {"Negative", "CRUD"})
     public void userCannotCreateProjectWithExistingNameTest() {
         projectController.createProject(testData.getProject());
@@ -190,6 +204,7 @@ public class ProjectTests extends BaseTest {
                 .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .body(Matchers.containsString("Project with this name already exists: %s".formatted(testData.getProject().getName())));
     }
+
     @Test(description = "User should not be able to create a project without authentication", groups = {"Negative", "Auth"})
     public void userCannotCreateProjectWithoutAuthTest() {
         var unauthProjectController = new ProjectController(Specifications.unauthSpec());
@@ -200,6 +215,7 @@ public class ProjectTests extends BaseTest {
                 .statusCode(HttpStatus.SC_UNAUTHORIZED)
                 .body(Matchers.containsString("Authentication required"));
     }
+
     @Test(description = "User should be able to create a Project with an XSS payload in name (payload stored as text)", groups = {"Positive", "Security"})
     public void userCreatesProjectWithXSSInNameTest() {
         var xssPayload = "<script>alert('XSS')</script>";
