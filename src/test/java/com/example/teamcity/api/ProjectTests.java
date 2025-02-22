@@ -122,8 +122,8 @@ public class ProjectTests extends BaseTest {
         softy.assertEquals(createdProject.getName(), validProject.getName(), "Project name is incorrect");
         softy.assertAll();
     }
-    // Need to fix bug
-    @Test(description = "User should be able to create a Project with an ID of maximum allowed length", groups = {"Positive", "Validation"})
+    // Need to fix bug: 500 server error
+    @Test(description = "User should be able to create a Project with an ID of maximum allowed length", groups = {"Positive", "CRUD"})
     public void userCreatesProjectWithMaxLengthIdTest() {
         var maxLengthId = "A".repeat(255);
         var validProject = TestDataGenerator.generate(List.of(), Project.class, maxLengthId, RandomData.getString());
@@ -186,27 +186,28 @@ public class ProjectTests extends BaseTest {
                 .statusCode(HttpStatus.SC_UNAUTHORIZED)
                 .body(Matchers.containsString("Authentication required"));
     }
-    @Test(description = "User should not be able to create a Project with an XSS payload in name", groups = {"Negative", "Security"})
-    public void userCannotCreateProjectWithXSSInNameTest() {
-        var xssPayload = "<script>alert('XSS')</script>";
-        var invalidProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), xssPayload);
+    @Test(description = "User should be able to create a Project with an XSS payload in name (payload stored as text)", groups = {"Positive", "Security"})
+    public void userCreatesProjectWithXSSInNameTest() {
+        var xssPayload = "<script>alert('XSS1')</script>";
+        var projectWithXSS = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), xssPayload);
 
-        var response = projectController.createInvalidProject(invalidProject);
+        projectController.createProject(projectWithXSS);
+        var createdProject = projectController.getProject(projectWithXSS.getId());
 
-        response.then().assertThat()
-                .statusCode(HttpStatus.SC_BAD_REQUEST)
-                .body(Matchers.containsString("Invalid project name"));
+        softy.assertEquals(createdProject.getName(), xssPayload, "XSS payload was modified or blocked");
+        softy.assertAll();
     }
-    @Test(description = "User should not be able to create a Project with an SQL injection payload in name", groups = {"Negative", "Security"})
-    public void userCannotCreateProjectWithSQLInjectionTest() {
+
+    @Test(description = "User should be able to create a Project with an SQL injection payload in name (payload stored as text)", groups = {"Positive", "Security"})
+    public void userCreatesProjectWithSQLInjectionTest() {
         var sqlPayload = "'; DROP TABLE projects; --";
-        var invalidProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), sqlPayload);
+        var projectWithSQL = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), sqlPayload);
 
-        var response = projectController.createInvalidProject(invalidProject);
+        projectController.createProject(projectWithSQL);
+        var createdProject = projectController.getProject(projectWithSQL.getId());
 
-        response.then().assertThat()
-                .statusCode(HttpStatus.SC_BAD_REQUEST)
-                .body(Matchers.containsString("Invalid project name"));
+        softy.assertEquals(createdProject.getName(), sqlPayload, "SQL injection payload was modified or blocked");
+        softy.assertAll();
     }
 
 }
