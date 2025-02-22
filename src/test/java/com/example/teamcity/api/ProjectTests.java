@@ -43,6 +43,13 @@ public class ProjectTests extends BaseTest {
     public Object[][] nonLatinIdProviderForId() {
         return new Object[][]{{"проект"}, {"项目"}, {"プロジェクト"}, {"مشروع"}, {"παράδειγμα"}, {"नमूना"}, {"בדיקה"}};
     }
+    @DataProvider
+    public Object[][] invalidIdStartId() {
+        return new Object[][]{
+                {"_invalidId"},
+                {"1invalidId"},
+        };
+    }
 
     @Test(description = "User should be able to create a project with the minimum required fields", groups = {"Positive", "CRUD"})
     public void userCreatesProjectWithMandatoryFieldsTest() {
@@ -372,6 +379,20 @@ public class ProjectTests extends BaseTest {
 
         softy.assertEquals(createdProject.getName(), validProject.getName(), "Project name is incorrect");
         softy.assertAll();
+    }
+
+
+    @Test(description = "User should not be able to create a Project with an ID starting with an underscore or a digit",
+            groups = {"Negative", "CRUD", "KnownBugs"}, dataProvider = "invalidIdStartId")
+    public void userCannotCreateProjectWithInvalidStartingCharacterIdTest(String invalidId) {
+        var invalidProject = TestDataGenerator.generate(List.of(), Project.class, invalidId, RandomData.getString());
+
+        var response = projectController.createInvalidProject(invalidProject);
+
+        response.then().assertThat()
+                .statusCode(HttpStatus.SC_BAD_REQUEST)
+                .body(Matchers.containsString("Project ID \"%s\" is invalid".formatted(invalidId)))
+                .body(Matchers.containsString("ID should start with a latin letter and contain only latin letters, digits and underscores"));
     }
 
     @Test(description = "User should not be able to create a project without authentication", groups = {"Negative", "Auth"})
