@@ -11,7 +11,7 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * Singletone
+ * Хранит созданные сущности для последующего удаления
  */
 public class TestDataStorage {
     private static TestDataStorage testDataStorage;
@@ -58,7 +58,7 @@ public class TestDataStorage {
         addCreatedEntity(endpoint, getEntityIdOrLocator(model));
     }
 
-    //???
+
     public void deleteCreatedEntities() {
         createdEntitiesMap.forEach(((endpoint, ids) ->
                         ids.forEach(id ->

@@ -468,6 +468,18 @@ public class ProjectTests extends BaseTest {
     }
 
 
+    @Test(description = "User should be able to create a Project without specifying a name", groups = {"Positive", "CRUD"})
+    public void userCreatesProjectWithoutNameTest() {
+        var projectId = RandomData.getString();
+        var projectWithoutName = TestDataGenerator.generate(List.of(), Project.class, projectId, null);
+
+        var response = projectController.createInvalidProject(projectWithoutName);
+
+        response.then().assertThat()
+                .statusCode(HttpStatus.SC_OK)
+                .body("id", Matchers.equalTo(projectId))
+                .body("name", Matchers.notNullValue()); // Проверяем, что имя не осталось пустым
+    }
 
 
 

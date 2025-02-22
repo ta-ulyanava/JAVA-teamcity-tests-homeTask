@@ -1,13 +1,13 @@
 package com.example.teamcity.api.controllers;
 
 import com.example.teamcity.api.enums.Endpoint;
+import com.example.teamcity.api.generators.RandomData;
+import com.example.teamcity.api.generators.TestDataGenerator;
 import com.example.teamcity.api.generators.TestDataStorage;
 import com.example.teamcity.api.models.ParentProject;
 import com.example.teamcity.api.models.Project;
 import com.example.teamcity.api.requests.CheckedRequest;
 import com.example.teamcity.api.requests.UncheckedRequest;
-import com.example.teamcity.api.generators.RandomData;
-import com.example.teamcity.api.generators.TestDataGenerator;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 
@@ -32,6 +32,7 @@ public class ProjectController {
     public Project getProjectById(String projectId) {
         return checkedRequest.<Project>getRequest(Endpoint.PROJECTS).read(projectId);
     }
+
     public Project getProjectByName(String projectName) {
         return checkedRequest.<Project>getRequest(Endpoint.PROJECTS).read(projectName);
     }

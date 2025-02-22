@@ -11,11 +11,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
 import lombok.Builder;
 
 public final class TestDataGenerator {
 
-    private TestDataGenerator() {}
+    private TestDataGenerator() {
+    }
 
     /**
      * Универсальный генератор тестовых данных.
@@ -33,26 +35,26 @@ public final class TestDataGenerator {
                 boolean hasDefault = field.isAnnotationPresent(Builder.Default.class);
                 boolean isOptional = field.isAnnotationPresent(Optional.class);
 
-                // 🔥 **Обработка `@Optional`**
+                // Обрабатываем @Optional
                 if (isOptional && !isParamAvailable && !hasDefault) {
                     field.set(instance, null);
                     continue;
                 }
 
-                // ✅ **Обрабатываем @Parameterizable**
+                // Обрабатываем @Parameterizable
                 if (field.isAnnotationPresent(Parameterizable.class) && isParamAvailable) {
                     field.set(instance, parameters[paramIndex]);
                     paramIndex++;
                     continue;
                 }
 
-                // ✅ **Обрабатываем @Random**
+                // Обрабатываем @Random
                 if (field.isAnnotationPresent(Random.class) && field.getType().equals(String.class)) {
                     field.set(instance, RandomData.getString());
                     continue;
                 }
 
-                // ✅ **Обрабатываем Boolean**
+                // Обрабатываем Boolean
                 if (field.getType().equals(Boolean.class)) {
                     if (isParamAvailable) {
                         field.set(instance, parameters[paramIndex]);
@@ -65,7 +67,7 @@ public final class TestDataGenerator {
                     continue;
                 }
 
-                // ✅ **Обрабатываем String**
+                // Обрабатываем String
                 if (field.getType().equals(String.class)) {
                     if (isParamAvailable) {
                         field.set(instance, parameters[paramIndex]);
@@ -78,7 +80,7 @@ public final class TestDataGenerator {
                     continue;
                 }
 
-                // ✅ **Обрабатываем списки (`List<T>`)**
+                // Обрабатываем списки (`List<T>`)
                 if (List.class.isAssignableFrom(field.getType())) {
                     var genericType = (Class<?>) ((java.lang.reflect.ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
 
@@ -103,7 +105,7 @@ public final class TestDataGenerator {
                     continue;
                 }
 
-                // ✅ **Обрабатываем вложенные объекты**
+                // Обрабатываем вложенные объекты
                 if (BaseModel.class.isAssignableFrom(field.getType())) {
                     if (isParamAvailable) {
                         field.set(instance, parameters[paramIndex]);
@@ -120,7 +122,8 @@ public final class TestDataGenerator {
                 }
             }
             return instance;
-        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
+                 NoSuchMethodException e) {
             throw new IllegalStateException("Cannot generate test data", e);
         }
     }
@@ -143,7 +146,8 @@ public final class TestDataGenerator {
                 field.setAccessible(false);
             }
             return instance;
-        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
+                 NoSuchMethodException e) {
             throw new IllegalStateException("Cannot generate test data", e);
         }
     }
