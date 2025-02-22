@@ -68,5 +68,24 @@ public class ProjectTests extends BaseTest {
         softy.assertEquals(createdSecondProject.getParentProject().getId(), testData.getProject().getId(), "Parent project ID is incorrect");
         softy.assertAll();
     }
+    @Test(description = "User should be able to create a max amount of nested projects", groups = {"Positive", "CRUD", "CornerCase"})
+    public void userCreatesMaxAmountNestedProjectsTest() {
+        projectController.createProject(testData.getProject());
+
+        int maxNestedProjects = 10; // или другое максимальное число, зависящее от требований
+        var nestedProjects = projectController.createNestedProjects(testData.getProject().getId(), maxNestedProjects);
+
+        // Проверяем, что действительно создалось нужное количество вложенных проектов
+        softy.assertEquals(nestedProjects.size(), maxNestedProjects, "The number of nested projects is incorrect");
+
+        // Проверяем, что каждый проект вложен в предыдущий
+        for (int i = 1; i < nestedProjects.size(); i++) {
+            var parentProject = projectController.getProject(nestedProjects.get(i).getParentProject().getId());
+            softy.assertEquals(parentProject.getId(), nestedProjects.get(i - 1).getId(), "Parent project ID is incorrect for project " + nestedProjects.get(i).getId());
+        }
+
+        softy.assertAll();
+    }
+
 
 }
