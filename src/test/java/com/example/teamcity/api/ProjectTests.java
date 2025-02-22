@@ -37,34 +37,13 @@ public class ProjectTests extends BaseTest {
 
         superUserCheckRequests.getRequest(Endpoint.USERS).create(testData.getUser());
         var userCheckRequests = new CheckedRequests(Specifications.authSpec(testData.getUser()));
-
-        var projectWithCopyAll = generate(
-                Arrays.asList(testData.getProject()),
-                Project.class,
-                testData.getProject().getId(),
-                testData.getProject().getName(),
-                null,
-                true
-        );
-
+        var projectWithCopyAll = generate(Arrays.asList(testData.getProject()), Project.class, testData.getProject().getId(), testData.getProject().getName(), null, true);
         userCheckRequests.<Project>getRequest(Endpoint.PROJECTS).create(projectWithCopyAll);
-
         var createdProject = userCheckRequests.<Project>getRequest(Endpoint.PROJECTS).read(projectWithCopyAll.getId());
-
-
         softy.assertEquals(projectWithCopyAll.getId(), createdProject.getId(), "Project ID does not match");
         softy.assertEquals(projectWithCopyAll.getName(), createdProject.getName(), "Project name does not match");
 
     }
-
-
-
-
-
-
-
-
-
 
 
 }
