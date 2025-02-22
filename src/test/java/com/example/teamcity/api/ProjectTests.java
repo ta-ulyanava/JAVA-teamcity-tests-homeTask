@@ -160,7 +160,17 @@ public class ProjectTests extends BaseTest {
         softy.assertEquals(createdProject.getName(), validProject.getName(), "Project name is incorrect");
         softy.assertAll();
     }
+    @Test(description = "User should be able to create a Project with a name of length 1", groups = {"Positive", "Validation"})
+    public void userCreatesProjectWithOneCharacterNameTest() {
+        var validProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), "A");
 
+        projectController.createProject(validProject);
+        var createdProject = projectController.getProject(validProject.getId());
+
+        softy.assertEquals(createdProject.getId(), validProject.getId(), "Project ID is incorrect");
+        softy.assertEquals(createdProject.getName(), validProject.getName(), "Project name is incorrect");
+        softy.assertAll();
+    }
     @Test(description = "User should not be able to create Project with empty name", groups = {"Negative", "CRUD"})
     public void userCannotCreateProjectWithEmptyNameTest() {
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), "");
