@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 
 @Data
 @Builder
-
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)

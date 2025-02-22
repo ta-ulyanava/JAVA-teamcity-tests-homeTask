@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonInclude(JsonInclude.Include.NON_NULL)  // Исключаем null-поля из JSON
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class Project extends BaseModel {
     @Random
     @Parameterizable
@@ -28,5 +28,5 @@ public class Project extends BaseModel {
     @Optional
     private ParentProject parentProject;
 
-    private Boolean copyAllAssociatedSettings; // ❌ Убрали @Builder.Default
+    private Boolean copyAllAssociatedSettings;
 }
