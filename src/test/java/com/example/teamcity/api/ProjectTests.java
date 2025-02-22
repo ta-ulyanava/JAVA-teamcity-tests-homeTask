@@ -8,6 +8,8 @@ import com.example.teamcity.api.models.Project;
 import com.example.teamcity.api.requests.CheckedRequests;
 import com.example.teamcity.api.requests.unchecked.UncheckedBase;
 import com.example.teamcity.api.spec.Specifications;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpStatus;
 import org.hamcrest.Matchers;
 import org.testng.annotations.Test;
@@ -29,6 +31,34 @@ public class ProjectTests extends BaseTest {
         softy.assertEquals(testData.getProject().getId(), createdProject.getId(), "Project id is not correct");
         softy.assertEquals(testData.getProject().getName(), createdProject.getName(), "Project name is not correct");
     }
+
+    @Test(description = "User should be able to create Project with copyAllAssociatedSettings set to true", groups = {"Positive", "CRUD"})
+    public void userCreatesProjectWithCopyAllAssociatedSettingsTest() throws JsonProcessingException {
+
+        superUserCheckRequests.getRequest(Endpoint.USERS).create(testData.getUser());
+        var userCheckRequests = new CheckedRequests(Specifications.authSpec(testData.getUser()));
+
+        var projectWithCopyAll = generate(
+                Arrays.asList(testData.getProject()),
+                Project.class,
+                testData.getProject().getId(),
+                testData.getProject().getName(),
+                null,
+                true
+        );
+
+        userCheckRequests.<Project>getRequest(Endpoint.PROJECTS).create(projectWithCopyAll);
+
+        var createdProject = userCheckRequests.<Project>getRequest(Endpoint.PROJECTS).read(projectWithCopyAll.getId());
+
+
+        softy.assertEquals(projectWithCopyAll.getId(), createdProject.getId(), "Project ID does not match");
+        softy.assertEquals(projectWithCopyAll.getName(), createdProject.getName(), "Project name does not match");
+
+    }
+
+
+
 
 
 

@@ -17,7 +17,7 @@ public class ParentProject extends BaseModel {
     private String id;
     private String locator;
 
-    public static ParentProject defaultRoot() {
+    /*public static ParentProject defaultRoot() {
         return ParentProject.builder().locator("_Root").build();
-    }
+    }*/
 }
