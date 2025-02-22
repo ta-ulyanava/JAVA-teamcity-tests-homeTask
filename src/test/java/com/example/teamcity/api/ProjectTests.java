@@ -339,6 +339,8 @@ public class ProjectTests extends BaseTest {
                 .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .body(Matchers.containsString("Project with this name already exists: %s".formatted(duplicateName)));
     }
+
+
     @Test(description = "User should not be able to create a Project with an existing ID in a different case", groups = {"Negative", "CRUD"})
     public void userCannotCreateProjectWithExistingIdDifferentCaseTest() {
         projectController.createProject(testData.getProject());
@@ -350,8 +352,27 @@ public class ProjectTests extends BaseTest {
                 .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .body(Matchers.containsString("Project ID \"%s\" is already used by another project".formatted(duplicateId)));
     }
+    @Test(description = "User should not be able to create a Project with an ID consisting only of digits", groups = {"Negative", "CRUD", "KnownBugs"})
+    public void userCannotCreateProjectWithDigitsOnlyIdTest() {
+        var invalidProject = TestDataGenerator.generate(List.of(), Project.class, "123456", RandomData.getString());
 
+        var response = projectController.createInvalidProject(invalidProject);
 
+        response.then().assertThat()
+                .statusCode(HttpStatus.SC_BAD_REQUEST)
+                .body(Matchers.containsString("Project ID \"123456\" is invalid"))
+                .body(Matchers.containsString("ID should start with a latin letter and contain only latin letters, digits and underscores"));
+    }
+    @Test(description = "User should be able to create a Project with a name consisting only of digits", groups = {"Positive", "Validation"})
+    public void userCreatesProjectWithDigitsOnlyNameTest() {
+        var validProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), "123456");
+
+        projectController.createProject(validProject);
+        var createdProject = projectController.getProject(validProject.getId());
+
+        softy.assertEquals(createdProject.getName(), validProject.getName(), "Project name is incorrect");
+        softy.assertAll();
+    }
 
     @Test(description = "User should not be able to create a project without authentication", groups = {"Negative", "Auth"})
     public void userCannotCreateProjectWithoutAuthTest() {
