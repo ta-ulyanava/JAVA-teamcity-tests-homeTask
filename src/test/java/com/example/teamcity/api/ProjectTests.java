@@ -101,5 +101,18 @@ public class ProjectTests extends BaseTest {
                 .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .body(Matchers.containsString("Project ID \"%s\" is already used by another project".formatted(testData.getProject().getId())));
     }
+    @Test(description = "User should not be able to create a Project with an existing name", groups = {"Negative", "CRUD"})
+    public void userCannotCreateProjectWithExistingNameTest() {
+        projectController.createProject(testData.getProject());
+
+        var duplicateProject = TestDataGenerator.generate(List.of(testData.getProject()), Project.class, RandomData.getString(), testData.getProject().getName());
+
+        Response response = projectController.createInvalidProject(duplicateProject);
+
+        response.then().assertThat()
+                .statusCode(HttpStatus.SC_BAD_REQUEST)
+                .body(Matchers.containsString("Project with this name already exists: %s".formatted(testData.getProject().getName())));
+    }
+
 
 }
