@@ -328,6 +328,19 @@ public class ProjectTests extends BaseTest {
                 .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .body(Matchers.containsString("Project with this name already exists: %s".formatted(testData.getProject().getName())));
     }
+    @Test(description = "User should not be able to create a Project with an existing name in a different case", groups = {"Negative", "CRUD"})
+    public void userCannotCreateProjectWithExistingNameDifferentCaseTest() {
+        projectController.createProject(testData.getProject());
+
+        var duplicateName = testData.getProject().getName().toUpperCase();
+        var response = projectController.createInvalidProject(TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), duplicateName));
+
+        response.then().assertThat()
+                .statusCode(HttpStatus.SC_BAD_REQUEST)
+                .body(Matchers.containsString("Project with this name already exists: %s".formatted(duplicateName)));
+    }
+
+
 
     @Test(description = "User should not be able to create a project without authentication", groups = {"Negative", "Auth"})
     public void userCannotCreateProjectWithoutAuthTest() {
