@@ -111,7 +111,29 @@ public class ProjectTests extends BaseTest {
 
         softy.assertAll();
     }
+    @Test(description = "User should be able to create a Project with a name of maximum allowed length", groups = {"Positive", "CRUD"})
+    public void userCreatesProjectWithMaxLengthNameTest() {
+        var maxLengthName = "A".repeat(255);
+        var validProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), maxLengthName);
 
+        projectController.createProject(validProject);
+        var createdProject = projectController.getProject(validProject.getId());
+
+        softy.assertEquals(createdProject.getName(), validProject.getName(), "Project name is incorrect");
+        softy.assertAll();
+    }
+    // Need to fix bug
+    @Test(description = "User should be able to create a Project with an ID of maximum allowed length", groups = {"Positive", "Validation"})
+    public void userCreatesProjectWithMaxLengthIdTest() {
+        var maxLengthId = "A".repeat(255);
+        var validProject = TestDataGenerator.generate(List.of(), Project.class, maxLengthId, RandomData.getString());
+
+        projectController.createProject(validProject);
+        var createdProject = projectController.getProject(validProject.getId());
+
+        softy.assertEquals(createdProject.getId(), validProject.getId(), "Project ID is incorrect");
+        softy.assertAll();
+    }
 
     @Test(description = "User should not be able to create Project with empty name", groups = {"Negative", "CRUD"})
     public void userCannotCreateProjectWithEmptyNameTest() {
