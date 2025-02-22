@@ -5,6 +5,7 @@ import com.example.teamcity.api.controllers.ProjectController;
 import com.example.teamcity.api.enums.Endpoint;
 import com.example.teamcity.api.generators.RandomData;
 import com.example.teamcity.api.generators.TestDataGenerator;
+import com.example.teamcity.api.models.ParentProject;
 import com.example.teamcity.api.models.Project;
 import com.example.teamcity.api.spec.Specifications;
 import io.restassured.response.Response;
@@ -71,6 +72,18 @@ public class ProjectTests extends BaseTest {
         }
         softy.assertAll();
     }
+
+
+    @Test(description = "User should not be able to create a Project with a non-existent parentProject locator", groups = {"Negative", "CRUD"})
+    public void userCannotCreateProjectWithNonExistentParentProjectTest() {
+        var response = projectController.createInvalidProject(generate(List.of(), Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("non_existent_locator", null)));
+
+        response.then().assertThat()
+                .statusCode(HttpStatus.SC_NOT_FOUND)
+                .body(Matchers.containsString("Project cannot be found by external id 'non_existent_locator'"));
+    }
+
+
 
     @Test(description = "User should not be able to create Project with empty name", groups = {"Negative", "CRUD"})
     public void userCannotCreateProjectWithEmptyNameTest() {
