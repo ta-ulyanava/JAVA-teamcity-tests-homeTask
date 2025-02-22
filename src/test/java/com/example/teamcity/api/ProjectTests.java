@@ -370,7 +370,7 @@ public class ProjectTests extends BaseTest {
                 .body(Matchers.containsString("Project ID \"123456\" is invalid"))
                 .body(Matchers.containsString("ID should start with a latin letter and contain only latin letters, digits and underscores"));
     }
-    @Test(description = "User should be able to create a Project with a name consisting only of digits", groups = {"Positive", "Validation"})
+    @Test(description = "User should be able to create a Project with a name consisting only of digits", groups = {"Positive", "CRUD"})
     public void userCreatesProjectWithDigitsOnlyNameTest() {
         var validProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), "123456");
 
@@ -433,7 +433,7 @@ public class ProjectTests extends BaseTest {
         softy.assertAll();
     }
     @Test(description = "User should not be able to create a Project without an ID",
-            groups = {"Negative", "Validation"})
+            groups = {"Negative", "CRUD"})
     public void userCannotCreateProjectWithoutIdTest() {
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, null, RandomData.getString());
 
@@ -481,7 +481,7 @@ public class ProjectTests extends BaseTest {
                 .body("name", Matchers.notNullValue()); // Проверяем, что имя не осталось пустым
     }
 
-    @Test(description = "User should not be able to create a Project without specifying a name", groups = {"Negative", "Validation"})
+    @Test(description = "User should not be able to create a Project without specifying a name", groups = {"Negative", "CRUD"})
     public void userCannotCreateProjectWithoutNameTest() {
         var projectWithoutName = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), null);
 
