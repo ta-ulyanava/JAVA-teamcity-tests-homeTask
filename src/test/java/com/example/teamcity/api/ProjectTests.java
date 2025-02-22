@@ -87,7 +87,7 @@ public class ProjectTests extends BaseTest {
     }
 
 
-    @Test(description = "User should be able to create a project in Root and nest 20 projects inside it", groups = {"Positive", "CRUD"})
+    @Test(description = "User should be able to create a project in Root and nest 20 projects inside it", groups = {"Positive", "CRUD", "CornerCase"})
     public void userCreatesProjectInRootWith20NestedProjectsTest() {
         var rootProject = generate(List.of(), Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("_Root", null));
         projectController.createProject(rootProject);
@@ -100,7 +100,7 @@ public class ProjectTests extends BaseTest {
         softy.assertAll();
     }
 
-    @Test(description = "User should be able to create 20 sibling projects under the same parent", groups = {"Positive", "CRUD"})
+    @Test(description = "User should be able to create 20 sibling projects under the same parent", groups = {"Positive", "CRUD", "CornerCase"})
     public void userCreates20SiblingProjectsTest() {
         projectController.createProject(testData.getProject());
 
@@ -126,7 +126,7 @@ public class ProjectTests extends BaseTest {
                 .body(Matchers.containsString("Project cannot be found by external id 'non_existent_locator'"));
     }
 
-    @Test(description = "User should not be able to create a Project with the same ID as its parent ID", groups = {"Negative", "Validation"})
+    @Test(description = "User should not be able to create a Project with the same ID as its parent ID", groups = {"Negative", "СRUD"})
     public void userCannotCreateProjectWithSameParentIdTest() {
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, testData.getProject().getId(), RandomData.getString(), new ParentProject(testData.getProject().getId(), null));
 
@@ -138,8 +138,8 @@ public class ProjectTests extends BaseTest {
     }
 
 
-    @Test(description = "User should be able to create a Project with a name of maximum allowed length", groups = {"Positive", "CRUD"})
-    public void userCreatesProjectWithMaxLengthNameTest() {
+    @Test(description = "User should be able to create a Project with a name of 500 characters", groups = {"Positive", "CRUD", "CornerCase"})
+    public void userCreatesProjectWith500LengthNameTest() {
         var maxLengthName = "A".repeat(500);
         var validProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), maxLengthName);
 
@@ -162,7 +162,7 @@ public class ProjectTests extends BaseTest {
         softy.assertAll();
     }
     //To fix 500 (Internal Server Error).
-    @Test(description = "User should not be able to create a Project with an ID longer than 225 characters", groups = {"Negative", "CRUD", "KnownBugs"})
+    @Test(description = "User should not be able to create a Project with an ID longer than 225 characters", groups = {"Negative", "CRUD", "KnownBugs", "CornerCase"})
     public void userCannotCreateProjectWithTooLongIdTest() {
         var tooLongId = "A".repeat(226);
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, tooLongId, RandomData.getString());
@@ -224,7 +224,7 @@ public class ProjectTests extends BaseTest {
         softy.assertAll();
     }
 
-    @Test(description = "User should be able to create a Project with a localized name", groups = {"Positive", "Validation"})
+    @Test(description = "User should be able to create a Project with a localized name", groups = {"Positive", "CRUD"})
     public void userCreatesProjectWithLocalizedNameTest() {
         var localizedProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), RandomData.getFullLocalizationString());
         projectController.createProject(localizedProject);
