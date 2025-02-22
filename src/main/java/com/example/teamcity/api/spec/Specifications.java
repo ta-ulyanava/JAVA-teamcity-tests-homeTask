@@ -49,56 +49,27 @@ public class Specifications {
 
     /**
      * Метод создаёт спецификацию без аутентификации
-     *
      */
-//    Просто вызывает reqBuilder(), создаёт RequestSpecification без авторизации.
-//    Используется для публичных API-запросов
-//    Фраза "Метод создаёт спецификацию без аутентификации" означает, что этот метод (unauthSpec())
-//    возвращает настройки для запросов, в которых отсутствует информация о логине и пароле.
-//    Вызывает reqBuilder(), который:
-//    Устанавливает базовый URL.
-//    Добавляет Content-Type: JSON (формат данных).
-//    Включает логирование запросов и ответов.
-
-  /*  public static RequestSpecification unauthSpec() {
-        var requestBuilder=reqBuilder();
-        return reqBuilder()
-// Вызывает .build(), что создаёт готовую спецификацию.
-                .build();
-    }*/
     public static RequestSpecification unauthSpec() {
         return new RequestSpecBuilder()
-                .setBaseUri("http://" + Config.getProperty("host"))  // Используем HTTP вместо HTTPS
+                .setBaseUri("http://" + Config.getProperty("host"))
                 .setContentType(ContentType.JSON)
                 .setAccept(ContentType.JSON)
-                .setRelaxedHTTPSValidation()  // Отключаем проверку сертификатов
+                .setRelaxedHTTPSValidation()
                 .addFilters(List.of(new RequestLoggingFilter(), new ResponseLoggingFilter()))
                 .build();
     }
 
+    public static RequestSpecification authSpec(User user) {
+        var requestBuilder = reqBuilder();
+        requestBuilder.setBaseUri("http://%s:%s@%s".formatted(user.getUsername(), user.getPassword(), Config.getProperty("host")));
+        return requestBuilder.build();
+    }
 
-    /*public RequestSpecification authSpec(User user) {
-        //Создаёт объект BasicAuthScheme (это класс для Basic Authentication)
-        BasicAuthScheme basicAuthScheme = new BasicAuthScheme();
-        //Устанавливает логин и пароль пользователя
-        basicAuthScheme.setUserName(user.getUser());
-        basicAuthScheme.setPassword(user.getPassword());
-        //Передаёт эту аутентификацию в reqBuilder()
-        return reqBuilder()
-                .setAuth(basicAuthScheme)
-                .build();
-    }*/
-public static RequestSpecification authSpec(User user){
-    var requestBuilder=reqBuilder();
-    // ???
-    requestBuilder.setBaseUri("http://%s:%s@%s".formatted(user.getUsername(), user.getPassword(), Config.getProperty("host")));
-    return requestBuilder.build();
-}
-
-public static RequestSpecification superUserAuthSpec(){
-    var requestBuilder=reqBuilder();
-    requestBuilder.setBaseUri("http://:%s@%s".formatted(Config.getProperty("superUserToken"), Config.getProperty("host")));
-    return requestBuilder.build();
-}
+    public static RequestSpecification superUserAuthSpec() {
+        var requestBuilder = reqBuilder();
+        requestBuilder.setBaseUri("http://:%s@%s".formatted(Config.getProperty("superUserToken"), Config.getProperty("host")));
+        return requestBuilder.build();
+    }
 
 }

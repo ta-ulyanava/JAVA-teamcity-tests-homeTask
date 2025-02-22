@@ -9,24 +9,24 @@ import com.example.teamcity.api.requests.unchecked.UncheckedBase;
 import io.restassured.specification.RequestSpecification;
 import org.apache.http.HttpStatus;
 
-@SuppressWarnings("unchecked") //убираем предупреждения о неверном кастовании
 public final class CheckedBase<T extends BaseModel> extends Request implements CrudInterface {
-
     private final UncheckedBase uncheckedBase;
-
 
     public CheckedBase(RequestSpecification spec, Endpoint endpoint) {
         super(spec, endpoint);
-
+        // Чтобы не дублировать все запросы, мы просто обращаемся к анчектбейс
         this.uncheckedBase = new UncheckedBase(spec, endpoint);
     }
+
 
     @Override
     public T create(BaseModel model) {
         var createdModel = (T) uncheckedBase
                 .create(model)
                 .then().assertThat().statusCode(HttpStatus.SC_OK)
+
                 .extract().as(endpoint.getModelClass());
+
 
         TestDataStorage.getInstance().addCreatedEntity(endpoint, createdModel);
         return createdModel;
