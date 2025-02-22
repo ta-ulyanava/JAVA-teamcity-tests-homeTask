@@ -154,6 +154,17 @@ public class ProjectTests extends BaseTest {
                 .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .body(Matchers.containsString("Project with this name already exists: %s".formatted(testData.getProject().getName())));
     }
+    @Test(description = "User should not be able to create a project without authentication", groups = {"Negative", "Auth"})
+    public void userCannotCreateProjectWithoutAuthTest() {
+        var unauthProjectController = new ProjectController(Specifications.unauthSpec());
+        var invalidProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), RandomData.getString());
+        var response = unauthProjectController.createInvalidProject(invalidProject);
+
+        response.then().assertThat()
+                .statusCode(HttpStatus.SC_UNAUTHORIZED)
+                .body(Matchers.containsString("Authentication required"));
+    }
+
 
 
 }
