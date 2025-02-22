@@ -3,8 +3,6 @@ package com.example.teamcity.api;
 import com.example.teamcity.BaseTest;
 import com.example.teamcity.api.controllers.ProjectController;
 import com.example.teamcity.api.enums.Endpoint;
-import com.example.teamcity.api.generators.RandomData;
-import com.example.teamcity.api.models.ParentProject;
 import com.example.teamcity.api.models.Project;
 import com.example.teamcity.api.spec.Specifications;
 import org.testng.annotations.BeforeMethod;
@@ -59,9 +57,8 @@ public class ProjectTests extends BaseTest {
     public void userCreatesSecondProjectWithParentProjectTest() {
         projectController.createProject(testData.getProject());
 
-        // Создаем вложенные проекты (1 проект с родителем testData.getProject())
         var nestedProjects = projectController.createNestedProjects(testData.getProject().getId(), 1);
-        var secondProject = nestedProjects.get(0); // Берем созданный проект
+        var secondProject = nestedProjects.get(0);
 
         var createdSecondProject = projectController.getProject(secondProject.getId());
 
@@ -75,10 +72,8 @@ public class ProjectTests extends BaseTest {
         int maxNestedProjects = 10; // или другое максимальное число, зависящее от требований
         var nestedProjects = projectController.createNestedProjects(testData.getProject().getId(), maxNestedProjects);
 
-        // Проверяем, что действительно создалось нужное количество вложенных проектов
-        softy.assertEquals(nestedProjects.size(), maxNestedProjects, "The number of nested projects is incorrect");
 
-        // Проверяем, что каждый проект вложен в предыдущий
+        softy.assertEquals(nestedProjects.size(), maxNestedProjects, "The number of nested projects is incorrect");
         for (int i = 1; i < nestedProjects.size(); i++) {
             var parentProject = projectController.getProject(nestedProjects.get(i).getParentProject().getId());
             softy.assertEquals(parentProject.getId(), nestedProjects.get(i - 1).getId(), "Parent project ID is incorrect for project " + nestedProjects.get(i).getId());
