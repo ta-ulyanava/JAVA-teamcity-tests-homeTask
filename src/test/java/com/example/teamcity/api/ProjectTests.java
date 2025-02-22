@@ -12,6 +12,7 @@ import io.restassured.response.Response;
 import org.apache.http.HttpStatus;
 import org.hamcrest.Matchers;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.util.Arrays;
@@ -29,6 +30,12 @@ public class ProjectTests extends BaseTest {
         super.beforeTest();
         superUserCheckRequests.getRequest(Endpoint.USERS).create(testData.getUser());
         projectController = new ProjectController(Specifications.authSpec(testData.getUser()));
+    }
+    @DataProvider(name = "invalidSpecialCharactersForId")
+    public static Object[][] invalidSpecialCharactersForId() {
+        return "!@#$%^&*()+-={}[]:\\".chars()
+                .mapToObj(c -> new Object[]{String.valueOf((char) c)})
+                .toArray(Object[][]::new);
     }
 
     @Test(description = "User should be able to create a project with the minimum required fields", groups = {"Positive", "CRUD"})
@@ -171,6 +178,37 @@ public class ProjectTests extends BaseTest {
         softy.assertEquals(createdProject.getName(), validProject.getName(), "Project name is incorrect");
         softy.assertAll();
     }
+
+
+
+    @Test(description = "User should be able to create a Project with special characters in name", groups = {"Positive", "Validation"})
+    public void userCreatesProjectWithSpecialCharactersInNameTest() {
+        var project = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), RandomData.getFullSpecialCharacterString());
+        projectController.createProject(project);
+        var createdProject = projectController.getProject(project.getId());
+
+        softy.assertEquals(createdProject.getId(), project.getId(), "Project ID is incorrect");
+        softy.assertEquals(createdProject.getName(), project.getName(), "Project name is incorrect");
+        softy.assertAll();
+    }
+
+
+// Need to fix 500 server Error
+    @Test(description = "User should not be able to create a Project with special characters in ID",
+            groups = {"Negative", "CRUD"},
+            dataProvider = "invalidSpecialCharactersForId")
+    public void userCannotCreateProjectWithEachSpecialCharacterInIdTest(String specialChar) {
+        var invalidProject = TestDataGenerator.generate(List.of(), Project.class, "test_" + specialChar, "ValidName");
+
+        var response = projectController.createInvalidProject(invalidProject);
+
+        response.then().assertThat()
+                .statusCode(HttpStatus.SC_BAD_REQUEST)
+                .body(Matchers.containsString("Project ID \"test_%s\" is invalid".formatted(specialChar)))
+                .body(Matchers.containsString("ID should start with a latin letter and contain only latin letters, digits and underscores"));
+    }
+
+
     @Test(description = "User should not be able to create Project with empty name", groups = {"Negative", "CRUD"})
     public void userCannotCreateProjectWithEmptyNameTest() {
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), "");
