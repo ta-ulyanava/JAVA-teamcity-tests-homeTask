@@ -1,7 +1,10 @@
 package com.example.teamcity.api.models;
 
+import com.example.teamcity.api.annotations.Optional;
+import com.example.teamcity.api.annotations.Parameterizable;
 import com.example.teamcity.api.annotations.Random;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,11 +15,21 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Project extends BaseModel{
+@JsonInclude(JsonInclude.Include.NON_NULL)  // Исключаем `null`-поля из JSON
+public class Project extends BaseModel {
     @Random
+    @Parameterizable
     private String id;
-    @Random
-    private String name;
-    private String locator;
 
+    @Random
+    @Parameterizable
+    private String name;
+
+    @Optional
+    @JsonInclude(JsonInclude.Include.NON_NULL)  // Убираем поле, если оно `null`
+    private ParentProject parentProject;
+
+    @Optional
+    @JsonInclude(JsonInclude.Include.NON_NULL)  // Убираем поле, если оно `null`
+    private Boolean copyAllAssociatedSettings;
 }

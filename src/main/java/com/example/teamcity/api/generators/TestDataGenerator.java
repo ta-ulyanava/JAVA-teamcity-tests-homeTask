@@ -4,12 +4,13 @@ import com.example.teamcity.api.annotations.Optional;
 import com.example.teamcity.api.annotations.Parameterizable;
 import com.example.teamcity.api.annotations.Random;
 import com.example.teamcity.api.models.BaseModel;
+import com.example.teamcity.api.models.ParentProject;
 import com.example.teamcity.api.models.TestData;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -21,73 +22,90 @@ public final class TestDataGenerator {
     /**
      * Основной метод генерации тестовых данных.
      *
-     * Если у поля аннотация Optional, оно пропускается, иначе:
-     *
-     * 1) если у поля аннотация Parameterizable, и в метод были переданы параметры, то поочередно (по мере встречи полей с
-     *     этой аннотацией) устанавливаются переданные параметры. То есть, если по ходу генерации было пройдено 4 поля с
-     *     аннотацией Parameterizable, но параметров в метод было передано 3, то значения будут установлены только у первых
-     *     трех встретившихся элементов в порядке их передачи в метод. Поэтому также важно следить за порядком полей
-     *     в @Data классе;
-     *
-     * 2) иначе, если у поля аннотация Random и это строка, оно заполняется рандомными данными;
-     *
-     * 3) иначе, если поле - наследник класса BaseModel, то оно генерируется, рекурсивно отправляясь в новый метод generate;
-     *
-     * 4) иначе, если поле - List, у которого generic type - наследник класса BaseModel, то оно устанавливается списком
-     *     из одного элемента, который генерируется, рекурсивно отправляясь в новый метод generate.
-     *
-     * Параметр generatedModels передается, когда генерируется несколько сущностей в цикле, и содержит в себе
-     * сгенерированные на предыдущих шагах сущности. Позволяет при генерации сложной сущности, которая своим полем содержит
-     * другую сущность, сгенерированную на предыдущем шаге, установить ее, а не генерировать новую. Данная логика
-     * применяется только для пунктов 3 и 4. Например, если был сгенерирован NewProjectDescription, то передав его
-     * параметром generatedModels при генерации BuildType, он будет переиспользоваться при установке
-     * поля NewProjectDescription project, вместо генерации нового.
+     * Логика:
+     * 1) Если поле `@Optional`, оно пропускается.
+     * 2) Если поле `@Parameterizable`:
+     *    - Если передан параметр (включая `""`) → используем его.
+     *    - Если параметр не передан:
+     *        - Строковые поля заполняются случайным значением.
+     *        - Объект `ParentProject` получает `locator="_Root"`.
+     *        - Остальные `BaseModel`-поля создаются рекурсивно.
+     * 3) Если поле `@Random` и строковое, оно заполняется случайными данными.
+     * 4) Если поле - объект `BaseModel`, оно создается рекурсивно.
+     * 5) Если поле - `List<BaseModel>`, создается список из одной случайной сущности.
      */
-    public static <T extends BaseModel> T generate(List<BaseModel> generatedModels, Class<T> generatorClass,
-                                                   Object... parameters) {
+    public static <T extends BaseModel> T generate(List<BaseModel> generatedModels, Class<T> generatorClass, Object... parameters) {
         try {
             var instance = generatorClass.getDeclaredConstructor().newInstance();
-            for (var field : generatorClass.getDeclaredFields()) {
+            var paramIndex = 0;
+
+            for (Field field : generatorClass.getDeclaredFields()) {
                 field.setAccessible(true);
-                if (!field.isAnnotationPresent(Optional.class)) {
-                    var generatedClass = generatedModels.stream().filter(m
-                            -> m.getClass().equals(field.getType())).findFirst();
-                    if (field.isAnnotationPresent(Parameterizable.class) && parameters.length > 0) {
-                        field.set(instance, parameters[0]);
-                        parameters = Arrays.copyOfRange(parameters, 1, parameters.length);
-                    } else if (field.isAnnotationPresent(Random.class)) {
-                        if (String.class.equals(field.getType())) {
-                            field.set(instance, RandomData.getString());
-                        }
+
+                // Если поле @Optional и параметр не передан – НЕ добавляем его в JSON
+                if (field.isAnnotationPresent(Optional.class) && parameters.length <= paramIndex) {
+                    field.set(instance, null);
+                    continue;
+                }
+
+                // Если передан параметр - используем его
+                if (field.isAnnotationPresent(Parameterizable.class) && parameters.length > paramIndex) {
+                    field.set(instance, parameters[paramIndex]);
+                    paramIndex++;
+                }
+                // Если поле @Random, но параметр НЕ передан – генерируем случайное значение
+                else if (field.isAnnotationPresent(Random.class)) {
+                    if (field.getType().equals(String.class)) {
+                        field.set(instance, RandomData.getString());
+                    }
+                }
+                // Если поле @Parameterizable, но параметр НЕ передан – задаем дефолтное значение
+                else if (field.isAnnotationPresent(Parameterizable.class)) {
+                    if (field.getType().equals(String.class)) {
+                        field.set(instance, RandomData.getString());
+                    } else if (field.getType().equals(ParentProject.class)) {
+                        field.set(instance, ParentProject.defaultRoot());
                     } else if (BaseModel.class.isAssignableFrom(field.getType())) {
-                        var finalParameters = parameters;
-                        field.set(instance, generatedClass.orElseGet(() -> generate(
-                                generatedModels, field.getType().asSubclass(BaseModel.class), finalParameters)));
-                    } else if (List.class.isAssignableFrom(field.getType())) {
-                        if (field.getGenericType() instanceof ParameterizedType pt) {
-                            var typeClass = (Class<?>) pt.getActualTypeArguments()[0];
-                            if (BaseModel.class.isAssignableFrom(typeClass)) {
-                                var finalParameters = parameters;
-                                field.set(instance, generatedClass.map(List::of).orElseGet(() -> List.of(generate(
-                                        generatedModels, typeClass.asSubclass(BaseModel.class), finalParameters))));
-                            }
+                        var generatedClass = generate(generatedModels, field.getType().asSubclass(BaseModel.class));
+                        field.set(instance, generatedClass);
+                    }
+                }
+                // Генерация вложенных объектов
+                else if (BaseModel.class.isAssignableFrom(field.getType())) {
+                    var generatedClass = generatedModels.stream()
+                            .filter(m -> m.getClass().equals(field.getType()))
+                            .findFirst()
+                            .orElseGet(() -> generate(generatedModels, field.getType().asSubclass(BaseModel.class)));
+
+                    field.set(instance, generatedClass);
+                }
+                // Генерация списков вложенных объектов
+                else if (List.class.isAssignableFrom(field.getType())) {
+                    if (field.getGenericType() instanceof ParameterizedType pt) {
+                        var typeClass = (Class<?>) pt.getActualTypeArguments()[0];
+                        if (BaseModel.class.isAssignableFrom(typeClass)) {
+                            var generatedClass = generate(generatedModels, typeClass.asSubclass(BaseModel.class));
+                            field.set(instance, new ArrayList<>(List.of(generatedClass))); // Изменяемый список
                         }
                     }
                 }
+
                 field.setAccessible(false);
             }
             return instance;
-        } catch (InstantiationException | IllegalAccessException | InvocationTargetException
-                 | NoSuchMethodException e) {
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
             throw new IllegalStateException("Cannot generate test data", e);
         }
     }
 
+    /**
+     * Генерация тестовых данных для `TestData` (получает все сущности в одном месте).
+     */
     public static TestData generate() {
         try {
             var instance = TestData.class.getDeclaredConstructor().newInstance();
             var generatedModels = new ArrayList<BaseModel>();
-            for (var field: TestData.class.getDeclaredFields()) {
+            for (var field : TestData.class.getDeclaredFields()) {
                 field.setAccessible(true);
                 if (BaseModel.class.isAssignableFrom(field.getType())) {
                     var generatedModel = generate(generatedModels, field.getType().asSubclass(BaseModel.class));
@@ -101,6 +119,10 @@ public final class TestDataGenerator {
             throw new IllegalStateException("Cannot generate test data", e);
         }
     }
+
+    /**
+     * Метод для генерации одной сущности (без учета уже созданных моделей).
+     */
     public static <T extends BaseModel> T generate(Class<T> generatorClass, Object... parameters) {
         return generate(Collections.emptyList(), generatorClass, parameters);
     }
