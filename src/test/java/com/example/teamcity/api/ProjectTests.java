@@ -74,14 +74,7 @@ public class ProjectTests extends BaseTest {
     }
 
 
-    @Test(description = "User should not be able to create a Project with a non-existent parentProject locator", groups = {"Negative", "CRUD"})
-    public void userCannotCreateProjectWithNonExistentParentProjectTest() {
-        var response = projectController.createInvalidProject(generate(List.of(), Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("non_existent_locator", null)));
 
-        response.then().assertThat()
-                .statusCode(HttpStatus.SC_NOT_FOUND)
-                .body(Matchers.containsString("Project cannot be found by external id 'non_existent_locator'"));
-    }
 
     @Test(description = "User should be able to create a project in Root and nest 20 projects inside it", groups = {"Positive", "CRUD"})
     public void userCreatesProjectInRootWith20NestedProjectsTest() {
@@ -111,6 +104,27 @@ public class ProjectTests extends BaseTest {
 
         softy.assertAll();
     }
+    @Test(description = "User should not be able to create a Project with a non-existent parentProject locator", groups = {"Negative", "CRUD"})
+    public void userCannotCreateProjectWithNonExistentParentProjectTest() {
+        var response = projectController.createInvalidProject(generate(List.of(), Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("non_existent_locator", null)));
+
+        response.then().assertThat()
+                .statusCode(HttpStatus.SC_NOT_FOUND)
+                .body(Matchers.containsString("Project cannot be found by external id 'non_existent_locator'"));
+    }
+    @Test(description = "User should not be able to create a Project with the same ID as its parent ID", groups = {"Negative", "Validation"})
+    public void userCannotCreateProjectWithSameParentIdTest() {
+        var invalidProject = TestDataGenerator.generate(List.of(), Project.class, testData.getProject().getId(), RandomData.getString(), new ParentProject(testData.getProject().getId(), null));
+
+        var response = projectController.createInvalidProject(invalidProject);
+
+        response.then().assertThat()
+                .statusCode(HttpStatus.SC_NOT_FOUND)
+                .body(Matchers.containsString("Project cannot be found by external id '%s'".formatted(testData.getProject().getId())));
+    }
+
+
+
     @Test(description = "User should be able to create a Project with a name of maximum allowed length", groups = {"Positive", "CRUD"})
     public void userCreatesProjectWithMaxLengthNameTest() {
         var maxLengthName = "A".repeat(255);
@@ -188,7 +202,7 @@ public class ProjectTests extends BaseTest {
     }
     @Test(description = "User should be able to create a Project with an XSS payload in name (payload stored as text)", groups = {"Positive", "Security"})
     public void userCreatesProjectWithXSSInNameTest() {
-        var xssPayload = "<script>alert('XSS1')</script>";
+        var xssPayload = "<script>alert('XSS')</script>";
         var projectWithXSS = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), xssPayload);
 
         projectController.createProject(projectWithXSS);
