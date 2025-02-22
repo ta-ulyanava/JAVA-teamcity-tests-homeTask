@@ -149,7 +149,7 @@ public class ProjectTests extends BaseTest {
         softy.assertEquals(createdProject.getId(), validProject.getId(), "Project ID is incorrect");
         softy.assertAll();
     }
-    @Test(description = "User should be able to create a Project with an ID of length 1", groups = {"Positive", "Validation"})
+    @Test(description = "User should be able to create a Project with an ID of length 1", groups = {"Positive", "CRUD"})
     public void userCreatesProjectWithOneCharacterIdTest() {
         var validProject = TestDataGenerator.generate(List.of(), Project.class, "A", RandomData.getString());
 
@@ -160,7 +160,7 @@ public class ProjectTests extends BaseTest {
         softy.assertEquals(createdProject.getName(), validProject.getName(), "Project name is incorrect");
         softy.assertAll();
     }
-    @Test(description = "User should be able to create a Project with a name of length 1", groups = {"Positive", "Validation"})
+    @Test(description = "User should be able to create a Project with a name of length 1", groups = {"Positive", "CRUD"})
     public void userCreatesProjectWithOneCharacterNameTest() {
         var validProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), "A");
 
@@ -188,7 +188,28 @@ public class ProjectTests extends BaseTest {
                 .statusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR)
                 .body(Matchers.containsString("Project ID cannot be empty"));
     }
+    // Need to fix bug: 500 server error
+    @Test(description = "User should not be able to create a Project with a space as ID", groups = {"Negative", "Validation"})
+    public void userCannotCreateProjectWithSpaceAsIdTest() {
+        var invalidProject = TestDataGenerator.generate(List.of(), Project.class, " ", RandomData.getString());
 
+        var response = projectController.createInvalidProject(invalidProject);
+
+        response.then().assertThat()
+                .statusCode(HttpStatus.SC_BAD_REQUEST)
+                .body(Matchers.containsString("Project ID must not be empty"));
+    }
+// Need to fix bug: 500 server error
+    @Test(description = "User should not be able to create a Project with a space as name", groups = {"Negative", "Validation"})
+    public void userCannotCreateProjectWithSpaceAsNameTest() {
+        var invalidProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), " ");
+
+        var response = projectController.createInvalidProject(invalidProject);
+
+        response.then().assertThat()
+                .statusCode(HttpStatus.SC_BAD_REQUEST)
+                .body(Matchers.containsString("Given project name is empty"));
+    }
     @Test(description = "User should not be able to create a Project with an existing ID", groups = {"Negative", "CRUD"})
     public void userCannotCreateProjectWithExistingIdTest() {
         projectController.createProject(testData.getProject());
