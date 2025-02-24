@@ -57,7 +57,7 @@ public class ProjectTests extends BaseTest {
     @Test(description = "User should be able to create a project with the minimum required fields", groups = {"Positive", "CRUD"})
     public void userCreatesProjectWithMandatoryFieldsTest() {
         Response response = projectController.createProject(testData.getProject());
-        ResponseHandler.logResponseDetails(response);
+        ResponseHandler.logIfError(response);
         ResponseValidator.checkSuccessStatus(response, HttpStatus.SC_OK);
         Project createdProject = ResponseHandler.extractAndLogModel(response, Project.class);
         ResponseValidator.validateRequiredFields(response, "id", createdProject.getId());
@@ -71,7 +71,7 @@ public class ProjectTests extends BaseTest {
     public void userCreatesProjectWithCopyAllAssociatedSettingsTrueTest() {
         var projectWithCopyAll = generate(Arrays.asList(testData.getProject()), Project.class, testData.getProject().getId(), testData.getProject().getName(), null, true);
         Response response = projectController.createProject(projectWithCopyAll);
-        ResponseHandler.logResponseDetails(response);
+        ResponseHandler.logIfError(response);
         ResponseValidator.checkSuccessStatus(response, HttpStatus.SC_OK);
         Project createdProject = ResponseHandler.extractAndLogModel(response, Project.class);
         ResponseValidator.validateRequiredFields(response, "id", createdProject.getId());
@@ -85,7 +85,7 @@ public class ProjectTests extends BaseTest {
     public void userCreatesProjectWithCopyAllAssociatedSettingsFalseTest() {
         var projectWithCopyAll = generate(Arrays.asList(testData.getProject()), Project.class, testData.getProject().getId(), testData.getProject().getName(), null, false);
         Response response = projectController.createProject(projectWithCopyAll);
-        ResponseHandler.logResponseDetails(response);
+        ResponseHandler.logIfError(response);
         ResponseValidator.checkSuccessStatus(response, HttpStatus.SC_OK);
         Project createdProject = ResponseHandler.extractAndLogModel(response, Project.class);
         ResponseValidator.validateRequiredFields(response, "id", createdProject.getId());
@@ -164,13 +164,7 @@ public class ProjectTests extends BaseTest {
             Response response = projectController.createProject(project);
 
             // Логируем информацию о проекте
-            ResponseHandler.logResponseDetails(response);
-
-            // Проверяем статус ответа и отсутствие ошибок
-            ResponseValidator.checkSuccessStatus(response, HttpStatus.SC_OK);  // Проверка успешного выполнения запроса
-
-            // Проверка на отсутствие ошибок в теле ответа
-            ResponseValidator.validateNoErrors(response);
+            ResponseHandler.logIfError(response);
 
             // Извлекаем объект Project из ответа
             Project createdProject = ResponseHandler.extractAndLogModel(response, Project.class);

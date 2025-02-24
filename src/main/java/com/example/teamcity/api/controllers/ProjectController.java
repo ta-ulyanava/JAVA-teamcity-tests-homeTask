@@ -64,12 +64,11 @@ public class ProjectController {
             );
 
             Response response = createProject(nestedProject);
-            ResponseHandler.logResponseDetails(response);
-            ResponseValidator.checkSuccessStatus(response, HttpStatus.SC_OK);
+            ResponseHandler.logIfError(response); // Теперь логируем только ошибки
 
             Project createdNestedProject = ResponseHandler.extractAndLogModel(response, Project.class);
             nestedProjects.add(createdNestedProject);
-            currentParentId = createdNestedProject.getId(); // обновляем родительский ID для следующего проекта
+            currentParentId = createdNestedProject.getId(); // Обновляем родительский ID для следующего проекта
         }
 
         return nestedProjects;

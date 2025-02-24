@@ -1,6 +1,7 @@
 package com.example.teamcity.api.responses;
 
 import io.restassured.response.Response;
+import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,7 +14,15 @@ public class ResponseHandler {
         logger.info("Status Code: {}", response.getStatusCode());
         logger.info("Response Body: {}", response.getBody().asString());
     }
+    public static void logIfError(Response response) {
+        int statusCode = response.getStatusCode();
 
+        // Проверяем, входит ли статус в успешный диапазон 2xx (200–299)
+        if (statusCode < HttpStatus.SC_OK || statusCode >= HttpStatus.SC_MULTIPLE_CHOICES) {
+            logger.error("❌ API ERROR: Status Code: {}", statusCode);
+            logger.error("Response Body: {}", response.getBody().asString());
+        }
+    }
     // Универсальная валидация поля в теле ответа на разные типы значений (строка, число, булевы)
     public static void validateResponseBody(Response response, String fieldName, Object expectedValue) {
         try {
