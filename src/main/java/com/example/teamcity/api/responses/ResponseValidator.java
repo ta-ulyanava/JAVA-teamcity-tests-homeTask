@@ -2,7 +2,7 @@ package com.example.teamcity.api.responses;
 
 import io.restassured.response.Response;
 import org.hamcrest.Matchers;
-
+import org.apache.http.HttpStatus;
 
 public class ResponseValidator {
 
@@ -33,4 +33,10 @@ public class ResponseValidator {
         checkStatusCode(response, expectedStatusCode);
     }
 
+    // Новый метод для проверки ошибки и тела
+    public static void checkErrorAndBody(Response response, int expectedStatusCode, String expectedBodyContent) {
+        checkErrorStatus(response, expectedStatusCode); // Проверка статуса ошибки
+        response.then().assertThat()
+                .body(Matchers.containsString(expectedBodyContent)); // Проверка содержания в теле ошибки
+    }
 }

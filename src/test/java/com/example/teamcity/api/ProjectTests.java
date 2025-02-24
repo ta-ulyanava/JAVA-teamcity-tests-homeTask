@@ -146,7 +146,28 @@ public class ProjectTests extends BaseTest {
         softy.assertEquals(siblingProjects.size(), siblingProjectsCount, "The number of created sibling projects is incorrect");
 
         siblingProjects.forEach(project -> {
-            var createdProject = projectController.getProjectById(project.getId());
+            // Генерация уникального имени проекта на основе времени
+            String uniqueProjectName = "test_" + System.currentTimeMillis();
+
+            // Обновляем имя проекта с уникальным значением
+            project.setName(uniqueProjectName);
+
+            // Генерация уникального ID проекта на основе времени
+            String uniqueProjectId = "test_" + System.currentTimeMillis();
+
+            // Обновляем ID проекта с уникальным
+            project.setId(uniqueProjectId);
+
+            // Создание проекта с уникальными ID и именем
+            Response response = projectController.createProject(project);
+
+            // Логируем информацию о проекте
+            ResponseHandler.logResponseDetails(response);
+
+            // Извлекаем объект Project из ответа
+            Project createdProject = ResponseHandler.extractAndLogModel(response, Project.class);
+
+            // Проверяем, что родительский проект правильный
             softy.assertEquals(createdProject.getParentProject().getId(), testData.getProject().getId(),
                     "Parent project ID is incorrect for project " + project.getId());
         });
@@ -155,25 +176,40 @@ public class ProjectTests extends BaseTest {
     }
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     @Test(description = "User should not be able to create a Project with a non-existent parentProject locator", groups = {"Negative", "CRUD"})
     public void userCannotCreateProjectWithNonExistentParentProjectTest() {
         var response = projectController.createInvalidProject(generate(List.of(), Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("non_existent_locator", null)));
 
-        response.then().assertThat()
-                .statusCode(HttpStatus.SC_NOT_FOUND)
-                .body(Matchers.containsString("Project cannot be found by external id 'non_existent_locator'"));
+        ResponseValidator.checkErrorAndBody(response, HttpStatus.SC_NOT_FOUND,
+                "Project cannot be found by external id 'non_existent_locator'");
     }
 
-    @Test(description = "User should not be able to create a Project with the same ID as its parent ID", groups = {"Negative", "СRUD"})
+    @Test(description = "User should not be able to create a Project with the same ID as its parent ID", groups = {"Negative", "CRUD"})
     public void userCannotCreateProjectWithSameParentIdTest() {
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, testData.getProject().getId(), RandomData.getString(), new ParentProject(testData.getProject().getId(), null));
 
         var response = projectController.createInvalidProject(invalidProject);
 
-        response.then().assertThat()
-                .statusCode(HttpStatus.SC_NOT_FOUND)
-                .body(Matchers.containsString("Project cannot be found by external id '%s'".formatted(testData.getProject().getId())));
+        ResponseValidator.checkErrorAndBody(response, HttpStatus.SC_NOT_FOUND,
+                "Project cannot be found by external id '%s'".formatted(testData.getProject().getId()));
     }
+
+
 
 
     @Test(description = "User should be able to create a Project with a name of 500 characters", groups = {"Positive", "CRUD", "CornerCase"})
