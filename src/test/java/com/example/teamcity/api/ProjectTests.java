@@ -111,34 +111,27 @@ public class ProjectTests extends BaseTest {
         softy.assertAll();
     }
 
-
     @Test(description = "User should be able to create a project in Root and nest 20 projects inside it", groups = {"Positive", "CRUD", "CornerCase"})
     public void userCreatesProjectInRootWith20NestedProjectsTest() {
-        // Создаем проект в корневом проекте "_Root"
         var rootProject = generate(List.of(), Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("_Root", null));
-        Response rootProjectResponse = projectController.createProject(rootProject);  // Создаем проект
-        ResponseHandler.logResponseDetails(rootProjectResponse);  // Логируем ответ на создание проекта
-        ResponseValidator.checkSuccessStatus(rootProjectResponse, HttpStatus.SC_OK);  // Проверяем успешность создания проекта
+        Response rootProjectResponse = projectController.createProject(rootProject);
+        ResponseHandler.logResponseDetails(rootProjectResponse);
+        ResponseValidator.checkSuccessStatus(rootProjectResponse, HttpStatus.SC_OK);
 
-        // Создаем 20 вложенных проектов
         int nestedProjectsCount = 20;
         var nestedProjects = projectController.createNestedProjects(rootProject.getId(), nestedProjectsCount);
 
-        // Проверяем количество вложенных проектов
         softy.assertEquals(nestedProjects.size(), nestedProjectsCount, "The number of nested projects is incorrect");
 
-        // Проверяем, что родительский проект каждого вложенного проекта соответствует предыдущему
         for (int i = 1; i < nestedProjects.size(); i++) {
             var parentProject = projectController.getProjectById(nestedProjects.get(i).getParentProject().getId());
             softy.assertEquals(parentProject.getId(), nestedProjects.get(i - 1).getId(), "Parent project ID is incorrect for project " + nestedProjects.get(i).getId());
         }
 
-        // Проверяем, что родительский проект для последнего вложенного проекта правильный
         var lastNestedProject = nestedProjects.get(nestedProjects.size() - 1);
         var createdLastNestedProject = projectController.getProjectById(lastNestedProject.getId());
         softy.assertEquals(createdLastNestedProject.getParentProject().getId(), nestedProjects.get(nestedProjects.size() - 2).getId(), "Parent project ID is incorrect for the last nested project");
 
-        // Проверяем все ассерты
         softy.assertAll();
     }
 
@@ -147,9 +140,10 @@ public class ProjectTests extends BaseTest {
     public void userCreates20SiblingProjectsTest() {
         projectController.createProject(testData.getProject());
 
-        var siblingProjects = projectController.createSiblingProjects(testData.getProject().getId(), 20);
+        int siblingProjectsCount = 20;
+        var siblingProjects = projectController.createSiblingProjects(testData.getProject().getId(), siblingProjectsCount);
 
-        softy.assertEquals(siblingProjects.size(), 20, "The number of created sibling projects is incorrect");
+        softy.assertEquals(siblingProjects.size(), siblingProjectsCount, "The number of created sibling projects is incorrect");
 
         siblingProjects.forEach(project -> {
             var createdProject = projectController.getProjectById(project.getId());
@@ -159,6 +153,7 @@ public class ProjectTests extends BaseTest {
 
         softy.assertAll();
     }
+
 
     @Test(description = "User should not be able to create a Project with a non-existent parentProject locator", groups = {"Negative", "CRUD"})
     public void userCannotCreateProjectWithNonExistentParentProjectTest() {
