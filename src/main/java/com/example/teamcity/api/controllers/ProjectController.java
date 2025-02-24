@@ -24,10 +24,12 @@ public class ProjectController {
         this.uncheckedRequests = new UncheckedRequest(spec);
     }
 
-    public void createProject(Project project) {
-        checkedRequest.<Project>getRequest(Endpoint.PROJECTS).create(project);
-        TestDataStorage.getInstance().addCreatedEntity(Endpoint.PROJECTS, project);
+    public Response createProject(Project project) {
+        Response response = checkedRequest.<Project>getRequest(Endpoint.PROJECTS).create(project);  // Получаем ответ от запроса
+        TestDataStorage.getInstance().addCreatedEntity(Endpoint.PROJECTS, project);  // Добавляем созданный проект в хранилище
+        return response;  // Возвращаем ответ
     }
+
 
     public Project getProjectById(String projectId) {
         return checkedRequest.<Project>getRequest(Endpoint.PROJECTS).read(projectId);

@@ -10,15 +10,11 @@ public class ResponseHandler {
 
     // Логирование деталей ответа
     public static void logResponseDetails(Response response) {
-        if (response != null) {
-            logger.info("Status Code: {}", response.getStatusCode());
-            logger.info("Response Body: {}", response.getBody().asString());
-        } else {
-            logger.error("Response is null");
-        }
+        logger.info("Status Code: {}", response.getStatusCode());
+        logger.info("Response Body: {}", response.getBody().asString());
     }
 
-    // Универсальная валидация поля в теле ответа на разные типы значений (строка, число, булево)
+    // Универсальная валидация поля в теле ответа на разные типы значений (строка, число, булевы)
     public static void validateResponseBody(Response response, String fieldName, Object expectedValue) {
         try {
             if (expectedValue instanceof String) {

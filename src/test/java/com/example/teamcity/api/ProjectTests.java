@@ -7,6 +7,8 @@ import com.example.teamcity.api.generators.RandomData;
 import com.example.teamcity.api.generators.TestDataGenerator;
 import com.example.teamcity.api.models.ParentProject;
 import com.example.teamcity.api.models.Project;
+import com.example.teamcity.api.responses.ResponseHandler;
+import com.example.teamcity.api.responses.ResponseValidator;
 import com.example.teamcity.api.spec.Specifications;
 import io.restassured.response.Response;
 import org.apache.http.HttpStatus;
@@ -54,12 +56,33 @@ public class ProjectTests extends BaseTest {
 
     @Test(description = "User should be able to create a project with the minimum required fields", groups = {"Positive", "CRUD"})
     public void userCreatesProjectWithMandatoryFieldsTest() {
-        projectController.createProject(testData.getProject());
-        var createdProject = projectController.getProjectById(testData.getProject().getId());
+        // Создаем проект и получаем ответ
+        Response response = projectController.createProject(testData.getProject());
+
+        // Логируем детали ответа
+        ResponseHandler.logResponseDetails(response);
+
+        // Проверка успешности (статус код 200)
+        ResponseValidator.checkSuccessStatus(response, HttpStatus.SC_OK);
+
+        // Извлекаем проект из ответа
+        Project createdProject = ResponseHandler.extractAndLogModel(response, Project.class);
+
+        // Валидация полей id и name проекта
+        ResponseValidator.validateRequiredFields(response, "id", createdProject.getId());
+        ResponseValidator.validateRequiredFields(response, "name", createdProject.getName());
+
+        // Проверки с использованием soft assertions
         softy.assertEquals(testData.getProject().getId(), createdProject.getId(), "Project id is not correct");
         softy.assertEquals(testData.getProject().getName(), createdProject.getName(), "Project name is not correct");
         softy.assertAll();
     }
+
+
+
+
+
+
 
     @Test(description = "User should be able to create Project with copyAllAssociatedSettings set to true", groups = {"Positive", "CRUD"})
     public void userCreatesProjectWithCopyAllAssociatedSettingsTrueTest() {
