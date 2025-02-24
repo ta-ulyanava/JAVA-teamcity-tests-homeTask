@@ -67,18 +67,15 @@ public class ProjectTests extends BaseTest {
         softy.assertAll();
     }
 
-
-
-
-
-
-
-
     @Test(description = "User should be able to create Project with copyAllAssociatedSettings set to true", groups = {"Positive", "CRUD"})
     public void userCreatesProjectWithCopyAllAssociatedSettingsTrueTest() {
         var projectWithCopyAll = generate(Arrays.asList(testData.getProject()), Project.class, testData.getProject().getId(), testData.getProject().getName(), null, true);
-        projectController.createProject(projectWithCopyAll);
-        var createdProject = projectController.getProjectById(projectWithCopyAll.getId());
+        Response response = projectController.createProject(projectWithCopyAll);
+        ResponseHandler.logResponseDetails(response);
+        ResponseValidator.checkSuccessStatus(response, HttpStatus.SC_OK);
+        Project createdProject = ResponseHandler.extractAndLogModel(response, Project.class);
+        ResponseValidator.validateRequiredFields(response, "id", createdProject.getId());
+        ResponseValidator.validateRequiredFields(response, "name", createdProject.getName());
         softy.assertEquals(projectWithCopyAll.getId(), createdProject.getId(), "Project ID does not match");
         softy.assertEquals(projectWithCopyAll.getName(), createdProject.getName(), "Project name does not match");
         softy.assertAll();
@@ -87,49 +84,64 @@ public class ProjectTests extends BaseTest {
     @Test(description = "User should be able to create Project with copyAllAssociatedSettings set to false", groups = {"Positive", "CRUD"})
     public void userCreatesProjectWithCopyAllAssociatedSettingsFalseTest() {
         var projectWithCopyAll = generate(Arrays.asList(testData.getProject()), Project.class, testData.getProject().getId(), testData.getProject().getName(), null, false);
-        projectController.createProject(projectWithCopyAll);
-        var createdProject = projectController.getProjectById(projectWithCopyAll.getId());
+        Response response = projectController.createProject(projectWithCopyAll);
+        ResponseHandler.logResponseDetails(response);
+        ResponseValidator.checkSuccessStatus(response, HttpStatus.SC_OK);
+        Project createdProject = ResponseHandler.extractAndLogModel(response, Project.class);
+        ResponseValidator.validateRequiredFields(response, "id", createdProject.getId());
+        ResponseValidator.validateRequiredFields(response, "name", createdProject.getName());
         softy.assertEquals(projectWithCopyAll.getId(), createdProject.getId(), "Project ID does not match");
         softy.assertEquals(projectWithCopyAll.getName(), createdProject.getName(), "Project name does not match");
         softy.assertAll();
     }
-
-    @Test(description = "User should be able to create a nested project", groups = {"Positive", "CRUD"})
-    public void userCreatesNestedProjectTest() {
-        projectController.createProject(testData.getProject());
-        var nestedProjects = projectController.createNestedProjects(testData.getProject().getId(), 1);
-        var secondProject = nestedProjects.get(0);
-        var createdSecondProject = projectController.getProjectById(secondProject.getId());
-        softy.assertEquals(createdSecondProject.getParentProject().getId(), testData.getProject().getId(), "Parent project ID is incorrect");
-        softy.assertAll();
-    }
-
     @Test(description = "User should be able to create a max amount of nested projects", groups = {"Positive", "CRUD", "CornerCase"})
     public void userCreatesMaxAmountNestedProjectsTest() {
         projectController.createProject(testData.getProject());
         int maxNestedProjects = 10;
         var nestedProjects = projectController.createNestedProjects(testData.getProject().getId(), maxNestedProjects);
+
         softy.assertEquals(nestedProjects.size(), maxNestedProjects, "The number of nested projects is incorrect");
+
+        // Проверка, что родительский ID для каждого вложенного проекта правильный
         for (int i = 1; i < nestedProjects.size(); i++) {
             var parentProject = projectController.getProjectById(nestedProjects.get(i).getParentProject().getId());
             softy.assertEquals(parentProject.getId(), nestedProjects.get(i - 1).getId(), "Parent project ID is incorrect for project " + nestedProjects.get(i).getId());
         }
+
         softy.assertAll();
     }
 
 
     @Test(description = "User should be able to create a project in Root and nest 20 projects inside it", groups = {"Positive", "CRUD", "CornerCase"})
     public void userCreatesProjectInRootWith20NestedProjectsTest() {
+        // Создаем проект в корневом проекте "_Root"
         var rootProject = generate(List.of(), Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("_Root", null));
-        projectController.createProject(rootProject);
+        Response rootProjectResponse = projectController.createProject(rootProject);  // Создаем проект
+        ResponseHandler.logResponseDetails(rootProjectResponse);  // Логируем ответ на создание проекта
+        ResponseValidator.checkSuccessStatus(rootProjectResponse, HttpStatus.SC_OK);  // Проверяем успешность создания проекта
 
-        var nestedProjects = projectController.createNestedProjects(rootProject.getId(), 20);
+        // Создаем 20 вложенных проектов
+        int nestedProjectsCount = 20;
+        var nestedProjects = projectController.createNestedProjects(rootProject.getId(), nestedProjectsCount);
+
+        // Проверяем количество вложенных проектов
+        softy.assertEquals(nestedProjects.size(), nestedProjectsCount, "The number of nested projects is incorrect");
+
+        // Проверяем, что родительский проект каждого вложенного проекта соответствует предыдущему
+        for (int i = 1; i < nestedProjects.size(); i++) {
+            var parentProject = projectController.getProjectById(nestedProjects.get(i).getParentProject().getId());
+            softy.assertEquals(parentProject.getId(), nestedProjects.get(i - 1).getId(), "Parent project ID is incorrect for project " + nestedProjects.get(i).getId());
+        }
+
+        // Проверяем, что родительский проект для последнего вложенного проекта правильный
         var lastNestedProject = nestedProjects.get(nestedProjects.size() - 1);
         var createdLastNestedProject = projectController.getProjectById(lastNestedProject.getId());
+        softy.assertEquals(createdLastNestedProject.getParentProject().getId(), nestedProjects.get(nestedProjects.size() - 2).getId(), "Parent project ID is incorrect for the last nested project");
 
-        softy.assertEquals(createdLastNestedProject.getParentProject().getId(), nestedProjects.get(nestedProjects.size() - 2).getId(), "Parent project ID is incorrect");
+        // Проверяем все ассерты
         softy.assertAll();
     }
+
 
     @Test(description = "User should be able to create 20 sibling projects under the same parent", groups = {"Positive", "CRUD", "CornerCase"})
     public void userCreates20SiblingProjectsTest() {
