@@ -138,24 +138,26 @@ public class ProjectTests extends BaseTest {
 
     @Test(description = "User should be able to create 20 sibling projects under the same parent", groups = {"Positive", "CRUD", "CornerCase"})
     public void userCreates20SiblingProjectsTest() {
+        // Создаем родительский проект
         projectController.createProject(testData.getProject());
 
+        // Количество сиблинг-проектов
         int siblingProjectsCount = 20;
+
+        // Создаем сиблинг-проекты
         var siblingProjects = projectController.createSiblingProjects(testData.getProject().getId(), siblingProjectsCount);
 
+        // Проверка на количество созданных сиблинг-проектов
         softy.assertEquals(siblingProjects.size(), siblingProjectsCount, "The number of created sibling projects is incorrect");
 
+        // Для каждого сиблинг-проекта генерируем уникальные имя и ID
         siblingProjects.forEach(project -> {
-            // Генерация уникального имени проекта на основе времени
-            String uniqueProjectName = "test_" + System.currentTimeMillis();
+            // Генерация уникального имени и ID проекта
+            String uniqueProjectName = RandomData.getUniqueName();
+            String uniqueProjectId = RandomData.getUniqueId();
 
-            // Обновляем имя проекта с уникальным значением
+            // Обновляем имя и ID проекта с уникальными значениями
             project.setName(uniqueProjectName);
-
-            // Генерация уникального ID проекта на основе времени
-            String uniqueProjectId = "test_" + System.currentTimeMillis();
-
-            // Обновляем ID проекта с уникальным
             project.setId(uniqueProjectId);
 
             // Создание проекта с уникальными ID и именем
@@ -163,6 +165,12 @@ public class ProjectTests extends BaseTest {
 
             // Логируем информацию о проекте
             ResponseHandler.logResponseDetails(response);
+
+            // Проверяем статус ответа и отсутствие ошибок
+            ResponseValidator.checkSuccessStatus(response, HttpStatus.SC_OK);  // Проверка успешного выполнения запроса
+
+            // Проверка на отсутствие ошибок в теле ответа
+            ResponseValidator.validateNoErrors(response);
 
             // Извлекаем объект Project из ответа
             Project createdProject = ResponseHandler.extractAndLogModel(response, Project.class);
