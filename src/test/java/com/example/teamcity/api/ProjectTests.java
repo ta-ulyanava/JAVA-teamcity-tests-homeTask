@@ -84,31 +84,24 @@ public class ProjectTests extends BaseTest {
         softy.assertAll();
     }
 
-
     @Test(description = "User should be able to create a Project with copyAllAssociatedSettings set to false and verify fields are NOT copied",
             groups = {"Positive", "CRUD"})
     public void userCreatesProjectWithCopyAllAssociatedSettingsFalseTest() {
         var sourceProject = generate(List.of(), Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("_Root", null));
-        Response sourceResponse = projectController.createProject(sourceProject);
-        ResponseValidator.checkSuccessStatus(sourceResponse, HttpStatus.SC_OK);
+        var createdSourceProject = projectController.createAndReturnProject(sourceProject);
 
-        var newProject = generate(List.of(), Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("_Root", null), false, sourceProject);
-        Response newProjectResponse = projectController.createProject(newProject);
-        ResponseValidator.checkSuccessStatus(newProjectResponse, HttpStatus.SC_OK);
-        Project createdProject = ResponseExtractor.extractModel(newProjectResponse, Project.class);
+        var newProject = generate(List.of(), Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("_Root", null), false, createdSourceProject);
+        var createdProject = projectController.createAndReturnProject(newProject);
 
         softy.assertNull(createdProject.getProjectsIdsMap(), "projectsIdsMap should NOT be copied");
         softy.assertNull(createdProject.getBuildTypesIdsMap(), "buildTypesIdsMap should NOT be copied");
         softy.assertNull(createdProject.getVcsRootsIdsMap(), "vcsRootsIdsMap should NOT be copied");
         softy.assertNull(createdProject.getSourceProject(), "Source project should NOT be copied");
 
-        softy.assertNotEquals(createdProject.getId(), sourceProject.getId(), "Project ID should be different");
-        softy.assertNotEquals(createdProject.getName(), sourceProject.getName(), "Project name should be different");
-        softy.assertEquals(createdProject.getParentProject().getId(), "_Root", "Parent project should be Root");
+        TestValidator.validateEntityFields(newProject, createdProject, softy);
 
         softy.assertAll();
     }
-
 
 /********/
 // Need to fix bug
