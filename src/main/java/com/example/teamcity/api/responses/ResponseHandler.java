@@ -4,6 +4,8 @@ import io.restassured.response.Response;
 import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.example.teamcity.api.models.Identifiable;
+import org.testng.asserts.SoftAssert;
 
 public class ResponseHandler {
 
@@ -14,6 +16,7 @@ public class ResponseHandler {
         logger.info("Status Code: {}", response.getStatusCode());
         logger.info("Response Body: {}", response.getBody().asString());
     }
+
     public static void logIfError(Response response) {
         int statusCode = response.getStatusCode();
 
@@ -23,6 +26,7 @@ public class ResponseHandler {
             logger.error("Response Body: {}", response.getBody().asString());
         }
     }
+
     // Универсальная валидация поля в теле ответа на разные типы значений (строка, число, булевы)
     public static void validateResponseBody(Response response, String fieldName, Object expectedValue) {
         try {
@@ -59,5 +63,10 @@ public class ResponseHandler {
     public static <T> T extractAndLogModel(Response response, Class<T> modelClass) {
         logResponseDetails(response);  // Логируем ответ
         return extractModel(response, modelClass);  // Извлекаем модель
+    }
+
+    // Валидация сущности с помощью TestValidator
+    public static <T extends Identifiable> void validateEntityFields(T expected, T actual, SoftAssert softy) {
+        TestValidator.validateEntityFields(expected, actual, softy);  // Используем универсальную валидацию
     }
 }

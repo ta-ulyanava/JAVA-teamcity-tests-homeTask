@@ -7,8 +7,7 @@ import com.example.teamcity.api.generators.RandomData;
 import com.example.teamcity.api.generators.TestDataGenerator;
 import com.example.teamcity.api.models.ParentProject;
 import com.example.teamcity.api.models.Project;
-import com.example.teamcity.api.responses.ResponseHandler;
-import com.example.teamcity.api.responses.ResponseValidator;
+import com.example.teamcity.api.responses.*;
 import com.example.teamcity.api.spec.Specifications;
 import io.restassured.response.Response;
 import org.apache.http.HttpStatus;
@@ -55,15 +54,12 @@ public class ProjectTests extends BaseTest {
     }
 
     @Test(description = "User should be able to create a project with the minimum required fields", groups = {"Positive", "CRUD"})
-    public void userCreatesProjectWithMandatoryFieldsTest() {
+    public void userCreatesProjectWithMandatoryFieldsOnlyTest() {
         Response response = projectController.createProject(testData.getProject());
-        ResponseHandler.logIfError(response);
+        ResponseLogger.logIfError(response);
         ResponseValidator.checkSuccessStatus(response, HttpStatus.SC_OK);
-        Project createdProject = ResponseHandler.extractAndLogModel(response, Project.class);
-        ResponseValidator.validateRequiredFields(response, "id", createdProject.getId());
-        ResponseValidator.validateRequiredFields(response, "name", createdProject.getName());
-        softy.assertEquals(testData.getProject().getId(), createdProject.getId(), "Project id is not correct");
-        softy.assertEquals(testData.getProject().getName(), createdProject.getName(), "Project name is not correct");
+        Project createdProject = ResponseExtractor.extractModel(response, Project.class);
+        TestValidator.validateEntityFields(testData.getProject(), createdProject, softy);
         softy.assertAll();
     }
 
@@ -71,51 +67,44 @@ public class ProjectTests extends BaseTest {
     public void userCreatesProjectWithCopyAllAssociatedSettingsTrueTest() {
         var projectWithCopyAll = generate(Arrays.asList(testData.getProject()), Project.class, testData.getProject().getId(), testData.getProject().getName(), null, true);
         Response response = projectController.createProject(projectWithCopyAll);
-        ResponseHandler.logIfError(response);
+        ResponseLogger.logIfError(response);
         ResponseValidator.checkSuccessStatus(response, HttpStatus.SC_OK);
-        Project createdProject = ResponseHandler.extractAndLogModel(response, Project.class);
-        ResponseValidator.validateRequiredFields(response, "id", createdProject.getId());
-        ResponseValidator.validateRequiredFields(response, "name", createdProject.getName());
-        softy.assertEquals(projectWithCopyAll.getId(), createdProject.getId(), "Project ID does not match");
-        softy.assertEquals(projectWithCopyAll.getName(), createdProject.getName(), "Project name does not match");
+        Project createdProject = ResponseExtractor.extractModel(response, Project.class);
+        TestValidator.validateEntityFields(projectWithCopyAll, createdProject, softy);
         softy.assertAll();
     }
+
 
     @Test(description = "User should be able to create Project with copyAllAssociatedSettings set to false", groups = {"Positive", "CRUD"})
     public void userCreatesProjectWithCopyAllAssociatedSettingsFalseTest() {
         var projectWithCopyAll = generate(Arrays.asList(testData.getProject()), Project.class, testData.getProject().getId(), testData.getProject().getName(), null, false);
         Response response = projectController.createProject(projectWithCopyAll);
-        ResponseHandler.logIfError(response);
+        ResponseLogger.logIfError(response);
         ResponseValidator.checkSuccessStatus(response, HttpStatus.SC_OK);
-        Project createdProject = ResponseHandler.extractAndLogModel(response, Project.class);
-        ResponseValidator.validateRequiredFields(response, "id", createdProject.getId());
-        ResponseValidator.validateRequiredFields(response, "name", createdProject.getName());
-        softy.assertEquals(projectWithCopyAll.getId(), createdProject.getId(), "Project ID does not match");
-        softy.assertEquals(projectWithCopyAll.getName(), createdProject.getName(), "Project name does not match");
+        Project createdProject = ResponseExtractor.extractModel(response, Project.class);
+        TestValidator.validateEntityFields(projectWithCopyAll, createdProject, softy);
         softy.assertAll();
     }
+
     @Test(description = "User should be able to create a max amount of nested projects", groups = {"Positive", "CRUD", "CornerCase"})
     public void userCreatesMaxAmountNestedProjectsTest() {
         projectController.createProject(testData.getProject());
         int maxNestedProjects = 10;
         var nestedProjects = projectController.createNestedProjects(testData.getProject().getId(), maxNestedProjects);
-
         softy.assertEquals(nestedProjects.size(), maxNestedProjects, "The number of nested projects is incorrect");
-
-        // Проверка, что родительский ID для каждого вложенного проекта правильный
         for (int i = 1; i < nestedProjects.size(); i++) {
             var parentProject = projectController.getProjectById(nestedProjects.get(i).getParentProject().getId());
             softy.assertEquals(parentProject.getId(), nestedProjects.get(i - 1).getId(), "Parent project ID is incorrect for project " + nestedProjects.get(i).getId());
         }
-
         softy.assertAll();
     }
+
 
     @Test(description = "User should be able to create a project in Root and nest 20 projects inside it", groups = {"Positive", "CRUD", "CornerCase"})
     public void userCreatesProjectInRootWith20NestedProjectsTest() {
         var rootProject = generate(List.of(), Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("_Root", null));
         Response rootProjectResponse = projectController.createProject(rootProject);
-        ResponseHandler.logResponseDetails(rootProjectResponse);
+        ResponseLogger.logIfError(rootProjectResponse);
         ResponseValidator.checkSuccessStatus(rootProjectResponse, HttpStatus.SC_OK);
 
         int nestedProjectsCount = 20;
@@ -136,19 +125,12 @@ public class ProjectTests extends BaseTest {
     }
 
 
-    @Test(description = "User should be able to create 20 sibling projects under the same parent",
-            groups = {"Positive", "CRUD", "CornerCase"})
+    @Test(description = "User should be able to create 20 sibling projects under the same parent", groups = {"Positive", "CRUD", "CornerCase"})
     public void userCreates20SiblingProjectsTest() {
-        // Создаём родительский проект
         projectController.createProject(testData.getProject());
-
-        // Количество sibling-проектов
         int siblingProjectsCount = 20;
-
-        // Используем createSiblingProjects(), который уже делает все проверки!
         var siblingProjects = projectController.createSiblingProjects(testData.getProject().getId(), siblingProjectsCount);
 
-        // Проверяем только бизнес-логику, не дублируя API-проверки
         softy.assertEquals(siblingProjects.size(), siblingProjectsCount, "The number of created sibling projects is incorrect");
 
         siblingProjects.forEach(project ->
@@ -159,15 +141,15 @@ public class ProjectTests extends BaseTest {
         softy.assertAll();
     }
 
-
-
     @Test(description = "User should not be able to create a Project with a non-existent parentProject locator", groups = {"Negative", "CRUD"})
     public void userCannotCreateProjectWithNonExistentParentProjectTest() {
         var response = projectController.createInvalidProject(generate(List.of(), Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("non_existent_locator", null)));
 
         ResponseValidator.checkErrorAndBody(response, HttpStatus.SC_NOT_FOUND,
                 "Project cannot be found by external id 'non_existent_locator'");
+        softy.assertAll();
     }
+
 
     @Test(description = "User should not be able to create a Project with the same ID as its parent ID", groups = {"Negative", "CRUD"})
     public void userCannotCreateProjectWithSameParentIdTest() {
@@ -177,19 +159,17 @@ public class ProjectTests extends BaseTest {
 
         ResponseValidator.checkErrorAndBody(response, HttpStatus.SC_NOT_FOUND,
                 "Project cannot be found by external id '%s'".formatted(testData.getProject().getId()));
+        softy.assertAll();
     }
 
-
-/*****************************************************************************************************/
 
     @Test(description = "User should be able to create a Project with a name of 500 characters", groups = {"Positive", "CRUD", "CornerCase"})
     public void userCreatesProjectWith500LengthNameTest() {
         var maxLengthName = "A".repeat(500);
         var validProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), maxLengthName);
-
-        projectController.createProject(validProject);
-        var createdProject = projectController.getProjectById(validProject.getId());
-
+        Response response = projectController.createProject(validProject);
+        ResponseValidator.checkSuccessStatus(response, HttpStatus.SC_OK);
+        Project createdProject = ResponseExtractor.extractModel(response, Project.class);
         softy.assertEquals(createdProject.getName(), validProject.getName(), "Project name is incorrect");
         softy.assertAll();
     }
@@ -198,11 +178,11 @@ public class ProjectTests extends BaseTest {
     public void userCreatesProjectWithMaxLengthIdTest() {
         var maxLengthId = "A".repeat(225);
         var validProject = TestDataGenerator.generate(List.of(), Project.class, maxLengthId, RandomData.getString());
-
-        projectController.createProject(validProject);
-        var createdProject = projectController.getProjectById(validProject.getId());
-
-        softy.assertEquals(createdProject.getId(), validProject.getId(), "Project ID is incorrect");
+        Response response = projectController.createProject(validProject);
+        ResponseLogger.logIfError(response);
+        ResponseValidator.checkSuccessStatus(response, HttpStatus.SC_OK);
+        Project createdProject = ResponseExtractor.extractModel(response, Project.class);
+        TestValidator.validateEntityFields(validProject, createdProject, softy);
         softy.assertAll();
     }
 
@@ -211,12 +191,9 @@ public class ProjectTests extends BaseTest {
     public void userCannotCreateProjectWithTooLongIdTest() {
         var tooLongId = "A".repeat(226);
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, tooLongId, RandomData.getString());
-
         var response = projectController.createInvalidProject(invalidProject);
-
-        response.then().assertThat()
-                .statusCode(HttpStatus.SC_BAD_REQUEST)
-                .body(Matchers.containsString("Project ID \"%s\" is invalid: it is 226 characters long while the maximum length is 225.".formatted(tooLongId)));
+        ResponseValidator.checkErrorAndBody(response, HttpStatus.SC_BAD_REQUEST,
+                "Project ID \"" + tooLongId + "\" is invalid: it is 226 characters long while the maximum length is 225.");
     }
 
 
@@ -224,23 +201,23 @@ public class ProjectTests extends BaseTest {
     public void userCreatesProjectWithOneCharacterIdTest() {
         var validProject = TestDataGenerator.generate(List.of(), Project.class, "A", RandomData.getString());
 
-        projectController.createProject(validProject);
-        var createdProject = projectController.getProjectById(validProject.getId());
+        Response response = projectController.createProject(validProject);
+        ResponseValidator.checkSuccessStatus(response, HttpStatus.SC_OK);
 
-        softy.assertEquals(createdProject.getId(), validProject.getId(), "Project ID is incorrect");
-        softy.assertEquals(createdProject.getName(), validProject.getName(), "Project name is incorrect");
+        Project createdProject = ResponseExtractor.extractModel(response, Project.class);
+        TestValidator.validateEntityFields(validProject, createdProject, softy);
+
         softy.assertAll();
     }
+
 
     @Test(description = "User should be able to create a Project with a name of length 1", groups = {"Positive", "CRUD"})
     public void userCreatesProjectWithOneCharacterNameTest() {
         var validProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), "A");
-
-        projectController.createProject(validProject);
-        var createdProject = projectController.getProjectById(validProject.getId());
-
-        softy.assertEquals(createdProject.getId(), validProject.getId(), "Project ID is incorrect");
-        softy.assertEquals(createdProject.getName(), validProject.getName(), "Project name is incorrect");
+        Response response = projectController.createProject(validProject);
+        ResponseValidator.checkSuccessStatus(response, HttpStatus.SC_OK);
+        Project createdProject = ResponseExtractor.extractModel(response, Project.class);
+        TestValidator.validateEntityFields(validProject, createdProject, softy);
         softy.assertAll();
     }
 
@@ -248,60 +225,54 @@ public class ProjectTests extends BaseTest {
     @Test(description = "User should be able to create a Project with special characters in name", groups = {"Positive", "CRUD"})
     public void userCreatesProjectWithSpecialCharactersInNameTest() {
         var project = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), RandomData.getFullSpecialCharacterString());
-        projectController.createProject(project);
-        var createdProject = projectController.getProjectById(project.getId());
-
-        softy.assertEquals(createdProject.getId(), project.getId(), "Project ID is incorrect");
-        softy.assertEquals(createdProject.getName(), project.getName(), "Project name is incorrect");
+        Response response = projectController.createProject(project);
+        ResponseValidator.checkSuccessStatus(response, HttpStatus.SC_OK);
+        Project createdProject = ResponseExtractor.extractModel(response, Project.class);
+        TestValidator.validateEntityFields(project, createdProject, softy);
         softy.assertAll();
     }
+
 
     @Test(description = "User should be able to create a Project with an ID containing an underscore", groups = {"Positive", "CRUD"})
     public void userCreatesProjectWithUnderscoreInIdTest() {
         var validProject = TestDataGenerator.generate(List.of(), Project.class, "test_project_123", RandomData.getString());
-
-        projectController.createProject(validProject);
-        var createdProject = projectController.getProjectById(validProject.getId());
-
-        softy.assertEquals(createdProject.getId(), validProject.getId(), "Project ID is incorrect");
-        softy.assertEquals(createdProject.getName(), validProject.getName(), "Project name is incorrect");
+        Response response = projectController.createProject(validProject);
+        ResponseValidator.checkSuccessStatus(response, HttpStatus.SC_OK);
+        Project createdProject = ResponseExtractor.extractModel(response, Project.class);
+        TestValidator.validateEntityFields(validProject, createdProject, softy);
         softy.assertAll();
     }
 
     @Test(description = "User should be able to create a Project with a localized name", groups = {"Positive", "CRUD"})
     public void userCreatesProjectWithLocalizedNameTest() {
         var localizedProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), RandomData.getFullLocalizationString());
-        projectController.createProject(localizedProject);
-        var createdProject = projectController.getProjectById(localizedProject.getId());
-
-        softy.assertEquals(createdProject.getName(), localizedProject.getName(), "Localized project name is incorrect");
+        Response response = projectController.createProject(localizedProject);
+        ResponseValidator.checkSuccessStatus(response, HttpStatus.SC_OK);
+        Project createdProject = ResponseExtractor.extractModel(response, Project.class);
+        TestValidator.validateEntityFields(localizedProject, createdProject, softy);
         softy.assertAll();
     }
 
+
     // Need to fix 500 server Error
-    @Test(description = "User should not be able to create a Project with special characters in ID",
-            groups = {"Negative", "CRUD", "KnownBugs"},
-            dataProvider = "invalidSpecialCharactersForId")
+    @Test(description = "User should not be able to create a Project with special characters in ID", groups = {"Negative", "CRUD", "KnownBugs"}, dataProvider = "invalidSpecialCharactersForId")
     public void userCannotCreateProjectWithEachSpecialCharacterInIdTest(String specialChar) {
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, "test_" + specialChar, "ValidName");
-
         var response = projectController.createInvalidProject(invalidProject);
-
-        response.then().assertThat()
-                .statusCode(HttpStatus.SC_BAD_REQUEST)
-                .body(Matchers.containsString("Project ID \"test_%s\" is invalid".formatted(specialChar)))
-                .body(Matchers.containsString("ID should start with a latin letter and contain only latin letters, digits and underscores"));
+        ResponseValidator.checkErrorAndBody(response, HttpStatus.SC_BAD_REQUEST,
+                "Project ID \"test_" + specialChar + "\" is invalid",
+                "ID should start with a latin letter and contain only latin letters, digits and underscores");
     }
+
 
     //Need to fix 500 error
     @Test(description = "User should not be able to create a Project with a non-Latin ID", groups = {"Negative", "CRUD", "KnownBugs"}, dataProvider = "nonLatinIdProviderForId")
     public void userCannotCreateProjectWithNonLatinIdTest(String invalidId) {
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, invalidId, RandomData.getString());
         var response = projectController.createInvalidProject(invalidProject);
-
-        response.then().assertThat()
-                .statusCode(HttpStatus.SC_BAD_REQUEST)
-                .body(Matchers.containsString("Project ID \"test_%s\" is invalid: contains non-latin letter '%s'. ID should start with a latin letter and contain only latin letters, digits and underscores (at most 225 characters).".formatted(invalidId)));
+        ResponseValidator.checkErrorAndBody(response, HttpStatus.SC_BAD_REQUEST,
+                "Project ID \"test_" + invalidId + "\" is invalid: contains non-latin letter '" + invalidId +
+                        "'. ID should start with a latin letter and contain only latin letters, digits and underscores (at most 225 characters).");
     }
 
 
@@ -309,244 +280,176 @@ public class ProjectTests extends BaseTest {
     public void userCannotCreateProjectWithEmptyNameTest() {
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), "");
         Response response = projectController.createInvalidProject(invalidProject);
-        response.then().assertThat()
-                .statusCode(HttpStatus.SC_BAD_REQUEST)
-                .body(Matchers.containsString("Project name cannot be empty"));
+        ResponseValidator.checkErrorAndBody(response, HttpStatus.SC_BAD_REQUEST, "Project name cannot be empty");
     }
 
-    // Need to fix a bug 500 (Internal Server Error).
+    //Need to fix 500 error
     @Test(description = "User should not be able to create Project with empty id", groups = {"Negative", "CRUD", "KnownBugs"})
     public void userCannotCreateProjectWithEmptyIdTest() {
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, "", RandomData.getString());
         Response response = projectController.createInvalidProject(invalidProject);
-        response.then().assertThat()
-                .statusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR)
-                .body(Matchers.containsString("Project ID cannot be empty"));
+        ResponseValidator.checkErrorAndBody(response, HttpStatus.SC_INTERNAL_SERVER_ERROR, "Project ID cannot be empty");
     }
 
-    // Need to fix bug: 500 server error
+    //Need to fix 500 error
     @Test(description = "User should not be able to create a Project with a space as ID", groups = {"Negative", "CRUD", "KnownBugs"})
     public void userCannotCreateProjectWithSpaceAsIdTest() {
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, " ", RandomData.getString());
-
-        var response = projectController.createInvalidProject(invalidProject);
-
-        response.then().assertThat()
-                .statusCode(HttpStatus.SC_BAD_REQUEST)
-                .body(Matchers.containsString("Project ID must not be empty"));
+        Response response = projectController.createInvalidProject(invalidProject);
+        ResponseValidator.checkErrorAndBody(response, HttpStatus.SC_BAD_REQUEST, "Project ID must not be empty");
     }
+
 
     // Need to fix bug: 500 server error
     @Test(description = "User should not be able to create a Project with a space as name", groups = {"Negative", "CRUD", "KnownBugs"})
     public void userCannotCreateProjectWithSpaceAsNameTest() {
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), " ");
-
         var response = projectController.createInvalidProject(invalidProject);
-
-        response.then().assertThat()
-                .statusCode(HttpStatus.SC_BAD_REQUEST)
-                .body(Matchers.containsString("Given project name is empty"));
+        ResponseValidator.checkErrorAndBody(response, HttpStatus.SC_BAD_REQUEST, "Given project name is empty");
     }
+
 
     @Test(description = "User should not be able to create a Project with an existing ID", groups = {"Negative", "CRUD"})
     public void userCannotCreateProjectWithExistingIdTest() {
         projectController.createProject(testData.getProject());
-
         var duplicateProject = TestDataGenerator.generate(List.of(testData.getProject()), Project.class, testData.getProject().getId(), RandomData.getString());
-
         Response response = projectController.createInvalidProject(duplicateProject);
-
-        response.then().assertThat()
-                .statusCode(HttpStatus.SC_BAD_REQUEST)
-                .body(Matchers.containsString("Project ID \"%s\" is already used by another project".formatted(testData.getProject().getId())));
+        ResponseValidator.checkErrorAndBody(response, HttpStatus.SC_BAD_REQUEST, "Project ID \"" + testData.getProject().getId() + "\" is already used by another project");
     }
 
     @Test(description = "User should not be able to create a Project with an existing name", groups = {"Negative", "CRUD"})
     public void userCannotCreateProjectWithExistingNameTest() {
         projectController.createProject(testData.getProject());
-
         var duplicateProject = TestDataGenerator.generate(List.of(testData.getProject()), Project.class, RandomData.getString(), testData.getProject().getName());
-
         Response response = projectController.createInvalidProject(duplicateProject);
-
-        response.then().assertThat()
-                .statusCode(HttpStatus.SC_BAD_REQUEST)
-                .body(Matchers.containsString("Project with this name already exists: %s".formatted(testData.getProject().getName())));
+        ResponseValidator.checkErrorAndBody(response, HttpStatus.SC_BAD_REQUEST, "Project with this name already exists: " + testData.getProject().getName());
     }
 
     @Test(description = "User should not be able to create a Project with an existing name in a different case", groups = {"Negative", "CRUD"})
     public void userCannotCreateProjectWithExistingNameDifferentCaseTest() {
         projectController.createProject(testData.getProject());
-
         var duplicateName = testData.getProject().getName().toUpperCase();
         var response = projectController.createInvalidProject(TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), duplicateName));
-
-        response.then().assertThat()
-                .statusCode(HttpStatus.SC_BAD_REQUEST)
-                .body(Matchers.containsString("Project with this name already exists: %s".formatted(duplicateName)));
+        ResponseValidator.checkErrorAndBody(response, HttpStatus.SC_BAD_REQUEST, "Project with this name already exists: " + duplicateName);
     }
 
 
     @Test(description = "User should not be able to create a Project with an existing ID in a different case", groups = {"Negative", "CRUD"})
     public void userCannotCreateProjectWithExistingIdDifferentCaseTest() {
         projectController.createProject(testData.getProject());
-
         var duplicateId = testData.getProject().getId().toUpperCase();
         var response = projectController.createInvalidProject(TestDataGenerator.generate(List.of(), Project.class, duplicateId, RandomData.getString()));
-
-        response.then().assertThat()
-                .statusCode(HttpStatus.SC_BAD_REQUEST)
-                .body(Matchers.containsString("Project ID \"%s\" is already used by another project".formatted(duplicateId)));
+        ResponseValidator.checkErrorAndBody(response, HttpStatus.SC_BAD_REQUEST, "Project ID \"" + duplicateId + "\" is already used by another project");
     }
 
+
+    //Need to fix 500 error
     @Test(description = "User should not be able to create a Project with an ID consisting only of digits", groups = {"Negative", "CRUD", "KnownBugs"})
     public void userCannotCreateProjectWithDigitsOnlyIdTest() {
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, "123456", RandomData.getString());
-
         var response = projectController.createInvalidProject(invalidProject);
-
-        response.then().assertThat()
-                .statusCode(HttpStatus.SC_BAD_REQUEST)
-                .body(Matchers.containsString("Project ID \"123456\" is invalid"))
-                .body(Matchers.containsString("ID should start with a latin letter and contain only latin letters, digits and underscores"));
+        ResponseValidator.checkErrorAndBody(response, HttpStatus.SC_BAD_REQUEST,
+                "Project ID \"123456\" is invalid",
+                "ID should start with a latin letter and contain only latin letters, digits and underscores");
     }
 
     @Test(description = "User should be able to create a Project with a name consisting only of digits", groups = {"Positive", "CRUD"})
     public void userCreatesProjectWithDigitsOnlyNameTest() {
         var validProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), "123456");
-
-        projectController.createProject(validProject);
-        var createdProject = projectController.getProjectById(validProject.getId());
-
-        softy.assertEquals(createdProject.getName(), validProject.getName(), "Project name is incorrect");
+        Response response = projectController.createProject(validProject);
+        ResponseValidator.checkSuccessStatus(response, HttpStatus.SC_OK);
+        Project createdProject = ResponseExtractor.extractModel(response, Project.class);
+        TestValidator.validateEntityFields(validProject, createdProject, softy);
         softy.assertAll();
     }
 
 
-    @Test(description = "User should not be able to create a Project with an ID starting with an underscore or a digit",
-            groups = {"Negative", "CRUD", "KnownBugs"}, dataProvider = "invalidIdStartId")
+    //Need to fix 500 error
+    @Test(description = "User should not be able to create a Project with an ID starting with an underscore or a digit", groups = {"Negative", "CRUD", "KnownBugs"}, dataProvider = "invalidIdStartId")
     public void userCannotCreateProjectWithInvalidStartingCharacterIdTest(String invalidId) {
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, invalidId, RandomData.getString());
-
         var response = projectController.createInvalidProject(invalidProject);
-
-        response.then().assertThat()
-                .statusCode(HttpStatus.SC_BAD_REQUEST)
-                .body(Matchers.containsString("Project ID \"%s\" is invalid".formatted(invalidId)))
-                .body(Matchers.containsString("ID should start with a latin letter and contain only latin letters, digits and underscores"));
+        ResponseValidator.checkErrorAndBody(response, HttpStatus.SC_BAD_REQUEST,
+                "Project ID \"" + invalidId + "\" is invalid",
+                "ID should start with a latin letter and contain only latin letters, digits and underscores");
     }
+    //Need to fix 500 error
 
-    //Fix bug 500 (Internal Server Error).
-    @Test(description = "User should not be able to create a Project with spaces in the middle of the ID",
-            groups = {"Negative", "CRUD", "KnownBugs"})
+    @Test(description = "User should not be able to create a Project with spaces in the middle of the ID", groups = {"Negative", "CRUD", "KnownBugs"})
     public void userCannotCreateProjectWithSpacesInIdTest() {
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, "invalid id", RandomData.getString());
-
         var response = projectController.createInvalidProject(invalidProject);
-
-        response.then().assertThat()
-                .statusCode(HttpStatus.SC_BAD_REQUEST)
-                .body(Matchers.containsString("Project ID \"invalid id\" is invalid"))
-                .body(Matchers.containsString("ID should start with a latin letter and contain only latin letters, digits and underscores"));
+        ResponseValidator.checkErrorAndBody(response, HttpStatus.SC_BAD_REQUEST,
+                "Project ID \"invalid id\" is invalid",
+                "ID should start with a latin letter and contain only latin letters, digits and underscores");
     }
 
-    @Test(description = "User should be able to create a Project with spaces in the middle of the name",
-            groups = {"Positive", "CRUD"})
+
+    @Test(description = "User should be able to create a Project with spaces in the middle of the name", groups = {"Positive", "CRUD"})
     public void userCreatesProjectWithSpacesInNameTest() {
         var validProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), "valid name with spaces");
-
-        projectController.createProject(validProject);
-        var createdProject = projectController.getProjectById(validProject.getId());
-
-        softy.assertEquals(createdProject.getId(), validProject.getId(), "Project ID is incorrect");
-        softy.assertEquals(createdProject.getName(), validProject.getName(), "Project name is incorrect");
+        Response response = projectController.createProject(validProject);
+        ResponseValidator.checkSuccessStatus(response, HttpStatus.SC_OK);
+        Project createdProject = ResponseExtractor.extractModel(response, Project.class);
+        TestValidator.validateEntityFields(validProject, createdProject, softy);
         softy.assertAll();
     }
 
-    @Test(description = "User should be able to create a Project with an ID containing Latin letters, digits, and underscores",
-            groups = {"Positive", "CRUD"})
+    @Test(description = "User should be able to create a Project with an ID containing Latin letters, digits, and underscores", groups = {"Positive", "CRUD"})
     public void userCreatesProjectWithValidIdCharactersTest() {
         var validProject = TestDataGenerator.generate(List.of(), Project.class, "valid_123_ID", RandomData.getString());
-
-        projectController.createProject(validProject);
-        var createdProject = projectController.getProjectById(validProject.getId());
-
-        softy.assertEquals(createdProject.getId(), validProject.getId(), "Project ID is incorrect");
-        softy.assertEquals(createdProject.getName(), validProject.getName(), "Project name is incorrect");
+        Response response = projectController.createProject(validProject);
+        ResponseValidator.checkSuccessStatus(response, HttpStatus.SC_OK);
+        Project createdProject = ResponseExtractor.extractModel(response, Project.class);
+        TestValidator.validateEntityFields(validProject, createdProject, softy);
         softy.assertAll();
     }
 
-    @Test(description = "User should not be able to create a Project without an ID",
-            groups = {"Negative", "CRUD"})
-    public void userCannotCreateProjectWithoutIdTest() {
-        var invalidProject = TestDataGenerator.generate(List.of(), Project.class, null, RandomData.getString());
 
-        var response = projectController.createInvalidProject(invalidProject);
-
-        response.then().assertThat()
-                .statusCode(HttpStatus.SC_BAD_REQUEST)
-                .body(Matchers.containsString("Project ID cannot be empty"));
-    }
-
-    @Test(description = "User should be able to create a Project with an empty ID",
-            groups = {"Positive", "CRUD"})
-    public void userCreatesProjectWithEmptyIdTest() {
-        var projectWithEmptyId = TestDataGenerator.generate(List.of(), Project.class, "", RandomData.getString());
-
-        projectController.createProject(projectWithEmptyId);
-        var createdProject = projectController.getProjectById(projectWithEmptyId.getId());
-
-        softy.assertEquals(createdProject.getId(), projectWithEmptyId.getId(), "Project ID is incorrect");
-        softy.assertEquals(createdProject.getName(), projectWithEmptyId.getName(), "Project name is incorrect");
-        softy.assertAll();
-    }
-
-    @Test(description = "User should be able to create a Project without specifying an ID", groups = {"Positive", "CRUD"})
-    public void userCreatesProjectWithoutIdTest() {
+    @Test(description = "User should be able to create a project without specifying an ID", groups = {"Positive", "CRUD"})
+    public void userCreatesProjectWithoutIdFieldTest() {
         var projectName = RandomData.getString();
         var projectWithoutId = TestDataGenerator.generate(List.of(), Project.class, null, projectName);
-
-        var response = projectController.createInvalidProject(projectWithoutId);
-
-        response.then().assertThat()
-                .statusCode(HttpStatus.SC_OK)
-                .body("name", Matchers.equalTo(projectName));
+        Response response = projectController.createProject(projectWithoutId);
+        ResponseValidator.checkSuccessStatus(response, HttpStatus.SC_OK);
+        Project createdProject = ResponseExtractor.extractModel(response, Project.class);
+        softy.assertNotNull(createdProject.getId(), "Project ID should not be null");
+        softy.assertFalse(createdProject.getId().isEmpty(), "Project ID should not be empty");
+        softy.assertEquals(createdProject.getName(), projectName, "Project name is incorrect");
+        softy.assertAll();
     }
 
+    //Need to fix 500 error
+    @Test(description = "User should be able to create a Project with an empty ID String", groups = {"Positive", "CRUD", "KnownBugs"})
+    public void userCreatesProjectWithEmptyIdStringTest() {
+        var projectWithEmptyId = TestDataGenerator.generate(List.of(), Project.class, "", RandomData.getString());
+        Response response = projectController.createProject(projectWithEmptyId);
+        ResponseValidator.checkSuccessStatus(response, HttpStatus.SC_OK);
+        Project createdProject = ResponseExtractor.extractModel(response, Project.class);
+        TestValidator.validateEntityFields(projectWithEmptyId, createdProject, softy);
+        softy.assertAll();
+    }
 
     @Test(description = "User should not be able to create a Project without specifying a name", groups = {"Negative", "CRUD"})
     public void userCannotCreateProjectWithoutNameTest() {
         var projectWithoutName = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), null);
-
         var response = projectController.createInvalidProject(projectWithoutName);
-
-        response.then().assertThat()
-                .statusCode(HttpStatus.SC_BAD_REQUEST)
-                .body(Matchers.containsString("Project name cannot be empty"));
+        ResponseValidator.checkErrorAndBody(response, HttpStatus.SC_BAD_REQUEST, "Project name cannot be empty");
     }
+
 
     @Test(description = "User should not be able to create a Project if parent project locator is not provided", groups = {"Negative", "CRUD"})
     public void userCannotCreateProjectWithoutParentProjectLocatorTest() {
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), RandomData.getString(), new ParentProject(null, null));
-
         var response = projectController.createInvalidProject(invalidProject);
-
-        response.then().assertThat()
-                .statusCode(HttpStatus.SC_BAD_REQUEST)
-                .body(Matchers.containsString("No project specified"))
-                .body(Matchers.containsString("Either 'id', 'internalId' or 'locator' attribute should be present"));
+        ResponseValidator.checkErrorAndBody(response, HttpStatus.SC_BAD_REQUEST, "No project specified", "Either 'id', 'internalId' or 'locator' attribute should be present");
     }
 
     @Test(description = "User should not be able to create a Project if parent project locator is empty", groups = {"Negative", "CRUD"})
     public void userCannotCreateProjectWithEmptyParentProjectLocatorTest() {
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("", null));
-
         var response = projectController.createInvalidProject(invalidProject);
-
-        response.then().assertThat()
-                .statusCode(HttpStatus.SC_NOT_FOUND)
-                .body(Matchers.containsString("No project found by locator 'count:1,id:'"))
-                .body(Matchers.containsString("Project cannot be found by external id ''"));
+        ResponseValidator.checkErrorAndBody(response, HttpStatus.SC_NOT_FOUND, "No project found by locator 'count:1,id:'", "Project cannot be found by external id ''");
     }
 
 
@@ -555,21 +458,15 @@ public class ProjectTests extends BaseTest {
         var unauthProjectController = new ProjectController(Specifications.unauthSpec());
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), RandomData.getString());
         var response = unauthProjectController.createInvalidProject(invalidProject);
-
-        response.then().assertThat()
-                .statusCode(HttpStatus.SC_UNAUTHORIZED)
-                .body(Matchers.containsString("Authentication required"));
+        ResponseValidator.checkErrorAndBody(response, HttpStatus.SC_UNAUTHORIZED, "Authentication required");
     }
 
     @Test(description = "User should be able to create a Project with an XSS payload in name (payload stored as text)", groups = {"Positive", "Security"})
     public void userCreatesProjectWithXSSInNameTest() {
-        var xssPayload = "<script>alert('XSS')</script>";
+        var xssPayload = "<script>alert('XSSd')</script>";
         var projectWithXSS = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), xssPayload);
-
-        projectController.createProject(projectWithXSS);
-        var createdProject = projectController.getProjectById(projectWithXSS.getId());
-
-        softy.assertEquals(createdProject.getName(), xssPayload, "XSS payload was modified or blocked");
+        Response response = projectController.createProject(projectWithXSS);
+        TestValidator.validateFieldValueFromResponse(response, Project.class, Project::getName, xssPayload, softy);
         softy.assertAll();
     }
 
@@ -577,13 +474,11 @@ public class ProjectTests extends BaseTest {
     public void userCreatesProjectWithSQLInjectionTest() {
         var sqlPayload = "'; DROP TABLE projects; --";
         var projectWithSQL = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), sqlPayload);
-
-        projectController.createProject(projectWithSQL);
-        var createdProject = projectController.getProjectById(projectWithSQL.getId());
-
-        softy.assertEquals(createdProject.getName(), sqlPayload, "SQL injection payload was modified or blocked");
+        Response response = projectController.createProject(projectWithSQL);
+        TestValidator.validateFieldValueFromResponse(response, Project.class, Project::getName, sqlPayload, softy);
         softy.assertAll();
     }
+
 
 }
 

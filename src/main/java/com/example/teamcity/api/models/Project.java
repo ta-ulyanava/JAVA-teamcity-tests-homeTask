@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class Project extends BaseModel {
+public class Project extends BaseModel implements Identifiable {
     @Random
     @Parameterizable
     private String id;

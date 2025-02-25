@@ -1,8 +1,10 @@
 package com.example.teamcity.api.responses;
 
+import com.example.teamcity.api.models.BaseModel;
 import io.restassured.response.Response;
-import org.hamcrest.Matchers;
 import org.apache.http.HttpStatus;
+import org.hamcrest.Matchers;
+import org.testng.asserts.SoftAssert;
 
 public class ResponseValidator {
 
@@ -23,20 +25,29 @@ public class ResponseValidator {
         }
     }
 
-    // Проверка успешного выполнения запроса по статусу
-    public static void checkSuccessStatus(Response response, int expectedStatusCode ) {
+    // Проверка успешного выполнения запроса
+    public static void checkSuccessStatus(Response response, int expectedStatusCode) {
         checkStatusCode(response, expectedStatusCode);
     }
 
-    // Проверка на ошибку (например, 404)
+    // Проверка ошибки по статусу
     public static void checkErrorStatus(Response response, int expectedStatusCode) {
         checkStatusCode(response, expectedStatusCode);
     }
 
-    // Новый метод для проверки ошибки и тела
-    public static void checkErrorAndBody(Response response, int expectedStatusCode, String expectedBodyContent) {
-        checkErrorStatus(response, expectedStatusCode); // Проверка статуса ошибки
+    // Проверка ошибки + содержимого тела
+    public static void checkErrorAndBody(Response response, int expectedStatusCode, String... expectedBodyContents) {
+        checkErrorStatus(response, expectedStatusCode);
+        for(String expected : expectedBodyContents) {
+            response.then().assertThat().body(Matchers.containsString(expected));
+        }
+    }
+
+
+    // Универсальная проверка на ошибку с конкретным сообщением в теле
+    public static void checkErrorWithMessage(Response response, int expectedStatusCode, String expectedMessage) {
         response.then().assertThat()
-                .body(Matchers.containsString(expectedBodyContent)); // Проверка содержания в теле ошибки
+                .statusCode(expectedStatusCode)
+                .body(Matchers.containsString(expectedMessage));
     }
 }
