@@ -52,6 +52,12 @@ public class ProjectTests extends BaseTest {
                 {"1invalidId"},
         };
     }
+    @DataProvider(name = "invalidCopySettings")
+    public Object[][] invalidCopySettings() {
+        return new Object[][] {
+                {"not a boolean"}, {123}, {"!@#$%"}, {" "}
+        };
+    }
 
     @Test(description = "User should be able to create a project with the minimum required fields", groups = {"Positive", "CRUD"})
     public void userCreatesProjectWithMandatoryFieldsOnlyTest() {
@@ -85,6 +91,15 @@ public class ProjectTests extends BaseTest {
         TestValidator.validateEntityFields(projectWithCopyAll, createdProject, softy);
         softy.assertAll();
     }
+
+// Need to fix bug
+    @Test(description = "User should not be able to create Project with invalid copyAllAssociatedSettings", groups = {"Negative", "CRUD", "KnownBugs"}, dataProvider = "invalidCopySettings")
+    public void userCannotCreateProjectWithInvalidCopySettingsTest(Object invalidValue) {
+        var project = TestDataGenerator.generate(List.of(), Project.class, testData.getProject().getId(), testData.getProject().getName(), new ParentProject(testData.getProject().getId(), null), invalidValue);
+        Response response = projectController.createInvalidProject(project);
+        ResponseValidator.checkErrorAndBody(response, HttpStatus.SC_BAD_REQUEST, "CopyAllAssociatedSettings is invalid");
+    }
+
 
     @Test(description = "User should be able to create a max amount of nested projects", groups = {"Positive", "CRUD", "CornerCase"})
     public void userCreatesMaxAmountNestedProjectsTest() {
