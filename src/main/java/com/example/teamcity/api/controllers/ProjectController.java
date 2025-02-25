@@ -8,11 +8,14 @@ import com.example.teamcity.api.models.ParentProject;
 import com.example.teamcity.api.models.Project;
 import com.example.teamcity.api.requests.CheckedRequest;
 import com.example.teamcity.api.requests.UncheckedRequest;
+import com.example.teamcity.api.responses.ResponseExtractor;
 import com.example.teamcity.api.responses.ResponseHandler;
 import com.example.teamcity.api.responses.ResponseValidator;
+import com.example.teamcity.api.responses.TestValidator;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 import org.apache.http.HttpStatus;
+import org.testng.asserts.SoftAssert;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,6 +33,15 @@ public class ProjectController {
         Response response = checkedRequest.<Project>getRequest(Endpoint.PROJECTS).create(project);
         TestDataStorage.getInstance().addCreatedEntity(Endpoint.PROJECTS, project);
         return response;
+    }
+    public Project createAndReturnProject(Project project) {
+        Response response = createProject(project);
+        ResponseValidator.checkSuccessStatus(response, HttpStatus.SC_OK);
+        return ResponseExtractor.extractModel(response, Project.class);
+    }
+    public void validateCreatedProject(Project expectedProject, Project actualProject, SoftAssert softAssert) {
+        TestValidator.validateEntityFields(expectedProject, actualProject, softAssert);
+        softAssert.assertAll();
     }
 
     public Project getProjectById(String projectId) {
@@ -75,4 +87,5 @@ public class ProjectController {
     public Response createInvalidProject(Project project) {
         return uncheckedRequests.getRequest(Endpoint.PROJECTS).create(project);
     }
+
 }

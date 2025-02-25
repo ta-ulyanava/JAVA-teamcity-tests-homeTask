@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.util.Map;
 
 @Builder
 @Data
@@ -29,4 +30,16 @@ public class Project extends BaseModel implements Identifiable {
     private ParentProject parentProject;
 
     private Boolean copyAllAssociatedSettings;
+
+    @Optional
+    private Map<String, String> projectsIdsMap;
+
+    @Optional
+    private Map<String, String> buildTypesIdsMap;
+
+    @Optional
+    private Map<String, String> vcsRootsIdsMap;
+
+    @Optional
+    private Project sourceProject;
 }
