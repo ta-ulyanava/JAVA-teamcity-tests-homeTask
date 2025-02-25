@@ -41,19 +41,19 @@ public class ProjectTests extends BaseTest {
     }
 
     @DataProvider
-    public Object[][] nonLatinIdProviderForId() {
+    public static Object[][] nonLatinIdProviderForId() {
         return new Object[][]{{"проект"}, {"项目"}, {"プロジェクト"}, {"مشروع"}, {"παράδειγμα"}, {"नमूना"}, {"בדיקה"}};
     }
 
     @DataProvider
-    public Object[][] invalidIdStartId() {
+    public static Object[][] invalidIdStartId() {
         return new Object[][]{
                 {"_invalidId"},
                 {"1invalidId"},
         };
     }
     @DataProvider(name = "invalidCopySettings")
-    public Object[][] invalidCopySettings() {
+    public static Object[][] invalidCopySettings() {
         return new Object[][] {
                 {"not a boolean"}, {123}, {"!@#$%"}, {" "}
         };
