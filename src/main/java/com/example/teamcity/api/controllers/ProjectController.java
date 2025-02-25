@@ -74,22 +74,37 @@ public class ProjectController {
         return nestedProjects;
     }
 
-    // Метод для создания дочерних проектов (сиблинг проектов)
+    // Метод для пакетного создания sibling-проектов
+    // Метод для последовательного создания sibling-проектов
     public List<Project> createSiblingProjects(String parentProjectId, int count) {
-        List<Project> siblingProjects = IntStream.range(0, count)
-                .mapToObj(i -> TestDataGenerator.generate(
-                        List.of(),
-                        Project.class,
-                        RandomData.getString(),
-                        RandomData.getString(),
-                        new ParentProject(parentProjectId, null)
-                ))
-                .toList();
+        List<Project> siblingProjects = new ArrayList<>();
 
-        siblingProjects.forEach(this::createProject);
+        for (int i = 0; i < count; i++) {
+            // Генерируем новый проект
+            Project siblingProject = TestDataGenerator.generate(
+                    List.of(),
+                    Project.class,
+                    RandomData.getUniqueName(),
+                    RandomData.getUniqueId(),
+                    new ParentProject(parentProjectId, null)
+            );
+
+            // Создаём проект через API
+            Response response = createProject(siblingProject);
+
+            // Логируем ошибку, если есть
+            ResponseHandler.logIfError(response);
+
+            // Проверяем, что проект успешно создан
+            ResponseValidator.checkSuccessStatus(response, HttpStatus.SC_OK);
+
+            // Извлекаем и добавляем в список
+            siblingProjects.add(ResponseHandler.extractAndLogModel(response, Project.class));
+        }
 
         return siblingProjects;
     }
+
 
     // Метод для создания некорректного проекта
     public Response createInvalidProject(Project project) {

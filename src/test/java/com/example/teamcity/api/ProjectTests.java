@@ -136,60 +136,28 @@ public class ProjectTests extends BaseTest {
     }
 
 
-    @Test(description = "User should be able to create 20 sibling projects under the same parent", groups = {"Positive", "CRUD", "CornerCase"})
+    @Test(description = "User should be able to create 20 sibling projects under the same parent",
+            groups = {"Positive", "CRUD", "CornerCase"})
     public void userCreates20SiblingProjectsTest() {
-        // Создаем родительский проект
+        // Создаём родительский проект
         projectController.createProject(testData.getProject());
 
-        // Количество сиблинг-проектов
+        // Количество sibling-проектов
         int siblingProjectsCount = 20;
 
-        // Создаем сиблинг-проекты
+        // Используем createSiblingProjects(), который уже делает все проверки!
         var siblingProjects = projectController.createSiblingProjects(testData.getProject().getId(), siblingProjectsCount);
 
-        // Проверка на количество созданных сиблинг-проектов
+        // Проверяем только бизнес-логику, не дублируя API-проверки
         softy.assertEquals(siblingProjects.size(), siblingProjectsCount, "The number of created sibling projects is incorrect");
 
-        // Для каждого сиблинг-проекта генерируем уникальные имя и ID
-        siblingProjects.forEach(project -> {
-            // Генерация уникального имени и ID проекта
-            String uniqueProjectName = RandomData.getUniqueName();
-            String uniqueProjectId = RandomData.getUniqueId();
-
-            // Обновляем имя и ID проекта с уникальными значениями
-            project.setName(uniqueProjectName);
-            project.setId(uniqueProjectId);
-
-            // Создание проекта с уникальными ID и именем
-            Response response = projectController.createProject(project);
-
-            // Логируем информацию о проекте
-            ResponseHandler.logIfError(response);
-
-            // Извлекаем объект Project из ответа
-            Project createdProject = ResponseHandler.extractAndLogModel(response, Project.class);
-
-            // Проверяем, что родительский проект правильный
-            softy.assertEquals(createdProject.getParentProject().getId(), testData.getProject().getId(),
-                    "Parent project ID is incorrect for project " + project.getId());
-        });
+        siblingProjects.forEach(project ->
+                softy.assertEquals(project.getParentProject().getId(), testData.getProject().getId(),
+                        "Parent project ID is incorrect for project " + project.getId())
+        );
 
         softy.assertAll();
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -212,7 +180,7 @@ public class ProjectTests extends BaseTest {
     }
 
 
-
+/*****************************************************************************************************/
 
     @Test(description = "User should be able to create a Project with a name of 500 characters", groups = {"Positive", "CRUD", "CornerCase"})
     public void userCreatesProjectWith500LengthNameTest() {
