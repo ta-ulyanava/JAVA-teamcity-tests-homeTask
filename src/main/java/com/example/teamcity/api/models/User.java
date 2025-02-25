@@ -6,18 +6,27 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.RandomStringUtils;
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class User extends BaseModel{
+public class User extends BaseModel {
     private int id;
+
     @Random
-    private String username;
+    @Builder.Default
+    private String username = generateRandomString();
+
     @Random
-    private String password;
+    @Builder.Default
+    private String password = generateRandomString();
+
     private Roles roles;
 
+    private static String generateRandomString() {
+        return "test_" + RandomStringUtils.randomAlphanumeric(8);
+    }
 }

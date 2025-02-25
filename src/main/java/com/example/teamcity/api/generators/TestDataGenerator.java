@@ -5,6 +5,7 @@ import com.example.teamcity.api.annotations.Parameterizable;
 import com.example.teamcity.api.annotations.Random;
 import com.example.teamcity.api.models.BaseModel;
 import com.example.teamcity.api.models.TestData;
+import com.example.teamcity.api.models.User;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -19,11 +20,6 @@ public final class TestDataGenerator {
     private TestDataGenerator() {
     }
 
-    /**
-     * Универсальный генератор тестовых данных.
-     * Работает с аннотациями @Optional, @Parameterizable, @Random.
-     * Автоматически обрабатывает списки (`List<>`), `Boolean`, вложенные объекты.
-     */
     public static <T extends BaseModel> T generate(List<BaseModel> generatedModels, Class<T> generatorClass, Object... parameters) {
         try {
             var instance = generatorClass.getDeclaredConstructor().newInstance();
@@ -35,26 +31,22 @@ public final class TestDataGenerator {
                 boolean hasDefault = field.isAnnotationPresent(Builder.Default.class);
                 boolean isOptional = field.isAnnotationPresent(Optional.class);
 
-                // Обрабатываем @Optional
                 if (isOptional && !isParamAvailable && !hasDefault) {
                     field.set(instance, null);
                     continue;
                 }
 
-                // Обрабатываем @Parameterizable
                 if (field.isAnnotationPresent(Parameterizable.class) && isParamAvailable) {
                     field.set(instance, parameters[paramIndex]);
                     paramIndex++;
                     continue;
                 }
 
-                // Обрабатываем @Random
                 if (field.isAnnotationPresent(Random.class) && field.getType().equals(String.class)) {
                     field.set(instance, RandomData.getString());
                     continue;
                 }
 
-                // Обрабатываем Boolean
                 if (field.getType().equals(Boolean.class)) {
                     if (isParamAvailable) {
                         field.set(instance, parameters[paramIndex]);
@@ -67,7 +59,6 @@ public final class TestDataGenerator {
                     continue;
                 }
 
-                // Обрабатываем String
                 if (field.getType().equals(String.class)) {
                     if (isParamAvailable) {
                         field.set(instance, parameters[paramIndex]);
@@ -80,7 +71,6 @@ public final class TestDataGenerator {
                     continue;
                 }
 
-                // Обрабатываем списки (`List<T>`)
                 if (List.class.isAssignableFrom(field.getType())) {
                     var genericType = (Class<?>) ((java.lang.reflect.ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
 
@@ -90,7 +80,7 @@ public final class TestDataGenerator {
                         if (isParamAvailable) {
                             field.set(instance, parameters[paramIndex]);
                         } else if (hasDefault) {
-                            field.set(instance, field.get(instance)); // Значение по умолчанию
+                            field.set(instance, field.get(instance));
                         } else if (!isOptional) {
                             generatedList.add(generate(generatedModels, genericType.asSubclass(BaseModel.class)));
                             field.set(instance, generatedList);
@@ -105,7 +95,6 @@ public final class TestDataGenerator {
                     continue;
                 }
 
-                // Обрабатываем вложенные объекты
                 if (BaseModel.class.isAssignableFrom(field.getType())) {
                     if (isParamAvailable) {
                         field.set(instance, parameters[paramIndex]);
@@ -121,6 +110,8 @@ public final class TestDataGenerator {
                     continue;
                 }
             }
+
+
             return instance;
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
                  NoSuchMethodException e) {
@@ -128,10 +119,6 @@ public final class TestDataGenerator {
         }
     }
 
-
-    /**
-     * Генерация тестовых данных для `TestData` (генерирует все сущности).
-     */
     public static TestData generate() {
         try {
             var instance = TestData.class.getDeclaredConstructor().newInstance();
@@ -152,11 +139,7 @@ public final class TestDataGenerator {
         }
     }
 
-    /**
-     * Метод для генерации одной сущности (без учета уже созданных моделей).
-     */
     public static <T extends BaseModel> T generate(Class<T> generatorClass, Object... parameters) {
         return generate(Collections.emptyList(), generatorClass, parameters);
     }
-
 }
