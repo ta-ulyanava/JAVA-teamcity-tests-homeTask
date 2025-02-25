@@ -84,8 +84,13 @@ public class ProjectController {
         return siblingProjects;
     }
 
-    public Response createInvalidProject(Project project) {
+    public Response createInvalidProjectFromProject(Project project) {
         return uncheckedRequests.getRequest(Endpoint.PROJECTS).create(project);
     }
+    public Response createInvalidProjectFromString(String projectJson) {
+        return uncheckedRequests.getRequest(Endpoint.PROJECTS).create(projectJson);
+    }
+
+
 
 }

@@ -22,6 +22,14 @@ public class UncheckedBase extends Request implements CrudInterface {
                 .post(endpoint.getUrl());
 
     }
+    public Response create(String body) {
+        return RestAssured
+                .given()
+                .spec(spec)
+                .body(body)
+                .post(endpoint.getUrl());
+    }
+
 
     @Override
     public Response read(String id) {
