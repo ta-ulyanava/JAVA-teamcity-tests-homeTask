@@ -5,8 +5,7 @@ import com.example.teamcity.api.controllers.ProjectController;
 import com.example.teamcity.api.enums.Endpoint;
 import com.example.teamcity.api.generators.RandomData;
 import com.example.teamcity.api.generators.TestDataGenerator;
-import com.example.teamcity.api.models.ParentProject;
-import com.example.teamcity.api.models.Project;
+import com.example.teamcity.api.models.*;
 import com.example.teamcity.api.responses.*;
 import com.example.teamcity.api.spec.Specifications;
 import io.restassured.response.Response;
@@ -478,8 +477,74 @@ public static Object[][] invalidCopySettings() {
     }
 
 
+        @DataProvider(name = "restrictedRoles")
+        public static Object[][] restrictedRoles() {
+            return new Object[][]{
+                    {"PROJECT_VIEWER"},
+                    {"GUEST_ROLE"},
+                    {"USER_ROLE"},
+                    {"PROJECT_DEVELOPER"},
+                    {"TOOLS_INTEGRATION"}
+            };
+        }
 
-}
+
+    @Test(description = "User with restricted role should not be able to create a project",
+            dataProvider = "restrictedRoles")
+    public void userWithRestrictedRoleCannotCreateProjectTest(String roleId) {
+        var restrictedUser = generate(User.class);
+        restrictedUser.setRoles(new Roles(List.of(new Role(roleId, "g"))));
+
+        superUserCheckRequests.getRequest(Endpoint.USERS).create(restrictedUser);
+
+        var restrictedUserController = new ProjectController(Specifications.authSpec(restrictedUser));
+        var newProject = generate(Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("_Root", null));
+
+        var response = restrictedUserController.createInvalidProjectFromProject(newProject);
+
+        ResponseValidator.checkErrorStatus(response, HttpStatus.SC_FORBIDDEN);
+        softy.assertTrue(response.asString().contains("Access denied"), "Ошибка должна содержать 'Access denied'");
+        softy.assertTrue(response.asString().contains("Create subproject"), "Ошибка должна содержать 'Create subproject'");
+
+        softy.assertAll();
+    }
+
+
+
+
+        @DataProvider(name = "allowedRoles")
+        public static Object[][] allowedRoles() {
+            return new Object[][]{
+                    {"PROJECT_ADMIN"},
+                    {"AGENT_MANAGER"}
+            };
+        }
+
+    @Test(description = "User with allowed role should be able to create a project",
+            dataProvider = "allowedRoles")
+    public void userWithAllowedRoleCanCreateProjectTest(String roleId) {
+        var allowedUser = generate(User.class);
+        allowedUser.setRoles(new Roles(List.of(new Role(roleId, "g"))));
+
+        superUserCheckRequests.getRequest(Endpoint.USERS).create(allowedUser);
+
+        var userController = new ProjectController(Specifications.authSpec(allowedUser));
+        var newProject = generate(Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("_Root", null));
+
+        var response = userController.createProject(newProject);
+
+        ResponseValidator.checkSuccessStatus(response, HttpStatus.SC_OK);
+        TestValidator.validateFieldWithStatusCode(response, HttpStatus.SC_OK, Project.class, Project::getId, newProject.getId(), softy);
+        TestValidator.validateFieldWithStatusCode(response, HttpStatus.SC_OK, Project.class, Project::getName, newProject.getName(), softy);
+
+        softy.assertAll();
+    }
+
+    }
+
+
+
+
 
 
 
