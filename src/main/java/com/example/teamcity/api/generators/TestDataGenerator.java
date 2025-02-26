@@ -84,7 +84,6 @@ public final class TestDataGenerator {
     }
 
     public static TestData generate() {
-        // Идем по всем полям TestData и для каждого, кто наследник BaseModel вызывыем generate() c передачей уже сгенерированных сущностей
         try {
             var instance = TestData.class.getDeclaredConstructor().newInstance();
             var generatedModels = new ArrayList<BaseModel>();
@@ -102,7 +101,6 @@ public final class TestDataGenerator {
             throw new IllegalStateException("Cannot generate test data", e);
         }
     }
-    // Метод, чтобы сгенерировать одну сущность. Передает пустой параметр generatedModels
     public static <T extends BaseModel> T generate(Class<T> generatorClass, Object... parameters) {
         return generate(Collections.emptyList(), generatorClass, parameters);
     }
