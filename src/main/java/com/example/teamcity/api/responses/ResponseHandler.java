@@ -11,7 +11,6 @@ public class ResponseHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(ResponseHandler.class);
 
-    // Логирование деталей ответа
     public static void logResponseDetails(Response response) {
         logger.info("Status Code: {}", response.getStatusCode());
         logger.info("Response Body: {}", response.getBody().asString());
@@ -19,15 +18,12 @@ public class ResponseHandler {
 
     public static void logIfError(Response response) {
         int statusCode = response.getStatusCode();
-
-        // Проверяем, входит ли статус в успешный диапазон 2xx (200–299)
         if (statusCode < HttpStatus.SC_OK || statusCode >= HttpStatus.SC_MULTIPLE_CHOICES) {
-            logger.error("❌ API ERROR: Status Code: {}", statusCode);
+            logger.error("API ERROR: Status Code: {}", statusCode);
             logger.error("Response Body: {}", response.getBody().asString());
         }
     }
 
-    // Универсальная валидация поля в теле ответа на разные типы значений (строка, число, булевы)
     public static void validateResponseBody(Response response, String fieldName, Object expectedValue) {
         try {
             if (expectedValue instanceof String) {
@@ -43,30 +39,26 @@ public class ResponseHandler {
             }
         } catch (AssertionError | IllegalArgumentException e) {
             logger.error("Validation failed for field: {}, expected value: {}. Error: {}", fieldName, expectedValue, e.getMessage());
-            throw e;  // Пробрасываем ошибку дальше
+            throw e;
         }
     }
 
-    // Извлечение модели данных из тела ответа
     public static <T> T extractModel(Response response, Class<T> modelClass) {
-        logResponseDetails(response);  // Логируем ответ
-        return response.getBody().as(modelClass);  // Преобразуем в объект
+        logResponseDetails(response);
+        return response.getBody().as(modelClass);
     }
 
-    // Извлечение строки из ответа (если нужно)
     public static String extractString(Response response) {
         logResponseDetails(response);
         return response.getBody().asString();
     }
 
-    // Извлечение объекта из ответа и логирование
     public static <T> T extractAndLogModel(Response response, Class<T> modelClass) {
-        logResponseDetails(response);  // Логируем ответ
-        return extractModel(response, modelClass);  // Извлекаем модель
+        logResponseDetails(response);
+        return extractModel(response, modelClass);
     }
 
-    // Валидация сущности с помощью TestValidator
     public static <T extends Identifiable> void validateEntityFields(T expected, T actual, SoftAssert softy) {
-        TestValidator.validateEntityFields(expected, actual, softy);  // Используем универсальную валидацию
+        TestValidator.validateEntityFields(expected, actual, softy);
     }
 }

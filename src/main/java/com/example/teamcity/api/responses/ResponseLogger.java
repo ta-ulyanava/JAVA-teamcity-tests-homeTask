@@ -11,7 +11,7 @@ public class ResponseLogger {
     public static void logIfError(Response response) {
         int statusCode = response.getStatusCode();
         if (statusCode < HttpStatus.SC_OK || statusCode >= HttpStatus.SC_MULTIPLE_CHOICES) {
-            logger.error("❌ API ERROR: Status Code: {}", statusCode);
+            logger.error("API ERROR: Status Code: {}", statusCode);
             logger.error("Response Body: {}", response.getBody().asString());
         }
     }

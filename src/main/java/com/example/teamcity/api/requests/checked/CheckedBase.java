@@ -20,19 +20,12 @@ public final class CheckedBase<T extends BaseModel> extends Request implements C
 
     @Override
     public Response create(BaseModel model) {
-        // Создаем модель через uncheckedBase и получаем Response
         Response response = uncheckedBase.create(model);
-
-        // После выполнения запроса проверяем статус
         response.then().assertThat().statusCode(HttpStatus.SC_OK);
-
-        // Приводим тип явно в зависимости от типа модели
         BaseModel createdModel = response.getBody().as(endpoint.getModelClass());
-
-        // Добавляем созданный объект в хранилище
         TestDataStorage.getInstance().addCreatedEntity(endpoint, createdModel);
 
-        return response;  // Возвращаем Response
+        return response;
     }
 
 

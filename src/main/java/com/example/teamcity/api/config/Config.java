@@ -24,7 +24,7 @@ public class Config {
 
 
     public static String getProperty(String key) {
-        return getConfig().properties.getProperty(key); // ✅ Теперь возвращает значение из конфига
+        return getConfig().properties.getProperty(key);
     }
 
     private void loadProperties(String filename) {

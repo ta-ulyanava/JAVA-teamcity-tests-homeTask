@@ -36,7 +36,6 @@ public class UncheckedBase extends Request implements CrudInterface {
         return RestAssured
                 .given()
                 .spec(spec)
-                //В гет всегда айдишник
                 .get(endpoint.getUrl() + "/id:" + id);
 
     }

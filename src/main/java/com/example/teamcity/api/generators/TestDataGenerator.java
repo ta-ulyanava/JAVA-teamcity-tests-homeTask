@@ -5,7 +5,6 @@ import com.example.teamcity.api.annotations.Parameterizable;
 import com.example.teamcity.api.annotations.Random;
 import com.example.teamcity.api.models.BaseModel;
 import com.example.teamcity.api.models.TestData;
-import com.example.teamcity.api.models.User;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
