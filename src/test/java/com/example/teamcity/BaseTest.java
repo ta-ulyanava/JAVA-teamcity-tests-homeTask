@@ -29,10 +29,12 @@ public class BaseTest {
     public void afterTest() {
         try {
             softy.assertAll();
+            TestDataStorage.getInstance().deleteCreatedEntities(); // Удаление созданных сущностей
         } catch (AssertionError e) {
             System.err.println("Ошибка в softAssert.assertAll() " + e.getMessage());
         }
     }
+
 
 
 }
