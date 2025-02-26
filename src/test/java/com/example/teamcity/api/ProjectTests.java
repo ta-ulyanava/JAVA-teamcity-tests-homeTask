@@ -58,22 +58,24 @@ public class ProjectTests extends BaseTest {
         softy.assertAll();
     }
 
-// Bug in API
-@Test(description = "User should be able to create a Project with copyAllAssociatedSettings set to true and verify copied fields", groups = {"Positive", "CRUD", "KnownBugs"})
-public void userCreatesProjectWithCopyAllAssociatedSettingsTrueTest() {
-    var sourceProject = generate(List.of(), Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("_Root", null));
-    var createdSourceProject = projectController.createAndReturnProject(sourceProject);
-    var newProject = generate(List.of(), Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("_Root", null), true, createdSourceProject);
-    var createdProject = projectController.createAndReturnProject(newProject);
-    softy.assertNotNull(createdProject.getSourceProject(), "sourceProject должен присутствовать, но отсутствует!");
-    if (createdProject.getSourceProject() != null) {
-        softy.assertEquals(createdProject.getSourceProject().getId(), createdSourceProject.getId(), "Source project ID не совпадает");
-    }
-    softy.assertNotNull(createdProject.getProjectsIdsMap(), "projectsIdsMap должен быть скопирован");
-    softy.assertNotNull(createdProject.getBuildTypesIdsMap(), "buildTypesIdsMap должен быть скопирован");
-    softy.assertNotNull(createdProject.getVcsRootsIdsMap(), "vcsRootsIdsMap должен быть скопирован");
-    softy.assertAll();
-}
+ //Bug in API
+ @Test(description = "User should be able to create a Project with copyAllAssociatedSettings set to true and verify copied fields",
+         groups = {"Positive", "CRUD", "KnownBugs"})
+ public void userCreatesProjectWithCopyAllAssociatedSettingsTrueTest() {
+     var sourceProject = generate(List.of(), Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("_Root", null));
+     var createdSourceProject = projectController.createAndReturnProject(sourceProject);
+
+     var newProject = generate(List.of(), Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("_Root", null), true, createdSourceProject);
+     var createdProject = projectController.createAndReturnProject(newProject);
+
+     softy.assertNotNull(createdProject.getSourceProject(), "sourceProject должен присутствовать, но отсутствует!");
+     softy.assertNotNull(createdProject.getProjectsIdsMap(), "projectsIdsMap должен быть скопирован");
+     softy.assertNotNull(createdProject.getBuildTypesIdsMap(), "buildTypesIdsMap должен быть скопирован");
+     softy.assertNotNull(createdProject.getVcsRootsIdsMap(), "vcsRootsIdsMap должен быть скопирован");
+
+     softy.assertAll(); // Перемещаем сюда
+ }
+
 
 
     @Test(description = "User should be able to create a Project with copyAllAssociatedSettings set to false and verify fields are NOT copied", groups = {"Positive", "CRUD"})

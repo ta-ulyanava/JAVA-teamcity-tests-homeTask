@@ -6,27 +6,24 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.apache.commons.lang3.RandomStringUtils;
 
-@Data
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class User extends BaseModel {
+// DTO class
+// Аннотации ломбока
+@Data // это шорткат для анотации toString,Equals, Getter
+// t.e toString будет определяться на основе двух полей класса
+// дает геттеры и сеттеры для НЕ final полей
+@Builder // реализует паттерн билдер, позволяет гибко, в произвольном порядке, создавать поля объекта
+// обычно джава требует строгий порядок
+// билдер позволяет инициализировать не все поля
+@AllArgsConstructor // конструктор со всеми аргументами
+@NoArgsConstructor // конструктор без аргументов
+@JsonIgnoreProperties(ignoreUnknown = true)// чтобы не падать когда приходят проперти, которые мы не описывали
+public class User extends BaseModel{
     private int id;
-
     @Random
-    @Builder.Default
-    private String username = generateRandomString();
-
+    private String username;
     @Random
-    @Builder.Default
-    private String password = generateRandomString();
-
+    private String password;
     private Roles roles;
 
-    private static String generateRandomString() {
-        return "test_" + RandomStringUtils.randomAlphanumeric(8);
-    }
 }

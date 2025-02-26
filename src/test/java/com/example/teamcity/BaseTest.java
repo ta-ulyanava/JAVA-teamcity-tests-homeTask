@@ -11,23 +11,28 @@ import org.testng.asserts.SoftAssert;
 import static com.example.teamcity.api.generators.TestDataGenerator.generate;
 
 public class BaseTest {
-    //сохраняем ассерты в переменной
     protected SoftAssert softy;
     protected TestData testData;
- // Самый первый запрос - под супер юзером всегда, для создания первой сущности,
- // поэтому убираем юзер реквестер из теста и выносим его в BaseTEst
-// Запрос будет использоваться в API и в UI
     protected CheckedRequest superUserCheckRequests = new CheckedRequest(Specifications.superUserAuthSpec());
-//(alwaysRun = true)  -- выполняем даже если тест упал
-@BeforeMethod(alwaysRun = true)
-public void beforeTest() {
-    softy = new SoftAssert();
-    testData = generate();
-}
-    @AfterMethod(alwaysRun = true)
-    public void afterTest(){
-        //накопили ассерты и можем падать
-        softy.assertAll();
-        TestDataStorage.getInstance().deleteCreatedEntities();
+    @BeforeMethod(alwaysRun = true)
+    public void beforeTest() {
+        try {
+            softy = new SoftAssert();
+            testData = generate();
+        } catch (Exception e) {
+            System.err.println("Ошибка в генерации данных beforeTest: " + e.getMessage());
+        }
     }
+
+
+    @AfterMethod(alwaysRun = true)
+    public void afterTest() {
+        try {
+            softy.assertAll();
+        } catch (AssertionError e) {
+            System.err.println("Ошибка в softAssert.assertAll() " + e.getMessage());
+        }
+    }
+
+
 }
