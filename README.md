@@ -26,6 +26,9 @@ teamcity-automation-tests/
 └── .gitignore                 # Ignored files
 ```
 
+## 🚀 Teamcity Installation from Docker
+```sh
+docker pull jetbrains/teamcity-server
 
 ## 🚀 Installation & Running Tests
 1️⃣ Clone the repository
