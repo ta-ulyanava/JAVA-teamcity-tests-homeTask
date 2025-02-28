@@ -27,8 +27,24 @@ teamcity-automation-tests/
 ```
 
 ## 🚀 Teamcity Installation from Docker
+1️⃣Downloading an image from Docker Hub
+unix/macOs/windows
 ```sh
 docker pull jetbrains/teamcity-server
+```
+2️⃣ Running a container based on the image
+unix/macOs
+```sh
+docker run --name teamcity-server-instance  \
+    -v $(pwd)/datadir:/data/teamcity_server/datadir \
+    -v $(pwd)/logs:/opt/teamcity/logs  \
+    -p 8111:8111 \
+    jetbrains/teamcity-server:2023.11.1
+```
+windows
+```sh
+docker run --name teamcity-server-instance -v "%cd%/datadir:/data/teamcity_server/datadir" -v "%cd%/logs:/opt/teamcity/logs" -p 8111:8111 jetbrains/teamcity-server:2023.11.1
+```
 
 ## 🚀 Installation & Running Tests
 1️⃣ Clone the repository
