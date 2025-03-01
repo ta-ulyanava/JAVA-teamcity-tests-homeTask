@@ -3,6 +3,7 @@ package com.example.teamcity.api;
 import com.example.teamcity.BaseTest;
 import com.example.teamcity.api.controllers.ProjectController;
 import com.example.teamcity.api.enums.Endpoint;
+import com.example.teamcity.api.enums.Role;
 import com.example.teamcity.api.generators.RandomData;
 import com.example.teamcity.api.generators.TestDataGenerator;
 import com.example.teamcity.api.models.*;
@@ -461,17 +462,25 @@ public void userCreatesProjectWithUnderscoreInIdTest() {
         softy.assertAll();
     }
 
+    @DataProvider(name = "restrictedRoles")
+    public static Object[][] restrictedRoles() {
+        return new Object[][]{
+                {Role.PROJECT_VIEWER},
+                {Role.GUEST_ROLE},
+                {Role.USER_ROLE},
+                {Role.PROJECT_DEVELOPER},
+                {Role.TOOLS_INTEGRATION}
+        };
+    }
+
     @Test(description = "User with restricted role should not be able to create a project",
             dataProvider = "restrictedRoles")
-    public void userWithRestrictedRoleCannotCreateProjectTest(String roleId) {
+    public void userWithRestrictedRoleCannotCreateProjectTest(Role role) {
         var restrictedUser = generate(User.class);
-        restrictedUser.setRoles(new Roles(List.of(new Role(roleId, "g"))));
-
+        restrictedUser.setRoles(new Roles(List.of(new com.example.teamcity.api.models.Role(role.getRoleName(), "g"))));
         superUserCheckRequests.getRequest(Endpoint.USERS).create(restrictedUser);
-
         var restrictedUserController = new ProjectController(Specifications.authSpec(restrictedUser));
         var newProject = generate(Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("_Root", null));
-
         var response = restrictedUserController.createInvalidProjectFromProject(newProject);
         response.then().spec(ValidationResponseSpecifications.checkForbiddenAccess());
         softy.assertAll();
@@ -480,25 +489,21 @@ public void userCreatesProjectWithUnderscoreInIdTest() {
     @DataProvider(name = "allowedRoles")
     public static Object[][] allowedRoles() {
         return new Object[][]{
-                {"PROJECT_ADMIN"},
-                {"AGENT_MANAGER"}
+                {Role.PROJECT_ADMIN},
+                {Role.AGENT_MANAGER}
         };
     }
 
     @Test(description = "User with allowed role should be able to create a project",
             dataProvider = "allowedRoles")
-    public void userWithAllowedRoleCanCreateProjectTest(String roleId) {
+    public void userWithAllowedRoleCanCreateProjectTest(Role role) {
         var allowedUser = generate(User.class);
-        allowedUser.setRoles(new Roles(List.of(new Role(roleId, "g"))));
-
+        allowedUser.setRoles(new Roles(List.of(new com.example.teamcity.api.models.Role(role.getRoleName(), "g"))));
         superUserCheckRequests.getRequest(Endpoint.USERS).create(allowedUser);
-
         var userController = new ProjectController(Specifications.authSpec(allowedUser));
         var newProject = generate(Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("_Root", null));
-
         var response = userController.createProject(newProject);
         response.then().spec(ValidationResponseSpecifications.checkBadRequest());
-
         TestValidator.validateFieldWithStatusCode(response, HttpStatus.SC_OK, Project.class, Project::getId, newProject.getId(), softy);
         TestValidator.validateFieldWithStatusCode(response, HttpStatus.SC_OK, Project.class, Project::getName, newProject.getName(), softy);
 
