@@ -1,16 +1,12 @@
 package com.example.teamcity.api.responses;
-
-import com.example.teamcity.api.models.BaseModel;
 import io.restassured.response.Response;
-import org.apache.http.HttpStatus;
 import org.hamcrest.Matchers;
-import org.testng.asserts.SoftAssert;
 
 public class ResponseValidator {
 
-    public static void checkStatusCode(Response response, int expectedStatusCode) {
-        response.then().assertThat().statusCode(expectedStatusCode);
-    }
+//    public static void checkStatusCode(Response response, int expectedStatusCode) {
+//        response.then().assertThat().statusCode(expectedStatusCode);
+//    }
 
     public static void validateNoErrors(Response response) {
         response.then().assertThat().body("errors", Matchers.nullValue());
@@ -22,20 +18,20 @@ public class ResponseValidator {
         }
     }
 
-    public static void checkSuccessStatus(Response response, int expectedStatusCode) {
-        checkStatusCode(response, expectedStatusCode);
-    }
+//    public static void checkSuccessStatus(Response response, int expectedStatusCode) {
+//        checkStatusCode(response, expectedStatusCode);
+//    }
 
-    public static void checkErrorStatus(Response response, int expectedStatusCode) {
-        checkStatusCode(response, expectedStatusCode);
-    }
+//    public static void checkErrorStatus(Response response, int expectedStatusCode) {
+//        checkStatusCode(response, expectedStatusCode);
+//    }
 
-    public static void checkErrorAndBody(Response response, int expectedStatusCode, String... expectedBodyContents) {
-        checkErrorStatus(response, expectedStatusCode);
-        for(String expected : expectedBodyContents) {
-            response.then().assertThat().body(Matchers.containsString(expected));
-        }
-    }
+//    public static void checkErrorAndBody(Response response, int expectedStatusCode, String... expectedBodyContents) {
+//        checkErrorStatus(response, expectedStatusCode);
+//        for(String expected : expectedBodyContents) {
+//            response.then().assertThat().body(Matchers.containsString(expected));
+//        }
+//    }
 
 
     public static void checkErrorWithMessage(Response response, int expectedStatusCode, String expectedMessage) {
