@@ -461,7 +461,6 @@ public void userCreatesProjectWithUnderscoreInIdTest() {
         TestValidator.validateFieldValueFromResponse(response, Project.class, Project::getName, sqlPayload, softy);
         softy.assertAll();
     }
-
     @DataProvider(name = "restrictedRoles")
     public static Object[][] restrictedRoles() {
         return new Object[][]{
@@ -498,15 +497,15 @@ public void userCreatesProjectWithUnderscoreInIdTest() {
             dataProvider = "allowedRoles")
     public void userWithAllowedRoleCanCreateProjectTest(Role role) {
         var allowedUser = generate(User.class);
-        allowedUser.setRoles(new Roles(List.of(new com.example.teamcity.api.models.Role(role.getRoleName(), "g"))));
+        var newProject = generate(Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("_Root", null));
+        var createdProject = projectController.createAndReturnProject(newProject);
+        allowedUser.setRoles(new Roles(List.of(new com.example.teamcity.api.models.Role(role.getRoleName(), "p:" + createdProject.getId()))));
         superUserCheckRequests.getRequest(Endpoint.USERS).create(allowedUser);
         var userController = new ProjectController(Specifications.authSpec(allowedUser));
-        var newProject = generate(Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("_Root", null));
         var response = userController.createProject(newProject);
         response.then().spec(ValidationResponseSpecifications.checkBadRequest());
         TestValidator.validateFieldWithStatusCode(response, HttpStatus.SC_OK, Project.class, Project::getId, newProject.getId(), softy);
         TestValidator.validateFieldWithStatusCode(response, HttpStatus.SC_OK, Project.class, Project::getName, newProject.getName(), softy);
-
         softy.assertAll();
     }
 
