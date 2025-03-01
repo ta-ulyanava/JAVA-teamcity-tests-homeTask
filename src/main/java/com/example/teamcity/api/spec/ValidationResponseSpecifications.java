@@ -10,25 +10,27 @@ public class ValidationResponseSpecifications {
     public static ResponseSpecification checkProjectWithNameAlreadyExists(String projectName) {
         return new ResponseSpecBuilder()
                 .expectStatusCode(HttpStatus.SC_BAD_REQUEST)
-                .expectBody(Matchers.containsString("Project with this name already exists: " + projectName))
+                .expectBody(Matchers.containsString("Project with this name already exists: %s".formatted(projectName)))
                 .build();
     }
+
     public static ResponseSpecification checkBadRequest() {
         return new ResponseSpecBuilder()
                 .expectStatusCode(HttpStatus.SC_BAD_REQUEST)
                 .build();
     }
+
     public static ResponseSpecification checkProjectWithIdAlreadyExists(String projectId) {
         return new ResponseSpecBuilder()
                 .expectStatusCode(HttpStatus.SC_BAD_REQUEST)
-                .expectBody(Matchers.containsString("Project ID \"" + projectId + "\" is already used by another project"))
+                .expectBody(Matchers.containsString("Project ID \"%s\" is already used by another project".formatted(projectId)))
                 .build();
     }
 
     public static ResponseSpecification checkProjectNotFound(String projectId) {
         return new ResponseSpecBuilder()
                 .expectStatusCode(HttpStatus.SC_NOT_FOUND)
-                .expectBody(Matchers.containsString("Project cannot be found by external id '" + projectId + "'"))
+                .expectBody(Matchers.containsString("Project cannot be found by external id '%s'".formatted(projectId)))
                 .build();
     }
 
@@ -63,8 +65,8 @@ public class ValidationResponseSpecifications {
     public static ResponseSpecification checkProjectIdTooLong(int maxLength) {
         return new ResponseSpecBuilder()
                 .expectStatusCode(HttpStatus.SC_BAD_REQUEST)
-                .expectBody(Matchers.containsString("Project ID is invalid: it is " + (maxLength + 1) + " characters long while the maximum length is " + maxLength))
+                .expectBody(Matchers.containsString("Project ID is invalid: it is %d characters long while the maximum length is %d"
+                        .formatted(maxLength + 1, maxLength)))
                 .build();
     }
-
 }
