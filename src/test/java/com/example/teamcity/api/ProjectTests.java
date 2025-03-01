@@ -504,10 +504,12 @@ public void userCreatesProjectWithUnderscoreInIdTest() {
         var userController = new ProjectController(Specifications.authSpec(allowedUser));
         var response = userController.createProject(newProject);
         response.then().spec(ValidationResponseSpecifications.checkBadRequest());
-        TestValidator.validateFieldWithStatusCode(response, HttpStatus.SC_OK, Project.class, Project::getId, newProject.getId(), softy);
-        TestValidator.validateFieldWithStatusCode(response, HttpStatus.SC_OK, Project.class, Project::getName, newProject.getName(), softy);
+        Project createdResponseProject = ResponseExtractor.extractModel(response, Project.class);
+        softy.assertEquals(createdResponseProject.getId(), newProject.getId(), "ID проекта не совпадает");
+        softy.assertEquals(createdResponseProject.getName(), newProject.getName(), "Название проекта не совпадает");
         softy.assertAll();
     }
+
 
 
 }
