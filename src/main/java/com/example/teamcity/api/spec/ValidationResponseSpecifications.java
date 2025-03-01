@@ -7,6 +7,13 @@ import org.hamcrest.Matchers;
 
 public class ValidationResponseSpecifications {
 
+    public static ResponseSpecification checkSuccess() {
+        return new ResponseSpecBuilder()
+                .expectStatusCode(HttpStatus.SC_OK)
+                .build();
+    }
+
+
     public static ResponseSpecification checkProjectWithNameAlreadyExists(String projectName) {
         return new ResponseSpecBuilder()
                 .expectStatusCode(HttpStatus.SC_BAD_REQUEST)

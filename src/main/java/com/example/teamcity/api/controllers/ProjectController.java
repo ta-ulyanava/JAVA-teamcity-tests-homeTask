@@ -9,7 +9,6 @@ import com.example.teamcity.api.models.Project;
 import com.example.teamcity.api.requests.CheckedRequest;
 import com.example.teamcity.api.requests.UncheckedRequest;
 import com.example.teamcity.api.responses.ResponseExtractor;
-import com.example.teamcity.api.spec.ValidationResponseSpecifications;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 import org.apache.http.HttpStatus;
@@ -27,8 +26,7 @@ public class ProjectController {
     }
 
     public Response createProject(Project project) {
-        Response response = checkedRequest.<Project>getRequest(Endpoint.PROJECTS).create(project);
-        response.then().spec(ValidationResponseSpecifications.checkBadRequest()); // Проверяем, что нет ошибок валидации
+        Response response = checkedRequest.getRequest(Endpoint.PROJECTS).create(project);
         TestDataStorage.getInstance().addCreatedEntity(Endpoint.PROJECTS, project);
         return response;
     }
@@ -57,7 +55,6 @@ public class ProjectController {
         for (int i = 0; i < count; i++) {
             var nestedProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), RandomData.getString(), new ParentProject(currentParentId, null));
             Response response = createProject(nestedProject);
-            response.then().spec(ValidationResponseSpecifications.checkBadRequest()); // Проверяем ошибки
             Project createdNestedProject = ResponseExtractor.extractModel(response, Project.class);
             nestedProjects.add(createdNestedProject);
             currentParentId = createdNestedProject.getId();
@@ -71,7 +68,6 @@ public class ProjectController {
         for (int i = 0; i < count; i++) {
             Project siblingProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getUniqueName(), RandomData.getUniqueId(), new ParentProject(parentProjectId, null));
             Response response = createProject(siblingProject);
-            response.then().spec(ValidationResponseSpecifications.checkBadRequest()); // Проверяем ошибки
             siblingProjects.add(ResponseExtractor.extractModel(response, Project.class));
         }
         return siblingProjects;
@@ -79,13 +75,11 @@ public class ProjectController {
 
     public Response createInvalidProjectFromProject(Project project) {
         Response response = uncheckedRequests.getRequest(Endpoint.PROJECTS).create(project);
-        response.then().spec(ValidationResponseSpecifications.checkBadRequest());
         return response;
     }
 
     public Response createInvalidProjectFromString(String projectJson) {
         Response response = uncheckedRequests.getRequest(Endpoint.PROJECTS).create(projectJson);
-        response.then().spec(ValidationResponseSpecifications.checkBadRequest());
         return response;
     }
 }

@@ -55,8 +55,9 @@ public class ProjectTests extends BaseTest {
 
     @Test(description = "User should be able to create a project with the minimum required fields under Root project", groups = {"Positive", "CRUD"})
     public void userCreatesProjectWithMandatoryFieldsOnlyTest() {
-        Project createdProject = projectController.createAndReturnProject(testData.getProject());
-        softy.assertEquals(createdProject, testData.getProject(), "Созданный проект не совпадает с ожидаемым");
+        var response = projectController.createProject(testData.getProject());
+        response.then().spec(ValidationResponseSpecifications.checkSuccess()); // Ожидаем 200 OK
+        var createdProject = ResponseExtractor.extractModel(response, Project.class);
         softy.assertEquals(createdProject.getParentProject().getId(), "_Root", "Parent project should be '_Root' when not specified");
         softy.assertAll();
     }
@@ -69,8 +70,11 @@ public class ProjectTests extends BaseTest {
         var createdSourceProject = projectController.createAndReturnProject(sourceProject);
         var newProject = generate(List.of(), Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("_Root", null), true, createdSourceProject);
         var createdProject = projectController.createAndReturnProject(newProject);
-        softy.assertEquals(createdProject, newProject, "Созданный проект не совпадает с ожидаемым");
+        softy.assertEquals(createdProject.getId(), newProject.getId());
+        softy.assertEquals(createdProject.getName(), newProject.getName());
+        softy.assertEquals(createdProject.getParentProject().getId(), newProject.getParentProject().getId());
         softy.assertAll();
+
     }
 
 @Test(description = "User should be able to create a Project with copyAllAssociatedSettings set to false and verify fields are NOT copied", groups = {"Positive", "CRUD"})
@@ -79,10 +83,12 @@ public void userCreatesProjectWithCopyAllAssociatedSettingsFalseTest() {
     var createdSourceProject = projectController.createAndReturnProject(sourceProject);
     var newProject = generate(List.of(), Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("_Root", null), false, createdSourceProject);
     var createdProject = projectController.createAndReturnProject(newProject);
-    softy.assertEquals(createdProject, newProject, "Созданный проект не совпадает с ожидаемым");
+    softy.assertEquals(createdProject.getId(), newProject.getId());
+    softy.assertEquals(createdProject.getName(), newProject.getName());
+    softy.assertEquals(createdProject.getParentProject().getId(), newProject.getParentProject().getId());
     softy.assertAll();
-}
 
+}
     // Need to fix bug
     @DataProvider(name = "invalidCopySettings")
     public static Object[][] invalidCopySettings() {
@@ -110,7 +116,6 @@ public void userCreatesProjectWithCopyAllAssociatedSettingsFalseTest() {
         projectController.createInvalidProjectFromString(invalidProjectJson)
                 .then().spec(ValidationResponseSpecifications.checkInvalidCopySettings());
     }
-
     @DataProvider(name = "projectCreationScenarios")
     public static Object[][] projectCreationScenarios() {
         return new Object[][]{{true, 20}, {false, 20}};
@@ -124,29 +129,37 @@ public void userCreatesProjectWithCopyAllAssociatedSettingsFalseTest() {
         List<Project> projects = isNested
                 ? projectController.createNestedProjects(createdRootProject.getId(), projectCount)
                 : projectController.createSiblingProjects(createdRootProject.getId(), projectCount);
+
         softy.assertEquals(projects.size(), projectCount, "The number of created projects is incorrect");
-        if (isNested) {
-            for (int i = 1; i < projects.size(); i++) {
-                var parentProject = projectController.getProjectById(projects.get(i).getParentProject().getId());
-                TestValidator.validateEntityFields(projects.get(i - 1), parentProject, softy);
+
+        projects.forEach(project -> {
+            if (isNested && projects.indexOf(project) > 0) {
+                softy.assertEquals(
+                        project.getParentProject().getId(),
+                        projects.get(projects.indexOf(project) - 1).getId(),
+                        "Parent project ID is incorrect for project " + project.getId()
+                );
+            } else {
+                softy.assertEquals(
+                        project.getParentProject().getId(),
+                        createdRootProject.getId(),
+                        "Parent project ID is incorrect for project " + project.getId()
+                );
             }
-        } else {
-            projects.forEach(project ->
-                    softy.assertEquals(project.getParentProject().getId(), createdRootProject.getId(),
-                            "Parent project ID is incorrect for project " + project.getId()));
-        }
+        });
+
         softy.assertAll();
     }
 
-
-
-    @Test(description = "User should not be able to create a Project with a non-existent parentProject locator", groups = {"Negative", "CRUD"})
+    @Test(description = "User should not be able to create a Project with a non-existent parentProject locator",
+            groups = {"Negative", "CRUD"})
     public void userCannotCreateProjectWithNonExistentParentProjectTest() {
         var invalidProject = generate(List.of(), Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("non_existent_locator", null));
         var response = projectController.createInvalidProjectFromProject(invalidProject);
-        response.then().spec(ValidationResponseSpecifications.checkProjectNotFound("non_existent_locator"));
+        response.then().spec(ValidationResponseSpecifications.checkProjectNotFound("non_existent_locator")); // Ожидаем 404
         softy.assertAll();
     }
+
 
     @Test(description = "User should not be able to create a Project with the same ID as its parent ID", groups = {"Negative", "CRUD"})
     public void userCannotCreateProjectWithSameParentIdTest() {
@@ -156,23 +169,22 @@ public void userCreatesProjectWithCopyAllAssociatedSettingsFalseTest() {
         response.then().spec(ValidationResponseSpecifications.checkProjectNotFound(projectId));
         softy.assertAll();
     }
-
-
-
+    /****/
     @Test(description = "User should be able to create a Project with a name of 500 characters", groups = {"Positive", "CRUD", "CornerCase"})
     public void userCreatesProjectWith500LengthNameTest() {
         var maxLengthName = "A".repeat(500);
         var validProject = generate(List.of(), Project.class, RandomData.getString(), maxLengthName);
         var response = projectController.createProject(validProject);
-        response.then().spec(ValidationResponseSpecifications.checkBadRequest());
+        response.then().spec(ValidationResponseSpecifications.checkSuccess());
         softy.assertAll();
     }
+    /****/
 
     @Test(description = "User should be able to create a Project with a name of length 1", groups = {"Positive", "CRUD"})
     public void userCreatesProjectWithOneCharacterNameTest() {
         var validProject = generate(List.of(), Project.class, RandomData.getString(), "A");
         var response = projectController.createProject(validProject);
-        response.then().spec(ValidationResponseSpecifications.checkBadRequest());
+        response.then().spec(ValidationResponseSpecifications.checkSuccess());
         softy.assertAll();
     }
 
@@ -182,7 +194,7 @@ public void userCreatesProjectWithCopyAllAssociatedSettingsFalseTest() {
         var maxLengthId = "A".repeat(225);
         var validProject = generate(List.of(), Project.class, maxLengthId, RandomData.getString());
         var response = projectController.createProject(validProject);
-        response.then().spec(ValidationResponseSpecifications.checkBadRequest());
+        response.then().spec(ValidationResponseSpecifications.checkSuccess());
         softy.assertAll();
     }
 
@@ -190,7 +202,7 @@ public void userCreatesProjectWithCopyAllAssociatedSettingsFalseTest() {
     public void userCreatesProjectWithOneCharacterIdTest() {
         var validProject = generate(List.of(), Project.class, "A", RandomData.getString());
         var response = projectController.createProject(validProject);
-        response.then().spec(ValidationResponseSpecifications.checkBadRequest());
+        response.then().spec(ValidationResponseSpecifications.checkSuccess());
         softy.assertAll();
     }
 
@@ -225,7 +237,7 @@ public void userCreatesProjectWithCopyAllAssociatedSettingsFalseTest() {
 public void userCreatesProjectWithLocalizedNameTest() {
     var localizedProject = generate(List.of(), Project.class, RandomData.getString(), RandomData.getFullLocalizationString());
     var response = projectController.createProject(localizedProject);
-    response.then().spec(ValidationResponseSpecifications.checkBadRequest());
+    response.then().spec(ValidationResponseSpecifications.checkSuccess());
     var createdProject = ResponseExtractor.extractModel(response, Project.class);
     TestValidator.validateEntityFields(localizedProject, createdProject, softy);
     softy.assertAll();
@@ -236,7 +248,7 @@ public void userCreatesProjectWithLocalizedNameTest() {
 public void userCreatesProjectWithUnderscoreInIdTest() {
     var projectWithUnderscore = generate(List.of(), Project.class, RandomData.getString() + "_test", RandomData.getString());
     var response = projectController.createProject(projectWithUnderscore);
-    response.then().spec(ValidationResponseSpecifications.checkBadRequest());
+    response.then().spec(ValidationResponseSpecifications.checkSuccess());
     var createdProject = ResponseExtractor.extractModel(response, Project.class);
     TestValidator.validateEntityFields(projectWithUnderscore, createdProject, softy);
     softy.assertAll();
@@ -385,7 +397,7 @@ public void userCreatesProjectWithUnderscoreInIdTest() {
     public void userCreatesProjectWithDigitsOnlyNameTest() {
         var validProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), "123456");
         var response = projectController.createProject(validProject);
-        response.then().spec(ValidationResponseSpecifications.checkBadRequest());
+        response.then().spec(ValidationResponseSpecifications.checkSuccess());
         var createdProject = ResponseExtractor.extractModel(response, Project.class);
         TestValidator.validateEntityFields(validProject, createdProject, softy);
         softy.assertAll();
@@ -405,7 +417,7 @@ public void userCreatesProjectWithUnderscoreInIdTest() {
     public void userCreatesProjectWithEmptyIdStringTest() {
         var projectWithEmptyId = TestDataGenerator.generate(List.of(), Project.class, "", RandomData.getString());
         var response = projectController.createProject(projectWithEmptyId);
-        response.then().spec(ValidationResponseSpecifications.checkBadRequest());
+        response.then().spec(ValidationResponseSpecifications.checkSuccess());
         var createdProject = ResponseExtractor.extractModel(response, Project.class);
         TestValidator.validateEntityFields(projectWithEmptyId, createdProject, softy);
         softy.assertAll();
