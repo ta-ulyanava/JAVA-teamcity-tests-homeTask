@@ -9,13 +9,10 @@ import com.example.teamcity.api.models.Project;
 import com.example.teamcity.api.requests.CheckedRequest;
 import com.example.teamcity.api.requests.UncheckedRequest;
 import com.example.teamcity.api.responses.ResponseExtractor;
-import com.example.teamcity.api.responses.ResponseHandler;
-import com.example.teamcity.api.responses.ResponseValidator;
-import com.example.teamcity.api.responses.TestValidator;
+import com.example.teamcity.api.spec.ValidationResponseSpecifications;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 import org.apache.http.HttpStatus;
-import org.testng.asserts.SoftAssert;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,17 +28,14 @@ public class ProjectController {
 
     public Response createProject(Project project) {
         Response response = checkedRequest.<Project>getRequest(Endpoint.PROJECTS).create(project);
+        response.then().spec(ValidationResponseSpecifications.checkBadRequest()); // Проверяем, что нет ошибок валидации
         TestDataStorage.getInstance().addCreatedEntity(Endpoint.PROJECTS, project);
         return response;
     }
+
     public Project createAndReturnProject(Project project) {
         Response response = createProject(project);
-        ResponseValidator.checkSuccessStatus(response, HttpStatus.SC_OK);
         return ResponseExtractor.extractModel(response, Project.class);
-    }
-    public void validateCreatedProject(Project expectedProject, Project actualProject, SoftAssert softAssert) {
-        TestValidator.validateEntityFields(expectedProject, actualProject, softAssert);
-        softAssert.assertAll();
     }
 
     public Project getProjectById(String projectId) {
@@ -63,8 +57,8 @@ public class ProjectController {
         for (int i = 0; i < count; i++) {
             var nestedProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), RandomData.getString(), new ParentProject(currentParentId, null));
             Response response = createProject(nestedProject);
-            ResponseHandler.logIfError(response);
-            Project createdNestedProject = ResponseHandler.extractAndLogModel(response, Project.class);
+            response.then().spec(ValidationResponseSpecifications.checkBadRequest()); // Проверяем ошибки
+            Project createdNestedProject = ResponseExtractor.extractModel(response, Project.class);
             nestedProjects.add(createdNestedProject);
             currentParentId = createdNestedProject.getId();
         }
@@ -77,20 +71,21 @@ public class ProjectController {
         for (int i = 0; i < count; i++) {
             Project siblingProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getUniqueName(), RandomData.getUniqueId(), new ParentProject(parentProjectId, null));
             Response response = createProject(siblingProject);
-            ResponseHandler.logIfError(response);
-            ResponseValidator.checkSuccessStatus(response, HttpStatus.SC_OK);
-            siblingProjects.add(ResponseHandler.extractAndLogModel(response, Project.class));
+            response.then().spec(ValidationResponseSpecifications.checkBadRequest()); // Проверяем ошибки
+            siblingProjects.add(ResponseExtractor.extractModel(response, Project.class));
         }
         return siblingProjects;
     }
 
     public Response createInvalidProjectFromProject(Project project) {
-        return uncheckedRequests.getRequest(Endpoint.PROJECTS).create(project);
+        Response response = uncheckedRequests.getRequest(Endpoint.PROJECTS).create(project);
+        response.then().spec(ValidationResponseSpecifications.checkBadRequest());
+        return response;
     }
+
     public Response createInvalidProjectFromString(String projectJson) {
-        return uncheckedRequests.getRequest(Endpoint.PROJECTS).create(projectJson);
+        Response response = uncheckedRequests.getRequest(Endpoint.PROJECTS).create(projectJson);
+        response.then().spec(ValidationResponseSpecifications.checkBadRequest());
+        return response;
     }
-
-
-
 }

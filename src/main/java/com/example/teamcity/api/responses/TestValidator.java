@@ -17,12 +17,4 @@ public class TestValidator {
         softAssert.assertEquals(fieldAccessor.apply(model), expectedValue, "Field value mismatch");
     }
 
-    public static <T> void validateBooleanFieldFromResponse(Response response, Class<T> modelClass, Function<T, Boolean> fieldAccessor, boolean expectedValue, SoftAssert softAssert) {
-        validateFieldValueFromResponse(response, modelClass, fieldAccessor, expectedValue, softAssert);
-    }
-
-    public static <T, V> void validateFieldWithStatusCode(Response response, int expectedStatusCode, Class<T> modelClass, Function<T, V> fieldAccessor, V expectedValue, SoftAssert softAssert) {
-        ResponseValidator.checkStatusCode(response, expectedStatusCode);
-        validateFieldValueFromResponse(response, modelClass, fieldAccessor, expectedValue, softAssert);
-    }
 }
