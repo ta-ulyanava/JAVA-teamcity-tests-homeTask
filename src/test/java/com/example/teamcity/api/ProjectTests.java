@@ -7,11 +7,11 @@ import com.example.teamcity.api.enums.Role;
 import com.example.teamcity.api.generators.RandomData;
 import com.example.teamcity.api.generators.TestDataGenerator;
 import com.example.teamcity.api.models.*;
-import com.example.teamcity.api.responses.*;
+import com.example.teamcity.api.responses.ResponseExtractor;
+import com.example.teamcity.api.responses.TestValidator;
 import com.example.teamcity.api.spec.Specifications;
 import com.example.teamcity.api.spec.ValidationResponseSpecifications;
 import io.restassured.response.Response;
-import org.apache.http.HttpStatus;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -70,25 +70,19 @@ public class ProjectTests extends BaseTest {
         var createdSourceProject = projectController.createAndReturnProject(sourceProject);
         var newProject = generate(List.of(), Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("_Root", null), true, createdSourceProject);
         var createdProject = projectController.createAndReturnProject(newProject);
-        softy.assertEquals(createdProject.getId(), newProject.getId());
-        softy.assertEquals(createdProject.getName(), newProject.getName());
-        softy.assertEquals(createdProject.getParentProject().getId(), newProject.getParentProject().getId());
+        softy.assertEquals(createdProject, newProject);
         softy.assertAll();
-
     }
 
-@Test(description = "User should be able to create a Project with copyAllAssociatedSettings set to false and verify fields are NOT copied", groups = {"Positive", "CRUD"})
-public void userCreatesProjectWithCopyAllAssociatedSettingsFalseTest() {
-    var sourceProject = generate(List.of(), Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("_Root", null));
-    var createdSourceProject = projectController.createAndReturnProject(sourceProject);
-    var newProject = generate(List.of(), Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("_Root", null), false, createdSourceProject);
-    var createdProject = projectController.createAndReturnProject(newProject);
-    softy.assertEquals(createdProject.getId(), newProject.getId());
-    softy.assertEquals(createdProject.getName(), newProject.getName());
-    softy.assertEquals(createdProject.getParentProject().getId(), newProject.getParentProject().getId());
-    softy.assertAll();
-
-}
+    @Test(description = "User should be able to create a Project with copyAllAssociatedSettings set to false and verify fields are NOT copied", groups = {"Positive", "CRUD"})
+    public void userCreatesProjectWithCopyAllAssociatedSettingsFalseTest() {
+        var sourceProject = generate(List.of(), Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("_Root", null));
+        var createdSourceProject = projectController.createAndReturnProject(sourceProject);
+        var newProject = generate(List.of(), Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("_Root", null), false, createdSourceProject);
+        var createdProject = projectController.createAndReturnProject(newProject);
+        softy.assertEquals(createdProject, newProject);
+        softy.assertAll();
+    }
     // Need to fix bug
     @DataProvider(name = "invalidCopySettings")
     public static Object[][] invalidCopySettings() {
