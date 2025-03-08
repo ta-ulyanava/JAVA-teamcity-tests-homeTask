@@ -21,6 +21,7 @@
         <jackson-databind.version>2.18.2</jackson-databind.version>
         <jackson-annotations.version>2.18.2</jackson-annotations.version>
         <selenide.version>7.7.3</selenide.version>
+        <selenium-java.version>4.29.0</selenium-java.version>
     </properties>
     <dependencies>
         <dependency>
@@ -68,6 +69,12 @@
             <artifactId>selenide</artifactId>
             <version>${selenide.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.seleniumhq.selenium</groupId>
+            <artifactId>selenium-java</artifactId>
+            <version>${selenium-java.version}</version>
+        </dependency>
+
 
 
 

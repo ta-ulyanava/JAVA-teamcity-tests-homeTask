@@ -23,10 +23,9 @@ public class CreateProjectPage extends CreateBasePage {
         return this;
     }
 
-    public ProjectsPage setupProject(String projectName, String buildTypeName) {
+    public void setupProject(String projectName, String buildTypeName) {
         projectNameInput.val(projectName);
         buildTypeNameInput.val(buildTypeName);
         submitButton.click();
-        return page(ProjectsPage.class);
     }
 }
