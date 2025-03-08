@@ -3,7 +3,7 @@ package com.example.teamcity.api;
 import com.example.teamcity.api.enums.Endpoint;
 import com.example.teamcity.api.models.BuildType;
 import com.example.teamcity.api.models.Project;
-import com.example.teamcity.api.requests.CheckedRequests;
+import com.example.teamcity.api.requests.CheckedRequest;
 import com.example.teamcity.api.requests.unchecked.UncheckedBase;
 import com.example.teamcity.api.spec.Specifications;
 import org.apache.http.HttpStatus;
@@ -20,9 +20,8 @@ public class BuildTypeTest extends BaseApiTest {
 
     @Test(description = "User should be able to create Build Type", groups = {"Positive", "CRUD"})
     public void userCreatesBuildTypeTest() {
-
         superUserCheckRequests.getRequest(Endpoint.USERS).create(testData.getUser());
-        var userCheckRequests = new CheckedRequests(Specifications.authSpec(testData.getUser()));
+        var userCheckRequests = new CheckedRequest(Specifications.authSpec(testData.getUser()));
         userCheckRequests.<Project>getRequest(Endpoint.PROJECTS).create(testData.getProject());
         userCheckRequests.getRequest(Endpoint.BUILD_TYPES).create(testData.getBuildType());
         var createdBuildType = userCheckRequests.<BuildType>getRequest(Endpoint.BUILD_TYPES).read(testData.getBuildType().getId());
@@ -33,14 +32,11 @@ public class BuildTypeTest extends BaseApiTest {
 
     @Test(description = "User cannot create two build types with same id", groups = {"Negative", "CRUD"})
     public void userCreatesTwoBuildTypesWithTheSameIdTest() {
-
         superUserCheckRequests.getRequest(Endpoint.USERS).create(testData.getUser());
-        var userCheckRequests = new CheckedRequests(Specifications.authSpec(testData.getUser()));
+        var userCheckRequests = new CheckedRequest(Specifications.authSpec(testData.getUser()));
         userCheckRequests.<Project>getRequest(Endpoint.PROJECTS).create(testData.getProject());
-
         var buildTypeWithSameId = generate(Arrays.asList(testData.getProject()), BuildType.class, testData.getBuildType().getId());
         userCheckRequests.getRequest(Endpoint.BUILD_TYPES).create(testData.getBuildType());
-
         new UncheckedBase(Specifications.authSpec(testData.getUser()), Endpoint.BUILD_TYPES)
                 .create(buildTypeWithSameId)
                 .then().assertThat().statusCode(HttpStatus.SC_BAD_REQUEST)
