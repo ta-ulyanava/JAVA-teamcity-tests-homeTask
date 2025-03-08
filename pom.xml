@@ -20,6 +20,7 @@
         <jackson-core.version>2.18.2</jackson-core.version>
         <jackson-databind.version>2.18.2</jackson-databind.version>
         <jackson-annotations.version>2.18.2</jackson-annotations.version>
+        <selenide.version>7.7.3</selenide.version>
     </properties>
     <dependencies>
         <dependency>
@@ -62,6 +63,12 @@
             <artifactId>jackson-annotations</artifactId>
             <version>${jackson-annotations.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.codeborne</groupId>
+            <artifactId>selenide</artifactId>
+            <version>${selenide.version}</version>
+        </dependency>
+
 
 
 
