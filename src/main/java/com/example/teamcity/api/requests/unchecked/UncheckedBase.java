@@ -20,8 +20,8 @@ public class UncheckedBase extends Request implements CrudInterface {
                 .spec(spec)
                 .body(model)
                 .post(endpoint.getUrl());
-
     }
+
     public Response create(String body) {
         return RestAssured
                 .given()
@@ -30,14 +30,21 @@ public class UncheckedBase extends Request implements CrudInterface {
                 .post(endpoint.getUrl());
     }
 
-
     @Override
     public Response read(String locator) {
-        return RestAssured
-                .given()
-                .spec(spec)
-                .get(endpoint.getUrl() + "/" + locator);
-
+        if (locator.contains(":")) {
+            // Если это локатор (содержит :), используем параметр запроса
+            return RestAssured
+                    .given()
+                    .spec(spec)
+                    .get(endpoint.getUrl() + "?locator=" + locator);
+        } else {
+            // Если это ID, добавляем как часть пути
+            return RestAssured
+                    .given()
+                    .spec(spec)
+                    .get(endpoint.getUrl() + "/" + locator);
+        }
     }
 
     @Override
