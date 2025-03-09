@@ -19,7 +19,7 @@ public class CreateProjectTest extends BaseUiTest {
     @Test(description = "User should be able to create project", groups = {"Positive"})
     public void UserCreatesProject() {
         // подготовка окружения
-        step("Login as user");
+        loginAs(testData.getUser());
         // взаимодействие с UI
         CreateProjectPage.open("_Root")
                 .createForm(REPO_URL)
@@ -41,24 +41,24 @@ public class CreateProjectTest extends BaseUiTest {
 
     }
 
-    @Test(description = "User should not be able to create a project without a name", groups = {"Negative"})
-    public void userCreatesProjectWithoutName() {
-        // подготовка окружения
-        step("Login as user");
-        loginAs(testData.getUser());
-        // взаимодействие с UI
-        step("Open `Create Project Page` (http://localhost:8111/admin/createObjectMenu.html)");
-        step("Send all project parameters (repository URL)");
-        step("Click `Proceed`");
-        step("Set Project Name value is empty");
-        step("Click `Proceed`");
-
-        // проверка состояния API
-        // (корректность отправки данных с UI на API)
-        step("Check that number of projects did not change");
-        // проверка состояния UI
-        // (корректность считывания данных и отображение данных на UI)
-        step("Check that error appears `Project name must not be empty`");
-
-    }
+//    @Test(description = "User should not be able to create a project without a name", groups = {"Negative"})
+//    public void userCreatesProjectWithoutName() {
+//        // подготовка окружения
+//        step("Login as user");
+//        loginAs(testData.getUser());
+//        // взаимодействие с UI
+//        step("Open `Create Project Page` (http://localhost:8111/admin/createObjectMenu.html)");
+//        step("Send all project parameters (repository URL)");
+//        step("Click `Proceed`");
+//        step("Set Project Name value is empty");
+//        step("Click `Proceed`");
+//
+//        // проверка состояния API
+//        // (корректность отправки данных с UI на API)
+//        step("Check that number of projects did not change");
+//        // проверка состояния UI
+//        // (корректность считывания данных и отображение данных на UI)
+//        step("Check that error appears `Project name must not be empty`");
+//
+//    }
 }

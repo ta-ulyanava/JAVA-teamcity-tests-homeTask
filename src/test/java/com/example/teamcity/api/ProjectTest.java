@@ -21,7 +21,7 @@ import java.util.List;
 import static com.example.teamcity.api.generators.TestDataGenerator.generate;
 
 @Test(groups = {"Regression"})
-public class ProjectTests extends BaseTest {
+public class ProjectTest extends BaseTest {
 
     private ProjectController projectController;
 
