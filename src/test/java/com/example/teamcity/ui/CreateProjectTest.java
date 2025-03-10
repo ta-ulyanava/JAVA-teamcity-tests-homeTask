@@ -3,6 +3,7 @@ package com.example.teamcity.ui;
 import com.codeborne.selenide.Condition;
 import com.example.teamcity.api.enums.Endpoint;
 import com.example.teamcity.api.models.Project;
+import com.example.teamcity.api.models.BuildType;
 import com.example.teamcity.api.requests.CheckedRequest;
 import com.example.teamcity.api.requests.UncheckedRequest;
 import com.example.teamcity.api.ui.pages.LoginPage;
@@ -10,6 +11,7 @@ import com.example.teamcity.api.ui.pages.ProjectPage;
 import com.example.teamcity.api.ui.pages.ProjectsPage;
 import com.example.teamcity.api.ui.pages.admin.CreateProjectPage;
 import com.example.teamcity.api.enums.Endpoint;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import static com.codeborne.selenide.Selenide.$;
@@ -42,12 +44,12 @@ public class CreateProjectTest extends BaseUiTest {
 
         var foundProjects = ProjectsPage.open()
                 .getProjects().stream()
-                .anyMatch(project -> project.getName().equals(testData.getProject().getName()));
+                .anyMatch(project -> project.getName().text().equals(testData.getProject().getName()));
 
         softy.assertTrue(foundProjects);
     }
 
-   /*@Test(description = "User should not be able to create a project without a name", groups = {"Negative"})
+   @Test(description = "User should not be able to create a project without a name", groups = {"Negative"})
     public void userCreatesProjectWithoutName() {
         // подготовка окружения
         step("Login as user");
@@ -66,5 +68,5 @@ public class CreateProjectTest extends BaseUiTest {
         // (корректность считывания данных и отображение данных на UI)
         step("Check that error appears `Project name must not be empty`");
 
-    }*/
+    }
 }

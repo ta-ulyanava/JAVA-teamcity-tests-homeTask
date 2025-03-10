@@ -7,6 +7,7 @@ import com.example.teamcity.api.requests.Request;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
+import org.apache.http.HttpStatus;
 
 public class UncheckedBase extends Request implements CrudInterface {
     public UncheckedBase(RequestSpecification spec, Endpoint endpoint) {

@@ -31,9 +31,16 @@ public final class CheckedBase<T extends BaseModel> extends Request implements C
 
     @Override
     public T read(String id) {
-        return (T) uncheckedBase.read(id)
-                .then().assertThat().statusCode(HttpStatus.SC_OK)
-                .extract().as(endpoint.getModelClass());
+        var response = uncheckedBase.read(id)
+                .then().assertThat().statusCode(HttpStatus.SC_OK);
+                
+        if (id.contains(":")) {
+            // Если это локатор, получаем первый проект из массива
+            return (T) response.extract().jsonPath().getObject("project[0]", endpoint.getModelClass());
+        } else {
+            // Если это прямой ID, десериализуем напрямую
+            return (T) response.extract().as(endpoint.getModelClass());
+        }
     }
 
     @Override
