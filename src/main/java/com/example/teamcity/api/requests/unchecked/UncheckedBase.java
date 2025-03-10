@@ -7,6 +7,7 @@ import com.example.teamcity.api.requests.Request;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
+import org.apache.http.HttpStatus;
 
 public class UncheckedBase extends Request implements CrudInterface {
     public UncheckedBase(RequestSpecification spec, Endpoint endpoint) {
@@ -20,8 +21,8 @@ public class UncheckedBase extends Request implements CrudInterface {
                 .spec(spec)
                 .body(model)
                 .post(endpoint.getUrl());
-
     }
+
     public Response create(String body) {
         return RestAssured
                 .given()
@@ -30,30 +31,37 @@ public class UncheckedBase extends Request implements CrudInterface {
                 .post(endpoint.getUrl());
     }
 
-
     @Override
-    public Response read(String id) {
-        return RestAssured
-                .given()
-                .spec(spec)
-                .get(endpoint.getUrl() + "/id:" + id);
-
+    public Response read(String locator) {
+        if (locator.contains(":")) {
+            // Если это локатор (содержит :), используем параметр запроса
+            return RestAssured
+                    .given()
+                    .spec(spec)
+                    .get(endpoint.getUrl() + "?locator=" + locator);
+        } else {
+            // Если это ID, добавляем как часть пути
+            return RestAssured
+                    .given()
+                    .spec(spec)
+                    .get(endpoint.getUrl() + "/" + locator);
+        }
     }
 
     @Override
-    public Response update(String id, BaseModel model) {
+    public Response update(String locator, BaseModel model) {
         return RestAssured
                 .given()
                 .body(model)
                 .spec(spec)
-                .put(endpoint.getUrl() + "/id:" + id);
+                .put(endpoint.getUrl() + "/" + locator);
     }
 
     @Override
-    public Response delete(String id) {
+    public Response delete(String locator) {
         return RestAssured
                 .given()
                 .spec(spec)
-                .delete(endpoint.getUrl() + "/id:" + id);
+                .delete(endpoint.getUrl() + "/" + locator);
     }
 }
