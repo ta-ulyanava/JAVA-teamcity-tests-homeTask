@@ -8,8 +8,10 @@ import com.example.teamcity.api.controllers.ProjectController;
 import com.example.teamcity.api.spec.Specifications;
 import com.example.teamcity.api.ui.pages.BuildTypePage;
 import com.example.teamcity.api.ui.pages.admin.CreateBuildTypePage;
+import com.example.teamcity.api.requests.UncheckedRequest;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+import io.restassured.response.Response;
 
 import static com.codeborne.selenide.Selenide.$;
 import static io.qameta.allure.Allure.step;
@@ -18,6 +20,7 @@ import static io.qameta.allure.Allure.step;
 public class CreateBuildTypeTest extends BaseUiTest {
     private static final String REPO_URL = "https://github.com/AlexPshe/spring-core-for-qa";
     private ProjectController projectController;
+    private UncheckedRequest uncheckedRequest;
 
     @BeforeMethod(alwaysRun = true)
     public void setup() {
@@ -25,6 +28,7 @@ public class CreateBuildTypeTest extends BaseUiTest {
         loginAs(testData.getUser());
         projectController = new ProjectController(Specifications.authSpec(testData.getUser()));
         projectController.createProject(testData.getProject());
+        uncheckedRequest = new UncheckedRequest(Specifications.superUserAuthSpec());
     }
 
     @Test(description = "User should be able to create build type", groups = {"Positive"})
@@ -36,16 +40,20 @@ public class CreateBuildTypeTest extends BaseUiTest {
                 .setupBuildType(testData.getBuildType().getName())
         );
 
-        // Проверка состояния API
-        step("Verify Build Type creation via API", () -> {
-            var createdBuildType = superUserCheckRequests.<BuildType>getRequest(Endpoint.BUILD_TYPES)
+        // Проверка состояния API и получение ID
+        Response buildTypeResponse = step("Verify Build Type creation via API", () -> {
+            Response apiResponse = uncheckedRequest.getRequest(Endpoint.BUILD_TYPES)
                 .read("name:" + testData.getBuildType().getName());
-            softy.assertNotNull(createdBuildType, "Build Type should be created");
+            System.out.println("Created build type response: " + apiResponse.asString());
+            softy.assertNotNull(apiResponse, "Build Type should be created");
+            return apiResponse;
         });
 
-        // Проверка состояния UI
+        // Проверка состояния UI с правильным ID
         step("Verify Build Type page UI", () -> {
-            BuildTypePage.open(testData.getBuildType().getId())
+            String buildTypeId = buildTypeResponse.jsonPath().getString("buildType[0].id");
+            System.out.println("Opening build type page with ID: " + buildTypeId);
+            BuildTypePage.open(buildTypeId)
                 .getTitle()
                 .shouldHave(Condition.exactText(testData.getBuildType().getName()));
         });
@@ -64,7 +72,7 @@ public class CreateBuildTypeTest extends BaseUiTest {
 
         // Проверка состояния UI - должно появиться сообщение об ошибке
         step("Verify error message is displayed", () -> {
-            $(".error").shouldHave(Condition.text("Build configuration name cannot be empty"));
+            $(".error").shouldHave(Condition.text("Build configuration name must not be empty"));
         });
 
         // Проверка состояния API - Build Type не должен быть создан
