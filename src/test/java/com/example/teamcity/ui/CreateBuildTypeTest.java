@@ -46,7 +46,6 @@ public class CreateBuildTypeTest extends BaseUiTest {
         var buildTypeId = step("Verify Build Type creation via API", () -> {
             Response response = uncheckedRequest.getRequest(ApiEndpoint.BUILD_TYPES)
                 .read("name:" + testData.getBuildType().getName());
-            System.out.println("Created build type response: " + response.asString());
             softy.assertNotNull(response, "Build Type should be created");
             return response.jsonPath().getString("buildType[0].id");
         });
