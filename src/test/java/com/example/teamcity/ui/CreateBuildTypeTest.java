@@ -12,8 +12,6 @@ import com.example.teamcity.api.requests.UncheckedRequest;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import io.restassured.response.Response;
-
-import static com.codeborne.selenide.Selenide.$;
 import static io.qameta.allure.Allure.step;
 
 @Test(groups = "Regression")
