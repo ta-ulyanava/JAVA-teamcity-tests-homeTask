@@ -1,6 +1,6 @@
 package com.example.teamcity.api;
 
-import com.example.teamcity.api.enums.Endpoint;
+import com.example.teamcity.api.enums.ApiEndpoint;
 import com.example.teamcity.api.models.BuildType;
 import com.example.teamcity.api.models.Project;
 import com.example.teamcity.api.requests.CheckedRequest;
@@ -20,11 +20,11 @@ public class BuildTypeTest extends BaseApiTest {
 
     @Test(description = "User should be able to create Build Type", groups = {"Positive", "CRUD"})
     public void userCreatesBuildTypeTest() {
-        superUserCheckRequests.getRequest(Endpoint.USERS).create(testData.getUser());
+        superUserCheckRequests.getRequest(ApiEndpoint.USERS).create(testData.getUser());
         var userCheckRequests = new CheckedRequest(Specifications.authSpec(testData.getUser()));
-        userCheckRequests.<Project>getRequest(Endpoint.PROJECTS).create(testData.getProject());
-        userCheckRequests.getRequest(Endpoint.BUILD_TYPES).create(testData.getBuildType());
-        var createdBuildType = userCheckRequests.<BuildType>getRequest(Endpoint.BUILD_TYPES).read(testData.getBuildType().getId());
+        userCheckRequests.<Project>getRequest(ApiEndpoint.PROJECTS).create(testData.getProject());
+        userCheckRequests.getRequest(ApiEndpoint.BUILD_TYPES).create(testData.getBuildType());
+        var createdBuildType = userCheckRequests.<BuildType>getRequest(ApiEndpoint.BUILD_TYPES).read(testData.getBuildType().getId());
         softy.assertEquals(testData.getBuildType().getName(), createdBuildType.getName(), "Build type name is not correct");
 
 
@@ -32,12 +32,12 @@ public class BuildTypeTest extends BaseApiTest {
 
     @Test(description = "User cannot create two build types with same id", groups = {"Negative", "CRUD"})
     public void userCreatesTwoBuildTypesWithTheSameIdTest() {
-        superUserCheckRequests.getRequest(Endpoint.USERS).create(testData.getUser());
+        superUserCheckRequests.getRequest(ApiEndpoint.USERS).create(testData.getUser());
         var userCheckRequests = new CheckedRequest(Specifications.authSpec(testData.getUser()));
-        userCheckRequests.<Project>getRequest(Endpoint.PROJECTS).create(testData.getProject());
+        userCheckRequests.<Project>getRequest(ApiEndpoint.PROJECTS).create(testData.getProject());
         var buildTypeWithSameId = generate(Arrays.asList(testData.getProject()), BuildType.class, testData.getBuildType().getId());
-        userCheckRequests.getRequest(Endpoint.BUILD_TYPES).create(testData.getBuildType());
-        new UncheckedBase(Specifications.authSpec(testData.getUser()), Endpoint.BUILD_TYPES)
+        userCheckRequests.getRequest(ApiEndpoint.BUILD_TYPES).create(testData.getBuildType());
+        new UncheckedBase(Specifications.authSpec(testData.getUser()), ApiEndpoint.BUILD_TYPES)
                 .create(buildTypeWithSameId)
                 .then().assertThat().statusCode(HttpStatus.SC_BAD_REQUEST)
                 .body(Matchers.containsString("The build configuration / template ID \"%s\" is already used by another configuration or template".formatted(testData.getBuildType().getId())));

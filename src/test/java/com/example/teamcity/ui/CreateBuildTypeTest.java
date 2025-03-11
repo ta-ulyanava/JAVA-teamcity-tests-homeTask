@@ -1,9 +1,8 @@
 package com.example.teamcity.ui;
 
 import com.codeborne.selenide.Condition;
-import com.example.teamcity.api.enums.Endpoint;
+import com.example.teamcity.api.enums.ApiEndpoint;
 import com.example.teamcity.api.models.BuildType;
-import com.example.teamcity.api.models.Project;
 import com.example.teamcity.api.controllers.ProjectController;
 import com.example.teamcity.api.spec.Specifications;
 import com.example.teamcity.api.ui.pages.BuildTypePage;
@@ -42,7 +41,7 @@ public class CreateBuildTypeTest extends BaseUiTest {
 
         // Проверка состояния API и получение ID
         Response buildTypeResponse = step("Verify Build Type creation via API", () -> {
-            Response apiResponse = uncheckedRequest.getRequest(Endpoint.BUILD_TYPES)
+            Response apiResponse = uncheckedRequest.getRequest(ApiEndpoint.BUILD_TYPES)
                 .read("name:" + testData.getBuildType().getName());
             System.out.println("Created build type response: " + apiResponse.asString());
             softy.assertNotNull(apiResponse, "Build Type should be created");
@@ -77,7 +76,7 @@ public class CreateBuildTypeTest extends BaseUiTest {
 
         // Проверка состояния API - Build Type не должен быть создан
         step("Verify Build Type was not created", () -> {
-            var buildTypes = superUserCheckRequests.<BuildType>getRequest(Endpoint.BUILD_TYPES)
+            var buildTypes = superUserCheckRequests.<BuildType>getRequest(ApiEndpoint.BUILD_TYPES)
                 .read("project:" + testData.getProject().getId());
             softy.assertNull(buildTypes, "Build Type should not be created");
         });

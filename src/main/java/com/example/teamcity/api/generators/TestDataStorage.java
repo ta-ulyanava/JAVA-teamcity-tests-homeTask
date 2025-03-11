@@ -1,6 +1,6 @@
 package com.example.teamcity.api.generators;
 
-import com.example.teamcity.api.enums.Endpoint;
+import com.example.teamcity.api.enums.ApiEndpoint;
 import com.example.teamcity.api.models.BaseModel;
 import com.example.teamcity.api.requests.unchecked.UncheckedBase;
 import com.example.teamcity.api.spec.Specifications;
@@ -15,10 +15,10 @@ import java.util.Set;
  */
 public class TestDataStorage {
     private static TestDataStorage testDataStorage;
-    private final EnumMap<Endpoint, Set<String>> createdEntitiesMap;
+    private final EnumMap<ApiEndpoint, Set<String>> createdEntitiesMap;
 
     private TestDataStorage() {
-        createdEntitiesMap = new EnumMap<>(Endpoint.class);
+        createdEntitiesMap = new EnumMap<>(ApiEndpoint.class);
     }
 
     public static TestDataStorage getInstance() {
@@ -28,9 +28,9 @@ public class TestDataStorage {
         return testDataStorage;
     }
 
-    private void addCreatedEntity(Endpoint endpoint, String id) {
+    private void addCreatedEntity(ApiEndpoint apiEndpoint, String id) {
         if (id != null) {
-            createdEntitiesMap.computeIfAbsent(endpoint, key -> new HashSet<>()).add(id);
+            createdEntitiesMap.computeIfAbsent(apiEndpoint, key -> new HashSet<>()).add(id);
         }
     }
 
@@ -54,8 +54,8 @@ public class TestDataStorage {
         }
     }
 
-    public void addCreatedEntity(Endpoint endpoint, BaseModel model) {
-        addCreatedEntity(endpoint, getEntityIdOrLocator(model));
+    public void addCreatedEntity(ApiEndpoint apiEndpoint, BaseModel model) {
+        addCreatedEntity(apiEndpoint, getEntityIdOrLocator(model));
     }
 
 

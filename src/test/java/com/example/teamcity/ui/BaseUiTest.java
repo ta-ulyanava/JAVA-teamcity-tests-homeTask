@@ -4,7 +4,7 @@ import com.codeborne.selenide.Configuration;
 import com.codeborne.selenide.Selenide;
 import com.example.teamcity.BaseTest;
 import com.example.teamcity.api.config.Config;
-import com.example.teamcity.api.enums.Endpoint;
+import com.example.teamcity.api.enums.ApiEndpoint;
 import com.example.teamcity.api.models.User;
 import com.example.teamcity.api.ui.pages.LoginPage;
 import org.testng.annotations.AfterMethod;
@@ -30,7 +30,7 @@ public class BaseUiTest extends BaseTest {
         Selenide.closeWebDriver();
     }
     protected void loginAs(User user){
-        superUserCheckRequests.getRequest(Endpoint.USERS).create(testData.getUser());
+        superUserCheckRequests.getRequest(ApiEndpoint.USERS).create(testData.getUser());
         LoginPage.open().login(testData.getUser());
     }
 }

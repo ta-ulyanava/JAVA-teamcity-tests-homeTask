@@ -1,6 +1,6 @@
 package com.example.teamcity.api.requests.checked;
 
-import com.example.teamcity.api.enums.Endpoint;
+import com.example.teamcity.api.enums.ApiEndpoint;
 import com.example.teamcity.api.generators.TestDataStorage;
 import com.example.teamcity.api.models.BaseModel;
 import com.example.teamcity.api.requests.CrudInterface;
@@ -13,17 +13,17 @@ import org.apache.http.HttpStatus;
 public final class CheckedBase<T extends BaseModel> extends Request implements CrudInterface {
     private final UncheckedBase uncheckedBase;
 
-    public CheckedBase(RequestSpecification spec, Endpoint endpoint) {
-        super(spec, endpoint);
-        this.uncheckedBase = new UncheckedBase(spec, endpoint);
+    public CheckedBase(RequestSpecification spec, ApiEndpoint apiEndpoint) {
+        super(spec, apiEndpoint);
+        this.uncheckedBase = new UncheckedBase(spec, apiEndpoint);
     }
 
     @Override
     public Response create(BaseModel model) {
         Response response = uncheckedBase.create(model);
         response.then().assertThat().statusCode(HttpStatus.SC_OK);
-        BaseModel createdModel = response.getBody().as(endpoint.getModelClass());
-        TestDataStorage.getInstance().addCreatedEntity(endpoint, createdModel);
+        BaseModel createdModel = response.getBody().as(apiEndpoint.getModelClass());
+        TestDataStorage.getInstance().addCreatedEntity(apiEndpoint, createdModel);
 
         return response;
     }
@@ -36,10 +36,10 @@ public final class CheckedBase<T extends BaseModel> extends Request implements C
                 
         if (id.contains(":")) {
             // Если это локатор, получаем первый проект из массива
-            return (T) response.extract().jsonPath().getObject("project[0]", endpoint.getModelClass());
+            return (T) response.extract().jsonPath().getObject("project[0]", apiEndpoint.getModelClass());
         } else {
             // Если это прямой ID, десериализуем напрямую
-            return (T) response.extract().as(endpoint.getModelClass());
+            return (T) response.extract().as(apiEndpoint.getModelClass());
         }
     }
 
@@ -47,7 +47,7 @@ public final class CheckedBase<T extends BaseModel> extends Request implements C
     public T update(String id, BaseModel model) {
         return (T) uncheckedBase.update(id, model)
                 .then().assertThat().statusCode(HttpStatus.SC_OK)
-                .extract().as(endpoint.getModelClass());
+                .extract().as(apiEndpoint.getModelClass());
     }
 
     @Override

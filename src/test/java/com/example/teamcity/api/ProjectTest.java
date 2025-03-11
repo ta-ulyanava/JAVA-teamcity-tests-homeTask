@@ -2,7 +2,7 @@ package com.example.teamcity.api;
 
 import com.example.teamcity.BaseTest;
 import com.example.teamcity.api.controllers.ProjectController;
-import com.example.teamcity.api.enums.Endpoint;
+import com.example.teamcity.api.enums.ApiEndpoint;
 import com.example.teamcity.api.enums.Role;
 import com.example.teamcity.api.generators.RandomData;
 import com.example.teamcity.api.generators.TestDataGenerator;
@@ -28,7 +28,7 @@ public class ProjectTest extends BaseTest {
     @BeforeMethod(alwaysRun = true)
     public void setup() {
         super.beforeTest();
-        superUserCheckRequests.getRequest(Endpoint.USERS).create(testData.getUser());
+        superUserCheckRequests.getRequest(ApiEndpoint.USERS).create(testData.getUser());
         projectController = new ProjectController(Specifications.authSpec(testData.getUser()));
     }
 
@@ -483,7 +483,7 @@ public void userCreatesProjectWithUnderscoreInIdTest() {
     public void userWithRestrictedRoleCannotCreateProjectTest(Role role) {
         var restrictedUser = generate(User.class);
         restrictedUser.setRoles(new Roles(List.of(new com.example.teamcity.api.models.Role(role.getRoleName(), "g"))));
-        superUserCheckRequests.getRequest(Endpoint.USERS).create(restrictedUser);
+        superUserCheckRequests.getRequest(ApiEndpoint.USERS).create(restrictedUser);
         var restrictedUserController = new ProjectController(Specifications.authSpec(restrictedUser));
         var newProject = generate(Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("_Root", null));
         var response = restrictedUserController.createInvalidProjectFromProject(newProject);
@@ -506,7 +506,7 @@ public void userCreatesProjectWithUnderscoreInIdTest() {
         var newProject = generate(Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("_Root", null));
         var createdProject = projectController.createAndReturnProject(newProject);
         allowedUser.setRoles(new Roles(List.of(new com.example.teamcity.api.models.Role(role.getRoleName(), "p:" + createdProject.getId()))));
-        superUserCheckRequests.getRequest(Endpoint.USERS).create(allowedUser);
+        superUserCheckRequests.getRequest(ApiEndpoint.USERS).create(allowedUser);
         var userController = new ProjectController(Specifications.authSpec(allowedUser));
         var response = userController.createProject(newProject);
         response.then().spec(ValidationResponseSpecifications.checkBadRequest());
