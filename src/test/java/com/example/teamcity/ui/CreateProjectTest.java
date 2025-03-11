@@ -2,6 +2,7 @@ package com.example.teamcity.ui;
 
 import com.codeborne.selenide.Condition;
 import com.example.teamcity.api.enums.ApiEndpoint;
+import com.example.teamcity.api.enums.WebRoute;
 import com.example.teamcity.api.models.Project;
 import com.example.teamcity.api.ui.pages.ProjectPage;
 import com.example.teamcity.api.ui.pages.ProjectsPage;
@@ -14,7 +15,6 @@ import static io.qameta.allure.Allure.step;
 
 @Test(groups = "Regression")
 public class CreateProjectTest extends BaseUiTest {
-    private static final String REPO_URL = "https://github.com/AlexPshe/spring-core-for-qa";
 
     @Test(description = "User should be able to create project", groups = {"Positive"})
     public void userCreatesProject() {
@@ -23,7 +23,7 @@ public class CreateProjectTest extends BaseUiTest {
 
         // взаимодействие с UI
         CreateProjectPage.open("_Root")
-                .createForm(REPO_URL)
+                .createForm(WebRoute.GITHUB_REPO.getUrl())
                 .setupProject(testData.getProject().getName(), testData.getBuildType().getName());
 
         // проверка состояния API

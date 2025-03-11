@@ -2,6 +2,7 @@ package com.example.teamcity.ui;
 
 import com.codeborne.selenide.Condition;
 import com.example.teamcity.api.enums.ApiEndpoint;
+import com.example.teamcity.api.enums.WebRoute;
 import com.example.teamcity.api.models.BuildType;
 import com.example.teamcity.api.controllers.ProjectController;
 import com.example.teamcity.api.spec.Specifications;
@@ -17,7 +18,7 @@ import static io.qameta.allure.Allure.step;
 
 @Test(groups = "Regression")
 public class CreateBuildTypeTest extends BaseUiTest {
-    private static final String REPO_URL = "https://github.com/AlexPshe/spring-core-for-qa";
+
     private ProjectController projectController;
     private UncheckedRequest uncheckedRequest;
 
@@ -35,7 +36,7 @@ public class CreateBuildTypeTest extends BaseUiTest {
         // Взаимодействие с UI
         step("Create Build Type via UI", () -> 
             CreateBuildTypePage.open(testData.getProject().getId())
-                .createForm(REPO_URL)
+                .createForm(WebRoute.GITHUB_REPO.getUrl())
                 .setupBuildType(testData.getBuildType().getName())
         );
 
@@ -65,7 +66,7 @@ public class CreateBuildTypeTest extends BaseUiTest {
         // Взаимодействие с UI
         step("Try to create Build Type without name", () -> {
             CreateBuildTypePage.open(testData.getProject().getId())
-                .createForm(REPO_URL)
+                .createForm(WebRoute.GITHUB_REPO.getUrl())
                 .setupBuildType("");  // Пустое имя
         });
 
