@@ -28,9 +28,18 @@ public class TestDataStorage {
         return testDataStorage;
     }
 
-    private void addCreatedEntity(ApiEndpoint apiEndpoint, String id) {
+    public void addCreatedEntity(ApiEndpoint apiEndpoint, String id) {
         if (id != null) {
             createdEntitiesMap.computeIfAbsent(apiEndpoint, key -> new HashSet<>()).add(id);
+        }
+    }
+
+    public void addCreatedEntityByName(ApiEndpoint apiEndpoint, String name) {
+        if (name != null) {
+            var uncheckedBase = new UncheckedBase(Specifications.superUserAuthSpec(), apiEndpoint);
+            var response = uncheckedBase.read("name:" + name);
+            var id = response.jsonPath().getString("buildType[0].id");
+            addCreatedEntity(apiEndpoint, id);
         }
     }
 

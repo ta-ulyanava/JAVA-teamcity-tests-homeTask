@@ -3,7 +3,9 @@ package com.example.teamcity.api.ui.pages.admin;
 import com.codeborne.selenide.Condition;
 import com.codeborne.selenide.Selenide;
 import com.codeborne.selenide.SelenideElement;
+import com.example.teamcity.api.enums.ApiEndpoint;
 import com.example.teamcity.api.enums.WebRoute;
+import com.example.teamcity.api.generators.TestDataStorage;
 
 import static com.codeborne.selenide.Selenide.$;
 import static com.codeborne.selenide.Selenide.page;
@@ -25,6 +27,9 @@ public class CreateBuildTypePage extends CreateBasePage {
     public CreateBuildTypePage setupBuildType(String buildTypeName) {
         buildTypeNameInput.val(buildTypeName);
         submitButton.click();
+        if (!buildTypeName.isEmpty()) {
+            TestDataStorage.getInstance().addCreatedEntityByName(ApiEndpoint.BUILD_TYPES, buildTypeName);
+        }
         return this;
     }
 
