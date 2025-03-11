@@ -68,13 +68,8 @@ public class CreateBuildTypeTest extends BaseUiTest {
         step("Try to create Build Type without name", () -> {
             CreateBuildTypePage.open(testData.getProject().getId())
                 .createForm(WebRoute.GITHUB_REPO.getUrl())
-                .setupBuildType("");  // Пустое имя
-        });
-
-        // проверка состояния UI
-        // (корректность отображения ошибки)
-        step("Verify error message is displayed", () -> {
-            $(".error").shouldHave(Condition.text("Build configuration name must not be empty"));
+                .setupBuildType("")  // Пустое имя
+                .assertErrorMessage("Build configuration name must not be empty");
         });
 
         // проверка состояния API
