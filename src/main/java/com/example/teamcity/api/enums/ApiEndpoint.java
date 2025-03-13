@@ -10,7 +10,7 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter
 
-public enum Endpoint {
+public enum ApiEndpoint {
     BUILD_TYPES("/app/rest/buildTypes", BuildType.class),
     PROJECTS("/app/rest/projects", Project.class),
     USERS("/app/rest/users", User.class);

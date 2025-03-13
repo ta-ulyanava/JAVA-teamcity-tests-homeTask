@@ -1,17 +1,16 @@
 package com.example.teamcity.api.requests.unchecked;
 
-import com.example.teamcity.api.enums.Endpoint;
+import com.example.teamcity.api.enums.ApiEndpoint;
 import com.example.teamcity.api.models.BaseModel;
 import com.example.teamcity.api.requests.CrudInterface;
 import com.example.teamcity.api.requests.Request;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
-import org.apache.http.HttpStatus;
 
 public class UncheckedBase extends Request implements CrudInterface {
-    public UncheckedBase(RequestSpecification spec, Endpoint endpoint) {
-        super(spec, endpoint);
+    public UncheckedBase(RequestSpecification spec, ApiEndpoint apiEndpoint) {
+        super(spec, apiEndpoint);
     }
 
     @Override
@@ -20,7 +19,7 @@ public class UncheckedBase extends Request implements CrudInterface {
                 .given()
                 .spec(spec)
                 .body(model)
-                .post(endpoint.getUrl());
+                .post(apiEndpoint.getUrl());
     }
 
     public Response create(String body) {
@@ -28,7 +27,7 @@ public class UncheckedBase extends Request implements CrudInterface {
                 .given()
                 .spec(spec)
                 .body(body)
-                .post(endpoint.getUrl());
+                .post(apiEndpoint.getUrl());
     }
 
     @Override
@@ -38,13 +37,13 @@ public class UncheckedBase extends Request implements CrudInterface {
             return RestAssured
                     .given()
                     .spec(spec)
-                    .get(endpoint.getUrl() + "?locator=" + locator);
+                    .get(apiEndpoint.getUrl() + "?locator=" + locator);
         } else {
             // Если это ID, добавляем как часть пути
             return RestAssured
                     .given()
                     .spec(spec)
-                    .get(endpoint.getUrl() + "/" + locator);
+                    .get(apiEndpoint.getUrl() + "/" + locator);
         }
     }
 
@@ -54,7 +53,7 @@ public class UncheckedBase extends Request implements CrudInterface {
                 .given()
                 .body(model)
                 .spec(spec)
-                .put(endpoint.getUrl() + "/" + locator);
+                .put(apiEndpoint.getUrl() + "/" + locator);
     }
 
     @Override
@@ -62,6 +61,6 @@ public class UncheckedBase extends Request implements CrudInterface {
         return RestAssured
                 .given()
                 .spec(spec)
-                .delete(endpoint.getUrl() + "/" + locator);
+                .delete(apiEndpoint.getUrl() + "/" + locator);
     }
 }

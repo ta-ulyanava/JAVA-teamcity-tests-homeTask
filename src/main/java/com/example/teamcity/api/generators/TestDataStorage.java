@@ -1,9 +1,9 @@
 package com.example.teamcity.api.generators;
 
-import com.example.teamcity.api.enums.Endpoint;
+import com.example.teamcity.api.enums.ApiEndpoint;
 import com.example.teamcity.api.models.BaseModel;
 import com.example.teamcity.api.requests.unchecked.UncheckedBase;
-import com.example.teamcity.api.spec.Specifications;
+import com.example.teamcity.api.spec.RequestSpecifications;
 
 import java.util.EnumMap;
 import java.util.HashSet;
@@ -15,10 +15,10 @@ import java.util.Set;
  */
 public class TestDataStorage {
     private static TestDataStorage testDataStorage;
-    private final EnumMap<Endpoint, Set<String>> createdEntitiesMap;
+    private final EnumMap<ApiEndpoint, Set<String>> createdEntitiesMap;
 
     private TestDataStorage() {
-        createdEntitiesMap = new EnumMap<>(Endpoint.class);
+        createdEntitiesMap = new EnumMap<>(ApiEndpoint.class);
     }
 
     public static TestDataStorage getInstance() {
@@ -28,9 +28,18 @@ public class TestDataStorage {
         return testDataStorage;
     }
 
-    private void addCreatedEntity(Endpoint endpoint, String id) {
+    public void addCreatedEntity(ApiEndpoint apiEndpoint, String id) {
         if (id != null) {
-            createdEntitiesMap.computeIfAbsent(endpoint, key -> new HashSet<>()).add(id);
+            createdEntitiesMap.computeIfAbsent(apiEndpoint, key -> new HashSet<>()).add(id);
+        }
+    }
+
+    public void addCreatedEntityByName(ApiEndpoint apiEndpoint, String name) {
+        if (name != null) {
+            var uncheckedBase = new UncheckedBase(RequestSpecifications.superUserAuthSpec(), apiEndpoint);
+            var response = uncheckedBase.read("name:" + name);
+            var id = response.jsonPath().getString("buildType[0].id");
+            addCreatedEntity(apiEndpoint, id);
         }
     }
 
@@ -54,15 +63,15 @@ public class TestDataStorage {
         }
     }
 
-    public void addCreatedEntity(Endpoint endpoint, BaseModel model) {
-        addCreatedEntity(endpoint, getEntityIdOrLocator(model));
+    public void addCreatedEntity(ApiEndpoint apiEndpoint, BaseModel model) {
+        addCreatedEntity(apiEndpoint, getEntityIdOrLocator(model));
     }
 
 
     public void deleteCreatedEntities() {
         createdEntitiesMap.forEach(((endpoint, ids) ->
                         ids.forEach(id ->
-                                new UncheckedBase(Specifications.superUserAuthSpec(), endpoint).delete(id)
+                                new UncheckedBase(RequestSpecifications.superUserAuthSpec(), endpoint).delete(id)
                         )
                 )
 

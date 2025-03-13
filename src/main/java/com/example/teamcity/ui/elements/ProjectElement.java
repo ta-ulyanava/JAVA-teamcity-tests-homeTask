@@ -1,4 +1,4 @@
-package com.example.teamcity.api.ui.elements;
+package com.example.teamcity.ui.elements;
 
 import com.codeborne.selenide.SelenideElement;
 import lombok.Getter;

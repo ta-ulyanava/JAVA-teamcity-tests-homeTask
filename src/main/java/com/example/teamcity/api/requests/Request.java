@@ -1,14 +1,14 @@
 package com.example.teamcity.api.requests;
 
-import com.example.teamcity.api.enums.Endpoint;
+import com.example.teamcity.api.enums.ApiEndpoint;
 import io.restassured.specification.RequestSpecification;
 
 public class Request {
     protected final RequestSpecification spec;
-    protected final Endpoint endpoint;
+    protected final ApiEndpoint apiEndpoint;
 
-    public Request(RequestSpecification spec, Endpoint endpoint) {
+    public Request(RequestSpecification spec, ApiEndpoint apiEndpoint) {
         this.spec = spec;
-        this.endpoint = endpoint;
+        this.apiEndpoint = apiEndpoint;
     }
 }

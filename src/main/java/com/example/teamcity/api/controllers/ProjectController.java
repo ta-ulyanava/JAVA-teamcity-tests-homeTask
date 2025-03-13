@@ -1,6 +1,6 @@
 package com.example.teamcity.api.controllers;
 
-import com.example.teamcity.api.enums.Endpoint;
+import com.example.teamcity.api.enums.ApiEndpoint;
 import com.example.teamcity.api.generators.RandomData;
 import com.example.teamcity.api.generators.TestDataGenerator;
 import com.example.teamcity.api.generators.TestDataStorage;
@@ -11,7 +11,6 @@ import com.example.teamcity.api.requests.UncheckedRequest;
 import com.example.teamcity.api.responses.ResponseExtractor;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
-import org.apache.http.HttpStatus;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,8 +25,8 @@ public class ProjectController {
     }
 
     public Response createProject(Project project) {
-        Response response = checkedRequest.getRequest(Endpoint.PROJECTS).create(project);
-        TestDataStorage.getInstance().addCreatedEntity(Endpoint.PROJECTS, project);
+        Response response = checkedRequest.getRequest(ApiEndpoint.PROJECTS).create(project);
+        TestDataStorage.getInstance().addCreatedEntity(ApiEndpoint.PROJECTS, project);
         return response;
     }
 
@@ -37,15 +36,15 @@ public class ProjectController {
     }
 
     public Project getProjectById(String projectId) {
-        return checkedRequest.<Project>getRequest(Endpoint.PROJECTS).read(projectId);
+        return checkedRequest.<Project>getRequest(ApiEndpoint.PROJECTS).read(projectId);
     }
 
     public Project getProjectByName(String projectName) {
-        return checkedRequest.<Project>getRequest(Endpoint.PROJECTS).read(projectName);
+        return checkedRequest.<Project>getRequest(ApiEndpoint.PROJECTS).read(projectName);
     }
 
     public void deleteProject(String projectId) {
-        checkedRequest.getRequest(Endpoint.PROJECTS).delete(projectId);
+        checkedRequest.getRequest(ApiEndpoint.PROJECTS).delete(projectId);
     }
 
     public List<Project> createNestedProjects(String parentProjectId, int count) {
@@ -74,12 +73,12 @@ public class ProjectController {
     }
 
     public Response createInvalidProjectFromProject(Project project) {
-        Response response = uncheckedRequests.getRequest(Endpoint.PROJECTS).create(project);
+        Response response = uncheckedRequests.getRequest(ApiEndpoint.PROJECTS).create(project);
         return response;
     }
 
     public Response createInvalidProjectFromString(String projectJson) {
-        Response response = uncheckedRequests.getRequest(Endpoint.PROJECTS).create(projectJson);
+        Response response = uncheckedRequests.getRequest(ApiEndpoint.PROJECTS).create(projectJson);
         return response;
     }
 }
