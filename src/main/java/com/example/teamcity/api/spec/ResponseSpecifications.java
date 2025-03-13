@@ -5,7 +5,7 @@ import io.restassured.specification.ResponseSpecification;
 import org.apache.http.HttpStatus;
 import org.hamcrest.Matchers;
 
-public class ValidationResponseSpecifications {
+public class ResponseSpecifications {
 
     public static ResponseSpecification checkSuccess() {
         return new ResponseSpecBuilder()

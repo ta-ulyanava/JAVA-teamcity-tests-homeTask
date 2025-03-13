@@ -1,8 +1,7 @@
-package com.example.teamcity.api.ui.validation;
+package com.example.teamcity.ui.assertions;
 
 import com.codeborne.selenide.Condition;
 import com.codeborne.selenide.SelenideElement;
-import com.example.teamcity.api.ui.errors.UiErrors;
 import org.testng.asserts.SoftAssert;
 
 public class ValidateElement {

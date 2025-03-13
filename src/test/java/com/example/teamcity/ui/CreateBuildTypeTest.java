@@ -5,18 +5,17 @@ import com.example.teamcity.api.enums.ApiEndpoint;
 import com.example.teamcity.api.enums.WebRoute;
 import com.example.teamcity.api.models.BuildType;
 import com.example.teamcity.api.controllers.ProjectController;
-import com.example.teamcity.api.spec.Specifications;
-import com.example.teamcity.api.ui.pages.BuildTypePage;
-import com.example.teamcity.api.ui.pages.admin.CreateBuildTypePage;
+import com.example.teamcity.api.spec.RequestSpecifications;
+import com.example.teamcity.ui.pages.BuildTypePage;
+import com.example.teamcity.ui.pages.admin.CreateBuildTypePage;
 import com.example.teamcity.api.requests.UncheckedRequest;
-import com.example.teamcity.api.ui.validation.ValidateElement;
-import com.example.teamcity.api.ui.errors.UiErrors;
-import com.example.teamcity.api.responses.TestValidator;
+import com.example.teamcity.ui.assertions.ValidateElement;
+import com.example.teamcity.ui.errors.UiErrorMessages;
+import com.example.teamcity.api.validation.EntityValidator;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import io.restassured.response.Response;
 import static io.qameta.allure.Allure.step;
-import java.time.Duration;
 
 @Test(groups = "Regression")
 public class CreateBuildTypeTest extends BaseUiTest {
@@ -27,9 +26,9 @@ public class CreateBuildTypeTest extends BaseUiTest {
     public void setup() {
         super.beforeTest();
         loginAs(testData.getUser());
-        projectController = new ProjectController(Specifications.authSpec(testData.getUser()));
+        projectController = new ProjectController(RequestSpecifications.authSpec(testData.getUser()));
         projectController.createProject(testData.getProject());
-        uncheckedRequest = new UncheckedRequest(Specifications.superUserAuthSpec());
+        uncheckedRequest = new UncheckedRequest(RequestSpecifications.superUserAuthSpec());
     }
 
     @Test(description = "User should be able to create build type", groups = {"Positive"})
@@ -52,7 +51,7 @@ public class CreateBuildTypeTest extends BaseUiTest {
             
             var createdBuildType = response.jsonPath().getObject("buildType[0]", BuildType.class);
             testData.getBuildType().setId(createdBuildType.getId());
-            TestValidator.validateEntityFields(testData.getBuildType(), createdBuildType, softy);
+            EntityValidator.validateEntityFields(testData.getBuildType(), createdBuildType, softy);
             
             return createdBuildType.getId();
         });
@@ -75,7 +74,7 @@ public class CreateBuildTypeTest extends BaseUiTest {
             var page = CreateBuildTypePage.open(testData.getProject().getId())
                 .createForm(WebRoute.GITHUB_REPO.getUrl())
                 .setupBuildType("");  // Пустое имя
-            ValidateElement.byText(page.getErrorMessage(), UiErrors.BUILD_CONFIG_NAME_MUST_BE_NOT_NULL, softy);
+            ValidateElement.byText(page.getErrorMessage(), UiErrorMessages.BUILD_CONFIG_NAME_MUST_BE_NOT_NULL, softy);
         });
 
         // проверка состояния API

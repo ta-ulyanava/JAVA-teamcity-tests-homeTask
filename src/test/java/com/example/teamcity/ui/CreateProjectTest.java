@@ -4,9 +4,9 @@ import com.codeborne.selenide.Condition;
 import com.example.teamcity.api.enums.ApiEndpoint;
 import com.example.teamcity.api.enums.WebRoute;
 import com.example.teamcity.api.models.Project;
-import com.example.teamcity.api.ui.pages.ProjectPage;
-import com.example.teamcity.api.ui.pages.ProjectsPage;
-import com.example.teamcity.api.ui.pages.admin.CreateProjectPage;
+import com.example.teamcity.ui.pages.ProjectPage;
+import com.example.teamcity.ui.pages.ProjectsPage;
+import com.example.teamcity.ui.pages.admin.CreateProjectPage;
 import org.testng.annotations.Test;
 
 import static com.codeborne.selenide.Selenide.$;

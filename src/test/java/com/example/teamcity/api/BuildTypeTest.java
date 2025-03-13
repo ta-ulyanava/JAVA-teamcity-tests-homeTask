@@ -5,7 +5,7 @@ import com.example.teamcity.api.models.BuildType;
 import com.example.teamcity.api.models.Project;
 import com.example.teamcity.api.requests.CheckedRequest;
 import com.example.teamcity.api.requests.unchecked.UncheckedBase;
-import com.example.teamcity.api.spec.Specifications;
+import com.example.teamcity.api.spec.RequestSpecifications;
 import org.apache.http.HttpStatus;
 import org.hamcrest.Matchers;
 import org.testng.annotations.Test;
@@ -21,7 +21,7 @@ public class BuildTypeTest extends BaseApiTest {
     @Test(description = "User should be able to create Build Type", groups = {"Positive", "CRUD"})
     public void userCreatesBuildTypeTest() {
         superUserCheckRequests.getRequest(ApiEndpoint.USERS).create(testData.getUser());
-        var userCheckRequests = new CheckedRequest(Specifications.authSpec(testData.getUser()));
+        var userCheckRequests = new CheckedRequest(RequestSpecifications.authSpec(testData.getUser()));
         userCheckRequests.<Project>getRequest(ApiEndpoint.PROJECTS).create(testData.getProject());
         userCheckRequests.getRequest(ApiEndpoint.BUILD_TYPES).create(testData.getBuildType());
         var createdBuildType = userCheckRequests.<BuildType>getRequest(ApiEndpoint.BUILD_TYPES).read(testData.getBuildType().getId());
@@ -33,11 +33,11 @@ public class BuildTypeTest extends BaseApiTest {
     @Test(description = "User cannot create two build types with same id", groups = {"Negative", "CRUD"})
     public void userCreatesTwoBuildTypesWithTheSameIdTest() {
         superUserCheckRequests.getRequest(ApiEndpoint.USERS).create(testData.getUser());
-        var userCheckRequests = new CheckedRequest(Specifications.authSpec(testData.getUser()));
+        var userCheckRequests = new CheckedRequest(RequestSpecifications.authSpec(testData.getUser()));
         userCheckRequests.<Project>getRequest(ApiEndpoint.PROJECTS).create(testData.getProject());
         var buildTypeWithSameId = generate(Arrays.asList(testData.getProject()), BuildType.class, testData.getBuildType().getId());
         userCheckRequests.getRequest(ApiEndpoint.BUILD_TYPES).create(testData.getBuildType());
-        new UncheckedBase(Specifications.authSpec(testData.getUser()), ApiEndpoint.BUILD_TYPES)
+        new UncheckedBase(RequestSpecifications.authSpec(testData.getUser()), ApiEndpoint.BUILD_TYPES)
                 .create(buildTypeWithSameId)
                 .then().assertThat().statusCode(HttpStatus.SC_BAD_REQUEST)
                 .body(Matchers.containsString("The build configuration / template ID \"%s\" is already used by another configuration or template".formatted(testData.getBuildType().getId())));

@@ -6,7 +6,7 @@ import com.example.teamcity.BaseTest;
 import com.example.teamcity.api.config.Config;
 import com.example.teamcity.api.enums.ApiEndpoint;
 import com.example.teamcity.api.models.User;
-import com.example.teamcity.api.ui.pages.LoginPage;
+import com.example.teamcity.ui.pages.LoginPage;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeSuite;
 

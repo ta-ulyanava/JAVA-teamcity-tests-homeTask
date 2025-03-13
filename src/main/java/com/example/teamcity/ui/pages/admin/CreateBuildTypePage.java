@@ -1,4 +1,4 @@
-package com.example.teamcity.api.ui.pages.admin;
+package com.example.teamcity.ui.pages.admin;
 
 import com.codeborne.selenide.Condition;
 import com.codeborne.selenide.Selenide;

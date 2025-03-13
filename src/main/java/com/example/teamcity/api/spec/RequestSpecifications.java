@@ -17,8 +17,8 @@ import java.util.List;
 // то есть это явное прописание username, пароля в запросе, хоста и явно как-то endpoint.
 
 
-public class Specifications {
-    private static Specifications spec;
+public class RequestSpecifications {
+    private static RequestSpecifications spec;
 
 /* Какие спецификации и реквесты нужны?
     // Как минимум базовая спека кот содержит фильтры, контент тайпы
