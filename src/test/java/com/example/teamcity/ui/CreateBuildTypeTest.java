@@ -11,10 +11,12 @@ import com.example.teamcity.api.ui.pages.admin.CreateBuildTypePage;
 import com.example.teamcity.api.requests.UncheckedRequest;
 import com.example.teamcity.api.ui.validation.ValidateElement;
 import com.example.teamcity.api.ui.errors.UiErrors;
+import com.example.teamcity.api.responses.TestValidator;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import io.restassured.response.Response;
 import static io.qameta.allure.Allure.step;
+import java.time.Duration;
 
 @Test(groups = "Regression")
 public class CreateBuildTypeTest extends BaseUiTest {
@@ -47,14 +49,20 @@ public class CreateBuildTypeTest extends BaseUiTest {
             Response response = uncheckedRequest.getRequest(ApiEndpoint.BUILD_TYPES)
                 .read("name:" + testData.getBuildType().getName());
             softy.assertNotNull(response, "Build Type should be created");
-            return response.jsonPath().getString("buildType[0].id");
+            
+            var createdBuildType = response.jsonPath().getObject("buildType[0]", BuildType.class);
+            testData.getBuildType().setId(createdBuildType.getId());
+            TestValidator.validateEntityFields(testData.getBuildType(), createdBuildType, softy);
+            
+            return createdBuildType.getId();
         });
 
         // проверка состояния UI
         // (корректность считывания данных и отображение данных на UI)
         step("Verify Build Type page UI", () -> {
             var page = BuildTypePage.open(buildTypeId);
-            ValidateElement.byText(page.getTitle(), testData.getBuildType().getName(), softy);
+            page.getTitle().should(Condition.visible);
+            softy.assertEquals(page.getTitle().getText(), testData.getBuildType().getName(), "Build Type title should match");
         });
 
         softy.assertAll();
