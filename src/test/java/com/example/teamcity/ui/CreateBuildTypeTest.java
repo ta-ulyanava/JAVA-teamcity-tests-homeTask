@@ -53,9 +53,8 @@ public class CreateBuildTypeTest extends BaseUiTest {
         // проверка состояния UI
         // (корректность считывания данных и отображение данных на UI)
         step("Verify Build Type page UI", () -> {
-            BuildTypePage.open(buildTypeId)
-                .getTitle()
-                .shouldHave(Condition.exactText(testData.getBuildType().getName()));
+            var page = BuildTypePage.open(buildTypeId);
+            ValidateElement.byText(page.getTitle(), testData.getBuildType().getName(), softy);
         });
 
         softy.assertAll();

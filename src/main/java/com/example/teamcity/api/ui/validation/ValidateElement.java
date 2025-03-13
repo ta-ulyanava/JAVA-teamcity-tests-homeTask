@@ -13,7 +13,7 @@ public class ValidateElement {
     }
 
     public void byText(SelenideElement element, String expectedText) {
-        softy.assertTrue(element.is(Condition.visible), "Element should be visible");
+        element.should(Condition.visible);
         softy.assertTrue(element.has(Condition.exactText(expectedText)), 
             String.format("Element should have text '%s'", expectedText));
     }
