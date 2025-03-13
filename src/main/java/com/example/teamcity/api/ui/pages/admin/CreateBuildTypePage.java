@@ -33,6 +33,10 @@ public class CreateBuildTypePage extends CreateBasePage {
         return this;
     }
 
+    public SelenideElement getErrorMessage() {
+        return errorMessage;
+    }
+
     public CreateBuildTypePage assertErrorMessage(String expectedMessage) {
         errorMessage.shouldHave(Condition.text(expectedMessage));
         return this;

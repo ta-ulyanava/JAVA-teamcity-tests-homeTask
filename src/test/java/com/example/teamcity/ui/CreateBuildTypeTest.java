@@ -9,6 +9,8 @@ import com.example.teamcity.api.spec.Specifications;
 import com.example.teamcity.api.ui.pages.BuildTypePage;
 import com.example.teamcity.api.ui.pages.admin.CreateBuildTypePage;
 import com.example.teamcity.api.requests.UncheckedRequest;
+import com.example.teamcity.api.ui.validation.ValidateElement;
+import com.example.teamcity.api.ui.errors.UiErrors;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import io.restassured.response.Response;
@@ -63,10 +65,10 @@ public class CreateBuildTypeTest extends BaseUiTest {
     public void userCannotCreateBuildTypeWithoutName() {
         // взаимодействие с UI
         step("Try to create Build Type without name", () -> {
-            CreateBuildTypePage.open(testData.getProject().getId())
+            var page = CreateBuildTypePage.open(testData.getProject().getId())
                 .createForm(WebRoute.GITHUB_REPO.getUrl())
-                .setupBuildType("")  // Пустое имя
-                .assertErrorMessage("Build configuration name must not be empty");
+                .setupBuildType("");  // Пустое имя
+            ValidateElement.byText(page.getErrorMessage(), UiErrors.BUILD_CONFIG_NAME_MUST_BE_NOT_NULL, softy);
         });
 
         // проверка состояния API
