@@ -2,15 +2,15 @@ package com.example.teamcity.api;
 
 import com.example.teamcity.BaseTest;
 import com.example.teamcity.api.controllers.ProjectController;
-import com.example.teamcity.api.enums.Endpoint;
+import com.example.teamcity.api.enums.ApiEndpoint;
 import com.example.teamcity.api.enums.Role;
 import com.example.teamcity.api.generators.RandomData;
 import com.example.teamcity.api.generators.TestDataGenerator;
 import com.example.teamcity.api.models.*;
 import com.example.teamcity.api.responses.ResponseExtractor;
-import com.example.teamcity.api.responses.TestValidator;
-import com.example.teamcity.api.spec.Specifications;
-import com.example.teamcity.api.spec.ValidationResponseSpecifications;
+import com.example.teamcity.api.validation.EntityValidator;
+import com.example.teamcity.api.spec.RequestSpecifications;
+import com.example.teamcity.api.spec.ResponseSpecifications;
 import io.restassured.response.Response;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
@@ -28,8 +28,8 @@ public class ProjectTest extends BaseTest {
     @BeforeMethod(alwaysRun = true)
     public void setup() {
         super.beforeTest();
-        superUserCheckRequests.getRequest(Endpoint.USERS).create(testData.getUser());
-        projectController = new ProjectController(Specifications.authSpec(testData.getUser()));
+        superUserCheckRequests.getRequest(ApiEndpoint.USERS).create(testData.getUser());
+        projectController = new ProjectController(RequestSpecifications.authSpec(testData.getUser()));
     }
 
     @DataProvider(name = "invalidSpecialCharactersForId")
@@ -56,7 +56,7 @@ public class ProjectTest extends BaseTest {
     @Test(description = "User should be able to create a project with the minimum required fields under Root project", groups = {"Positive", "CRUD"})
     public void userCreatesProjectWithMandatoryFieldsOnlyTest() {
         var response = projectController.createProject(testData.getProject());
-        response.then().spec(ValidationResponseSpecifications.checkSuccess()); // Ожидаем 200 OK
+        response.then().spec(ResponseSpecifications.checkSuccess()); // Ожидаем 200 OK
         var createdProject = ResponseExtractor.extractModel(response, Project.class);
         softy.assertEquals(createdProject.getParentProject().getId(), "_Root", "Parent project should be '_Root' when not specified");
         softy.assertAll();
@@ -108,7 +108,7 @@ public class ProjectTest extends BaseTest {
             }
             """.formatted(RandomData.getString(), RandomData.getString(), invalidValue);
         projectController.createInvalidProjectFromString(invalidProjectJson)
-                .then().spec(ValidationResponseSpecifications.checkInvalidCopySettings());
+                .then().spec(ResponseSpecifications.checkInvalidCopySettings());
     }
     @DataProvider(name = "projectCreationScenarios")
     public static Object[][] projectCreationScenarios() {
@@ -150,7 +150,7 @@ public class ProjectTest extends BaseTest {
     public void userCannotCreateProjectWithNonExistentParentProjectTest() {
         var invalidProject = generate(List.of(), Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("non_existent_locator", null));
         var response = projectController.createInvalidProjectFromProject(invalidProject);
-        response.then().spec(ValidationResponseSpecifications.checkProjectNotFound("non_existent_locator")); // Ожидаем 404
+        response.then().spec(ResponseSpecifications.checkProjectNotFound("non_existent_locator")); // Ожидаем 404
         softy.assertAll();
     }
 
@@ -160,7 +160,7 @@ public class ProjectTest extends BaseTest {
         var projectId = testData.getProject().getId();
         var invalidProject = generate(List.of(), Project.class, projectId, RandomData.getString(), new ParentProject(projectId, null));
         var response = projectController.createInvalidProjectFromProject(invalidProject);
-        response.then().spec(ValidationResponseSpecifications.checkProjectNotFound(projectId));
+        response.then().spec(ResponseSpecifications.checkProjectNotFound(projectId));
         softy.assertAll();
     }
     /****/
@@ -169,7 +169,7 @@ public class ProjectTest extends BaseTest {
         var maxLengthName = "A".repeat(500);
         var validProject = generate(List.of(), Project.class, RandomData.getString(), maxLengthName);
         var response = projectController.createProject(validProject);
-        response.then().spec(ValidationResponseSpecifications.checkSuccess());
+        response.then().spec(ResponseSpecifications.checkSuccess());
         softy.assertAll();
     }
     /****/
@@ -178,7 +178,7 @@ public class ProjectTest extends BaseTest {
     public void userCreatesProjectWithOneCharacterNameTest() {
         var validProject = generate(List.of(), Project.class, RandomData.getString(), "A");
         var response = projectController.createProject(validProject);
-        response.then().spec(ValidationResponseSpecifications.checkSuccess());
+        response.then().spec(ResponseSpecifications.checkSuccess());
         softy.assertAll();
     }
 
@@ -188,7 +188,7 @@ public class ProjectTest extends BaseTest {
         var maxLengthId = "A".repeat(225);
         var validProject = generate(List.of(), Project.class, maxLengthId, RandomData.getString());
         var response = projectController.createProject(validProject);
-        response.then().spec(ValidationResponseSpecifications.checkSuccess());
+        response.then().spec(ResponseSpecifications.checkSuccess());
         softy.assertAll();
     }
 
@@ -196,7 +196,7 @@ public class ProjectTest extends BaseTest {
     public void userCreatesProjectWithOneCharacterIdTest() {
         var validProject = generate(List.of(), Project.class, "A", RandomData.getString());
         var response = projectController.createProject(validProject);
-        response.then().spec(ValidationResponseSpecifications.checkSuccess());
+        response.then().spec(ResponseSpecifications.checkSuccess());
         softy.assertAll();
     }
 
@@ -209,7 +209,7 @@ public class ProjectTest extends BaseTest {
         var tooLongId = "A".repeat(226);
         var invalidProject = generate(List.of(), Project.class, tooLongId, RandomData.getString());
         var response = projectController.createInvalidProjectFromProject(invalidProject);
-        response.then().spec(ValidationResponseSpecifications.checkProjectIdTooLong(225));
+        response.then().spec(ResponseSpecifications.checkProjectIdTooLong(225));
         softy.assertAll();
     }
 
@@ -220,9 +220,9 @@ public class ProjectTest extends BaseTest {
     public void userCreatesProjectWithSpecialCharactersInNameTest() {
         var project = generate(List.of(), Project.class, RandomData.getString(), RandomData.getFullSpecialCharacterString());
         var response = projectController.createProject(project);
-        response.then().spec(ValidationResponseSpecifications.checkBadRequest());
+        response.then().spec(ResponseSpecifications.checkBadRequest());
         var createdProject = ResponseExtractor.extractModel(response, Project.class);
-        TestValidator.validateEntityFields(project, createdProject, softy);
+        EntityValidator.validateEntityFields(project, createdProject, softy);
         softy.assertAll();
     }
 
@@ -231,9 +231,9 @@ public class ProjectTest extends BaseTest {
 public void userCreatesProjectWithLocalizedNameTest() {
     var localizedProject = generate(List.of(), Project.class, RandomData.getString(), RandomData.getFullLocalizationString());
     var response = projectController.createProject(localizedProject);
-    response.then().spec(ValidationResponseSpecifications.checkSuccess());
+    response.then().spec(ResponseSpecifications.checkSuccess());
     var createdProject = ResponseExtractor.extractModel(response, Project.class);
-    TestValidator.validateEntityFields(localizedProject, createdProject, softy);
+    EntityValidator.validateEntityFields(localizedProject, createdProject, softy);
     softy.assertAll();
 }
 
@@ -242,9 +242,9 @@ public void userCreatesProjectWithLocalizedNameTest() {
 public void userCreatesProjectWithUnderscoreInIdTest() {
     var projectWithUnderscore = generate(List.of(), Project.class, RandomData.getString() + "_test", RandomData.getString());
     var response = projectController.createProject(projectWithUnderscore);
-    response.then().spec(ValidationResponseSpecifications.checkSuccess());
+    response.then().spec(ResponseSpecifications.checkSuccess());
     var createdProject = ResponseExtractor.extractModel(response, Project.class);
-    TestValidator.validateEntityFields(projectWithUnderscore, createdProject, softy);
+    EntityValidator.validateEntityFields(projectWithUnderscore, createdProject, softy);
     softy.assertAll();
 }
 
@@ -256,7 +256,7 @@ public void userCreatesProjectWithUnderscoreInIdTest() {
         var invalidId = "test_" + specialChar;
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, invalidId, "ValidName");
         var response = projectController.createInvalidProjectFromProject(invalidProject);
-        response.then().spec(ValidationResponseSpecifications.checkInvalidProjectId());
+        response.then().spec(ResponseSpecifications.checkInvalidProjectId());
         softy.assertAll();
     }
 
@@ -267,7 +267,7 @@ public void userCreatesProjectWithUnderscoreInIdTest() {
     public void userCannotCreateProjectWithNonLatinIdTest(String invalidId) {
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, invalidId, RandomData.getString());
         var response = projectController.createInvalidProjectFromProject(invalidProject);
-        response.then().spec(ValidationResponseSpecifications.checkInvalidProjectId());
+        response.then().spec(ResponseSpecifications.checkInvalidProjectId());
         softy.assertAll();
     }
 
@@ -276,7 +276,7 @@ public void userCreatesProjectWithUnderscoreInIdTest() {
     public void userCannotCreateProjectWithEmptyNameTest() {
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), "");
         var response = projectController.createInvalidProjectFromProject(invalidProject);
-        response.then().spec(ValidationResponseSpecifications.checkBadRequest());
+        response.then().spec(ResponseSpecifications.checkBadRequest());
         softy.assertTrue(response.asString().contains("Project name cannot be empty"));
         softy.assertAll();
     }
@@ -287,7 +287,7 @@ public void userCreatesProjectWithUnderscoreInIdTest() {
     public void userCannotCreateProjectWithEmptyIdTest() {
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, "", RandomData.getString());
         var response = projectController.createInvalidProjectFromProject(invalidProject);
-        response.then().spec(ValidationResponseSpecifications.checkBadRequest());
+        response.then().spec(ResponseSpecifications.checkBadRequest());
         softy.assertTrue(response.asString().contains("Project ID must not be empty."));
         softy.assertAll();
     }
@@ -296,7 +296,7 @@ public void userCreatesProjectWithUnderscoreInIdTest() {
     public void userCannotCreateProjectWithSpaceAsIdTest() {
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, " ", RandomData.getString());
         var response = projectController.createInvalidProjectFromProject(invalidProject);
-        response.then().spec(ValidationResponseSpecifications.checkBadRequest());
+        response.then().spec(ResponseSpecifications.checkBadRequest());
         softy.assertTrue(response.asString().contains("Project ID must not be empty"));
         softy.assertAll();
     }
@@ -305,7 +305,7 @@ public void userCreatesProjectWithUnderscoreInIdTest() {
     public void userCannotCreateProjectWithSpaceAsNameTest() {
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), " ");
         var response = projectController.createInvalidProjectFromProject(invalidProject);
-        response.then().spec(ValidationResponseSpecifications.checkBadRequest());
+        response.then().spec(ResponseSpecifications.checkBadRequest());
         softy.assertTrue(response.asString().contains("Given project name is empty"));
         softy.assertAll();
     }
@@ -317,7 +317,7 @@ public void userCreatesProjectWithUnderscoreInIdTest() {
         var existingProject = projectController.createAndReturnProject(testData.getProject());
         var duplicateProject = TestDataGenerator.generate(List.of(existingProject), Project.class, existingProject.getId(), RandomData.getString());
         var response = projectController.createInvalidProjectFromProject(duplicateProject);
-        response.then().spec(ValidationResponseSpecifications.checkProjectWithIdAlreadyExists(existingProject.getId()));
+        response.then().spec(ResponseSpecifications.checkProjectWithIdAlreadyExists(existingProject.getId()));
         softy.assertAll();
     }
 
@@ -326,7 +326,7 @@ public void userCreatesProjectWithUnderscoreInIdTest() {
         var existingProject = projectController.createAndReturnProject(testData.getProject());
         var duplicateProject = TestDataGenerator.generate(List.of(existingProject), Project.class, RandomData.getString(), existingProject.getName());
         var response = projectController.createInvalidProjectFromProject(duplicateProject);
-        response.then().spec(ValidationResponseSpecifications.checkProjectWithNameAlreadyExists(existingProject.getName()));
+        response.then().spec(ResponseSpecifications.checkProjectWithNameAlreadyExists(existingProject.getName()));
         softy.assertAll();
     }
 
@@ -336,7 +336,7 @@ public void userCreatesProjectWithUnderscoreInIdTest() {
         var duplicateName = existingProject.getName().toUpperCase();
         var duplicateProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), duplicateName);
         var response = projectController.createInvalidProjectFromProject(duplicateProject);
-        response.then().spec(ValidationResponseSpecifications.checkProjectWithNameAlreadyExists(duplicateName));
+        response.then().spec(ResponseSpecifications.checkProjectWithNameAlreadyExists(duplicateName));
         softy.assertAll();
     }
 
@@ -346,7 +346,7 @@ public void userCreatesProjectWithUnderscoreInIdTest() {
         var duplicateId = existingProject.getId().toUpperCase();
         var duplicateProject = TestDataGenerator.generate(List.of(), Project.class, duplicateId, RandomData.getString());
         var response = projectController.createInvalidProjectFromProject(duplicateProject);
-        response.then().spec(ValidationResponseSpecifications.checkProjectWithIdAlreadyExists(duplicateId));
+        response.then().spec(ResponseSpecifications.checkProjectWithIdAlreadyExists(duplicateId));
         softy.assertAll();
     }
 
@@ -357,7 +357,7 @@ public void userCreatesProjectWithUnderscoreInIdTest() {
     public void userCannotCreateProjectWithDigitsOnlyIdTest() {
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, "123456", RandomData.getString());
         var response = projectController.createInvalidProjectFromProject(invalidProject);
-        response.then().spec(ValidationResponseSpecifications.checkInvalidProjectId());
+        response.then().spec(ResponseSpecifications.checkInvalidProjectId());
         softy.assertAll();
     }
     //Need to fix 500 error
@@ -365,7 +365,7 @@ public void userCreatesProjectWithUnderscoreInIdTest() {
     public void userCannotCreateProjectWithInvalidStartingCharacterIdTest(String invalidId) {
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, invalidId, RandomData.getString());
         var response = projectController.createInvalidProjectFromProject(invalidProject);
-        response.then().spec(ValidationResponseSpecifications.checkInvalidProjectId());
+        response.then().spec(ResponseSpecifications.checkInvalidProjectId());
         softy.assertAll();
     }
     //Need to fix 500 error
@@ -373,7 +373,7 @@ public void userCreatesProjectWithUnderscoreInIdTest() {
     public void userCannotCreateProjectWithSpacesInIdTest() {
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, "invalid id", RandomData.getString());
         var response = projectController.createInvalidProjectFromProject(invalidProject);
-        response.then().spec(ValidationResponseSpecifications.checkInvalidProjectId());
+        response.then().spec(ResponseSpecifications.checkInvalidProjectId());
         softy.assertAll();
     }
 
@@ -381,9 +381,9 @@ public void userCreatesProjectWithUnderscoreInIdTest() {
     public void userCreatesProjectWithValidIdCharactersTest() {
         var validProject = TestDataGenerator.generate(List.of(), Project.class, "valid_123_ID", RandomData.getString());
         var response = projectController.createProject(validProject);
-        response.then().spec(ValidationResponseSpecifications.checkBadRequest());
+        response.then().spec(ResponseSpecifications.checkBadRequest());
         var createdProject = ResponseExtractor.extractModel(response, Project.class);
-        TestValidator.validateEntityFields(validProject, createdProject, softy);
+        EntityValidator.validateEntityFields(validProject, createdProject, softy);
         softy.assertAll();
     }
 
@@ -391,9 +391,9 @@ public void userCreatesProjectWithUnderscoreInIdTest() {
     public void userCreatesProjectWithDigitsOnlyNameTest() {
         var validProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), "123456");
         var response = projectController.createProject(validProject);
-        response.then().spec(ValidationResponseSpecifications.checkSuccess());
+        response.then().spec(ResponseSpecifications.checkSuccess());
         var createdProject = ResponseExtractor.extractModel(response, Project.class);
-        TestValidator.validateEntityFields(validProject, createdProject, softy);
+        EntityValidator.validateEntityFields(validProject, createdProject, softy);
         softy.assertAll();
     }
 
@@ -401,9 +401,9 @@ public void userCreatesProjectWithUnderscoreInIdTest() {
     public void userCreatesProjectWithSpacesInNameTest() {
         var validProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), "valid name with spaces");
         var response = projectController.createProject(validProject);
-        response.then().spec(ValidationResponseSpecifications.checkBadRequest());
+        response.then().spec(ResponseSpecifications.checkBadRequest());
         var createdProject = ResponseExtractor.extractModel(response, Project.class);
-        TestValidator.validateEntityFields(validProject, createdProject, softy);
+        EntityValidator.validateEntityFields(validProject, createdProject, softy);
         softy.assertAll();
     }
 
@@ -411,9 +411,9 @@ public void userCreatesProjectWithUnderscoreInIdTest() {
     public void userCreatesProjectWithEmptyIdStringTest() {
         var projectWithEmptyId = TestDataGenerator.generate(List.of(), Project.class, "", RandomData.getString());
         var response = projectController.createProject(projectWithEmptyId);
-        response.then().spec(ValidationResponseSpecifications.checkSuccess());
+        response.then().spec(ResponseSpecifications.checkSuccess());
         var createdProject = ResponseExtractor.extractModel(response, Project.class);
-        TestValidator.validateEntityFields(projectWithEmptyId, createdProject, softy);
+        EntityValidator.validateEntityFields(projectWithEmptyId, createdProject, softy);
         softy.assertAll();
     }
 
@@ -421,7 +421,7 @@ public void userCreatesProjectWithUnderscoreInIdTest() {
     public void userCannotCreateProjectWithoutNameTest() {
         var projectWithoutName = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), null);
         var response = projectController.createInvalidProjectFromProject(projectWithoutName);
-        response.then().spec(ValidationResponseSpecifications.checkBadRequest());
+        response.then().spec(ResponseSpecifications.checkBadRequest());
         softy.assertAll();
     }
 
@@ -429,7 +429,7 @@ public void userCreatesProjectWithUnderscoreInIdTest() {
     public void userCannotCreateProjectWithoutParentProjectLocatorTest() {
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), RandomData.getString(), new ParentProject(null, null));
         var response = projectController.createInvalidProjectFromProject(invalidProject);
-        response.then().spec(ValidationResponseSpecifications.checkBadRequest());
+        response.then().spec(ResponseSpecifications.checkBadRequest());
         softy.assertAll();
     }
 
@@ -437,16 +437,16 @@ public void userCreatesProjectWithUnderscoreInIdTest() {
     public void userCannotCreateProjectWithEmptyParentProjectLocatorTest() {
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("", null));
         var response = projectController.createInvalidProjectFromProject(invalidProject);
-        response.then().spec(ValidationResponseSpecifications.checkProjectNotFound(""));
+        response.then().spec(ResponseSpecifications.checkProjectNotFound(""));
         softy.assertAll();
     }
 
     @Test(description = "User should not be able to create a project without authentication", groups = {"Negative", "Auth"})
     public void userCannotCreateProjectWithoutAuthTest() {
-        var unauthProjectController = new ProjectController(Specifications.unauthSpec());
+        var unauthProjectController = new ProjectController(RequestSpecifications.unauthSpec());
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), RandomData.getString());
         var response = unauthProjectController.createInvalidProjectFromProject(invalidProject);
-        response.then().spec(ValidationResponseSpecifications.checkUnauthorizedAccess());
+        response.then().spec(ResponseSpecifications.checkUnauthorizedAccess());
         softy.assertAll();
     }
 
@@ -455,7 +455,7 @@ public void userCreatesProjectWithUnderscoreInIdTest() {
         var xssPayload = "<script>alert('XSSd')</script>";
         var projectWithXSS = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), xssPayload);
         Response response = projectController.createProject(projectWithXSS);
-        TestValidator.validateFieldValueFromResponse(response, Project.class, Project::getName, xssPayload, softy);
+        EntityValidator.validateFieldValueFromResponse(response, Project.class, Project::getName, xssPayload, softy);
         softy.assertAll();
     }
 
@@ -464,7 +464,7 @@ public void userCreatesProjectWithUnderscoreInIdTest() {
         var sqlPayload = "'; DROP TABLE projects; --";
         var projectWithSQL = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), sqlPayload);
         Response response = projectController.createProject(projectWithSQL);
-        TestValidator.validateFieldValueFromResponse(response, Project.class, Project::getName, sqlPayload, softy);
+        EntityValidator.validateFieldValueFromResponse(response, Project.class, Project::getName, sqlPayload, softy);
         softy.assertAll();
     }
     @DataProvider(name = "restrictedRoles")
@@ -483,11 +483,11 @@ public void userCreatesProjectWithUnderscoreInIdTest() {
     public void userWithRestrictedRoleCannotCreateProjectTest(Role role) {
         var restrictedUser = generate(User.class);
         restrictedUser.setRoles(new Roles(List.of(new com.example.teamcity.api.models.Role(role.getRoleName(), "g"))));
-        superUserCheckRequests.getRequest(Endpoint.USERS).create(restrictedUser);
-        var restrictedUserController = new ProjectController(Specifications.authSpec(restrictedUser));
+        superUserCheckRequests.getRequest(ApiEndpoint.USERS).create(restrictedUser);
+        var restrictedUserController = new ProjectController(RequestSpecifications.authSpec(restrictedUser));
         var newProject = generate(Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("_Root", null));
         var response = restrictedUserController.createInvalidProjectFromProject(newProject);
-        response.then().spec(ValidationResponseSpecifications.checkForbiddenAccess());
+        response.then().spec(ResponseSpecifications.checkForbiddenAccess());
         softy.assertAll();
     }
 
@@ -506,10 +506,10 @@ public void userCreatesProjectWithUnderscoreInIdTest() {
         var newProject = generate(Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("_Root", null));
         var createdProject = projectController.createAndReturnProject(newProject);
         allowedUser.setRoles(new Roles(List.of(new com.example.teamcity.api.models.Role(role.getRoleName(), "p:" + createdProject.getId()))));
-        superUserCheckRequests.getRequest(Endpoint.USERS).create(allowedUser);
-        var userController = new ProjectController(Specifications.authSpec(allowedUser));
+        superUserCheckRequests.getRequest(ApiEndpoint.USERS).create(allowedUser);
+        var userController = new ProjectController(RequestSpecifications.authSpec(allowedUser));
         var response = userController.createProject(newProject);
-        response.then().spec(ValidationResponseSpecifications.checkBadRequest());
+        response.then().spec(ResponseSpecifications.checkBadRequest());
         Project createdResponseProject = ResponseExtractor.extractModel(response, Project.class);
         softy.assertEquals(createdResponseProject.getId(), newProject.getId(), "ID проекта не совпадает");
         softy.assertEquals(createdResponseProject.getName(), newProject.getName(), "Название проекта не совпадает");

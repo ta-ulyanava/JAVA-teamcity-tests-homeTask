@@ -1,9 +1,9 @@
-package com.example.teamcity.api.ui.pages.admin;
+package com.example.teamcity.ui.pages.admin;
 
 import com.codeborne.selenide.Condition;
 import com.codeborne.selenide.Selectors;
 import com.codeborne.selenide.SelenideElement;
-import com.example.teamcity.api.ui.pages.BasePage;
+import com.example.teamcity.ui.pages.BasePage;
 
 import static com.codeborne.selenide.Selenide.$;
 

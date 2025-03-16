@@ -1,7 +1,7 @@
-package com.example.teamcity.api.ui.pages;
+package com.example.teamcity.ui.pages;
 
 import com.codeborne.selenide.*;
-import com.example.teamcity.api.ui.elements.ProjectElement;
+import com.example.teamcity.ui.elements.ProjectElement;
 
 import java.util.List;
 
