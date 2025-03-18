@@ -13,6 +13,8 @@ import com.example.teamcity.api.responses.ResponseExtractor;
 import com.example.teamcity.api.spec.RequestSpecifications;
 import com.example.teamcity.api.spec.ResponseSpecificationBuilder;
 import com.example.teamcity.api.validation.EntityValidator;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
 import io.restassured.response.Response;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -178,26 +180,8 @@ public class ProjectTest extends BaseApiTest {
 //
 //        softy.assertAll();
 //    }
-//
-//    @Test(description = "User should not be able to create a Project with a non-existent parentProject locator",
-//            groups = {"Negative", "CRUD"})
-//    public void userCannotCreateProjectWithNonExistentParentProjectTest() {
-//        var invalidProject = generate(List.of(), Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("non_existent_locator", null));
-//        var response = projectController.createInvalidProjectFromProject(invalidProject);
-//        response.then().spec(ResponseSpecifications.checkProjectNotFound("non_existent_locator")); // Ожидаем 404
-//        softy.assertAll();
-//    }
-//
-//
-//    @Test(description = "User should not be able to create a Project with the same ID as its parent ID", groups = {"Negative", "CRUD"})
-//    public void userCannotCreateProjectWithSameParentIdTest() {
-//        var projectId = testData.getProject().getId();
-//        var invalidProject = generate(List.of(), Project.class, projectId, RandomData.getString(), new ParentProject(projectId, null));
-//        var response = projectController.createInvalidProjectFromProject(invalidProject);
-//        response.then().spec(ResponseSpecifications.checkProjectNotFound(projectId));
-//        softy.assertAll();
-//    }
-//    /****/
+
+    //    /****/
 //    @Test(description = "User should be able to create a Project with a name of 500 characters", groups = {"Positive", "CRUD", "CornerCase"})
 //    public void userCreatesProjectWith500LengthNameTest() {
 //        var maxLengthName = "A".repeat(500);
@@ -459,17 +443,32 @@ public class ProjectTest extends BaseApiTest {
 //        softy.assertAll();
 //    }
 //
-    @Test(description = "User should not be able to create a Project if parent project locator is not provided", groups = {"Negative", "CRUD"})
-    public void userCannotCreateProjectWithoutParentProjectLocatorTest() {
+// =================== PARENT PROJECT VALIDATION TESTS (PARENT_VALIDATION_TAG) =================== //
+    @Feature("Parent Project Validation")
+    @Story("Non-Existent Parent Project")
+    @Test(description = "User should not be able to create a Project with a non-existent parentProject locator", groups = {"Negative", "CRUD", "PARENT_VALIDATION_TAG"})
+    public void userCannotCreateProjectWithNonExistentParentProjectTest() {
         Project invalidProject = TestDataGenerator.generate(Project.class);
-        invalidProject.setParentProject(new ParentProject(null, null));
-        UncheckedRequest request = new UncheckedRequest(RequestSpecifications.superUserAuthSpec());
-        Response response = request.getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
-        response.then().spec(ResponseSpecificationBuilder.create().withBadRequestStatus().build());
+        invalidProject.setParentProject(new ParentProject("non_existent_locator", null));
+        Response response = new UncheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
+        response.then().spec(ResponseSpecificationBuilder.create().withNotFoundStatus().withErrorMessage("No project found by locator").build());
+        softy.assertAll();
+    }
+    @Feature("Parent Project Validation")
+    @Story("Parent ID Conflict")
+    @Test(description = "User should not be able to create a Project with the same ID as its parent ID", groups = {"Negative", "CRUD", "PARENT_VALIDATION_TAG"})
+    public void userCannotCreateProjectWithSameParentIdTest() {
+        String projectId = testData.getProject().getId();
+        Project invalidProject = TestDataGenerator.generate(Project.class, projectId, RandomData.getUniqueId());
+        invalidProject.setParentProject(new ParentProject(projectId, null));
+        Response response = new UncheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
+        response.then().spec(ResponseSpecificationBuilder.create().withNotFoundStatus().withErrorMessage("No project found by locator").build());
         softy.assertAll();
     }
 
-    @Test(description = "User should not be able to create a Project if parent project locator is empty", groups = {"Negative", "CRUD"})
+    @Feature("Parent Project Validation")
+    @Story("Parent ID Empty")
+    @Test(description = "User should not be able to create a Project if parent project locator is empty", groups = {"Negative", "CRUD", "PARENT_VALIDATION_TAG"})
     public void userCannotCreateProjectWithEmptyParentProjectLocatorTest() {
         Project invalidProject = TestDataGenerator.generate(Project.class);
         invalidProject.setParentProject(new ParentProject("", null));
@@ -478,8 +477,22 @@ public class ProjectTest extends BaseApiTest {
         response.then().spec(ResponseSpecificationBuilder.create().withNotFoundStatus().withErrorMessage("No project found by locator").build());
         softy.assertAll();
     }
+    @Feature("Parent Project Validation")
+    @Story("Parent ID not provided")
+    @Test(description = "User should not be able to create a Project if parent project locator is not provided", groups = {"Negative", "CRUD", "PARENT_VALIDATION_TAG"})
+    public void userCannotCreateProjectWithoutParentProjectLocatorTest() {
+        Project invalidProject = TestDataGenerator.generate(Project.class);
+        invalidProject.setParentProject(new ParentProject(null, null));
+        UncheckedRequest request = new UncheckedRequest(RequestSpecifications.superUserAuthSpec());
+        Response response = request.getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
+        response.then().spec(ResponseSpecificationBuilder.create().withBadRequestStatus().build());
+        softy.assertAll();
+    }
+    // =================== PARENT PROJECT VALIDATION TESTS (PARENT_VALIDATION_TAG) =================== //
 
-
+    // =================== AUTHORIZATIONS TESTS (AUTH_TAG) =================== //
+    @Feature("Authorization")
+    @Story("User without authentication should not create a project")
     @Test(description = "User should not be able to create a project without authentication", groups = {"Negative", "Auth"})
     public void userCannotCreateProjectWithoutAuthTest() {
         Project invalidProject = TestDataGenerator.generate(Project.class);
@@ -488,9 +501,16 @@ public class ProjectTest extends BaseApiTest {
         response.then().spec(ResponseSpecificationBuilder.create().withUnauthorizedStatus().withAuthenticationRequiredError().build());
         softy.assertAll();
     }
+    // =================== AUTHORIZATIONS TESTS (AUTH_TAG) =================== //
 
+    // =================== SECURITY TESTS (SEC_TAG) =================== //
+    // Проверяем защиту от XSS и SQL-инъекций в имени проекта
+    // Ожидаем, что сервер сохранит payload как текст, без исполнения скриптов
+    // Для id такие проверки не нужны так как есть проверка на отсутствие спецсимволов
 
-    @Test(description = "User should be able to create a Project with an XSS payload in name (payload stored as text)", groups = {"Positive", "Security", "CRUD"})
+    @Feature("Security")
+    @Story("XSS Injection Prevention")
+    @Test(description = "User should be able to create a Project with an XSS payload in name (payload stored as text)", groups = {"Positive", "Security", "CRUD", "SEC_TAG"})
     public void userCreatesProjectWithXSSInNameTest() {
         Project projectWithXSS = TestDataGenerator.generate(Project.class, RandomData.getUniqueId(), XSS_PAYLOAD);
         CheckedRequest request = new CheckedRequest(RequestSpecifications.superUserAuthSpec());
@@ -501,7 +521,9 @@ public class ProjectTest extends BaseApiTest {
         softy.assertAll();
     }
 
-    @Test(description = "User should be able to create a Project with an SQL injection payload in name (payload stored as text)", groups = {"Positive", "Security", "CRUD"})
+    @Feature("Security")
+    @Story("SQL Injection Prevention")
+    @Test(description = "User should be able to create a Project with an SQL injection payload in name (payload stored as text)", groups = {"Positive", "Security", "CRUD", "SEC_TAG"})
     public void userCreatesProjectWithSQLInjectionTest() {
         Project projectWithSQL = TestDataGenerator.generate(Project.class, RandomData.getUniqueId(), SQL_INJECTION_PAYLOAD);
         CheckedRequest request = new CheckedRequest(RequestSpecifications.superUserAuthSpec());
@@ -511,7 +533,11 @@ public class ProjectTest extends BaseApiTest {
         EntityValidator.validateAllEntityFieldsIgnoring(projectWithSQL, createdProject, List.of("parentProject"), softy);
         softy.assertAll();
     }
+// =================== SECURITY TESTS (SEC_TAG) =================== //
 
+// =================== ROLE-BASED ACCESS TESTS (ROLE_TAG) =================== //
+@Feature("Access Control")
+@Story("Restricted Roles - No Project Creation")
     @DataProvider(name = "restrictedRoles")
     public static Object[][] restrictedRoles() {
         return new Object[][]{
@@ -523,8 +549,7 @@ public class ProjectTest extends BaseApiTest {
         };
     }
 
-
-    @Test(description = "User with restricted role should not be able to create a project", dataProvider = "restrictedRoles", groups = {"Negative", "CRUD"})
+    @Test(description = "User with restricted role should not be able to create a project", dataProvider = "restrictedRoles", groups = {"Negative", "CRUD", "ROLE_TAG"})
     public void userWithRestrictedRoleCannotCreateProjectTest(Role role) {
         User restrictedUser = createUserWithRole(role, "g");
         Project projectToCreate = testData.getProject();
@@ -533,7 +558,8 @@ public class ProjectTest extends BaseApiTest {
         response.then().spec(ResponseSpecificationBuilder.create().withForbiddenStatus().withAccessDeniedError().build());
         softy.assertAll();
     }
-
+    @Feature("Access Control")
+    @Story("Allowed Roles - Project Creation")
     @DataProvider(name = "allowedRoles")
     public static Object[][] allowedRoles() {
         return new Object[][]{
@@ -541,8 +567,7 @@ public class ProjectTest extends BaseApiTest {
                 {Role.AGENT_MANAGER}
         };
     }
-
-    @Test(description = "User with allowed role should be able to create a project", dataProvider = "allowedRoles", groups = {"Positive", "CRUD"})
+    @Test(description = "User with allowed role should be able to create a project", dataProvider = "allowedRoles", groups = {"Positive", "CRUD", "ROLE_TAG"})
     public void userWithAllowedRoleCanCreateProjectTest(Role role) {
         Project scopeProject = createProjectAndExtractModel(testData.getProject());
         User roleUser = createUserWithRole(role, scopeProject.getId());
@@ -553,7 +578,7 @@ public class ProjectTest extends BaseApiTest {
         EntityValidator.validateAllEntityFieldsIgnoring(newProject, createdProject, List.of("parentProject"), softy);
         softy.assertAll();
     }
-
+// =================== ROLE-BASED ACCESS TESTS (ROLE_TAG) =================== //
 
 }
 
