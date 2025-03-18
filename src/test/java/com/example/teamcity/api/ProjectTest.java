@@ -4,6 +4,7 @@ import com.example.teamcity.api.enums.ApiEndpoint;
 import com.example.teamcity.api.enums.Role;
 import com.example.teamcity.api.generators.RandomData;
 import com.example.teamcity.api.generators.TestDataGenerator;
+import com.example.teamcity.api.models.ParentProject;
 import com.example.teamcity.api.models.Project;
 import com.example.teamcity.api.models.User;
 import com.example.teamcity.api.requests.CheckedRequest;
@@ -458,31 +459,37 @@ public class ProjectTest extends BaseApiTest {
 //        softy.assertAll();
 //    }
 //
-//    @Test(description = "User should not be able to create a Project if parent project locator is not provided", groups = {"Negative", "CRUD"})
-//    public void userCannotCreateProjectWithoutParentProjectLocatorTest() {
-//        var invalidProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), RandomData.getString(), new ParentProject(null, null));
-//        var response = projectController.createInvalidProjectFromProject(invalidProject);
-//        response.then().spec(ResponseSpecifications.checkBadRequest());
-//        softy.assertAll();
-//    }
-//
-//    @Test(description = "User should not be able to create a Project if parent project locator is empty", groups = {"Negative", "CRUD"})
-//    public void userCannotCreateProjectWithEmptyParentProjectLocatorTest() {
-//        var invalidProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("", null));
-//        var response = projectController.createInvalidProjectFromProject(invalidProject);
-//        response.then().spec(ResponseSpecifications.checkProjectNotFound(""));
-//        softy.assertAll();
-//    }
-//
-//    @Test(description = "User should not be able to create a project without authentication", groups = {"Negative", "Auth"})
-//    public void userCannotCreateProjectWithoutAuthTest() {
-//        var unauthProjectController = new ProjectController(RequestSpecifications.unauthSpec());
-//        var invalidProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), RandomData.getString());
-//        var response = unauthProjectController.createInvalidProjectFromProject(invalidProject);
-//        response.then().spec(ResponseSpecifications.checkUnauthorizedAccess());
-//        softy.assertAll();
-//    }
-//
+    @Test(description = "User should not be able to create a Project if parent project locator is not provided", groups = {"Negative", "CRUD"})
+    public void userCannotCreateProjectWithoutParentProjectLocatorTest() {
+        Project invalidProject = TestDataGenerator.generate(Project.class);
+        invalidProject.setParentProject(new ParentProject(null, null));
+        UncheckedRequest request = new UncheckedRequest(RequestSpecifications.superUserAuthSpec());
+        Response response = request.getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
+        response.then().spec(ResponseSpecificationBuilder.create().withBadRequestStatus().build());
+        softy.assertAll();
+    }
+
+    @Test(description = "User should not be able to create a Project if parent project locator is empty", groups = {"Negative", "CRUD"})
+    public void userCannotCreateProjectWithEmptyParentProjectLocatorTest() {
+        Project invalidProject = TestDataGenerator.generate(Project.class);
+        invalidProject.setParentProject(new ParentProject("", null));
+        UncheckedRequest request = new UncheckedRequest(RequestSpecifications.superUserAuthSpec());
+        Response response = request.getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
+        response.then().spec(ResponseSpecificationBuilder.create().withNotFoundStatus().withErrorMessage("No project found by locator").build());
+        softy.assertAll();
+    }
+
+
+    @Test(description = "User should not be able to create a project without authentication", groups = {"Negative", "Auth"})
+    public void userCannotCreateProjectWithoutAuthTest() {
+        Project invalidProject = TestDataGenerator.generate(Project.class);
+        UncheckedRequest request = new UncheckedRequest(RequestSpecifications.unauthSpec());
+        Response response = request.getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
+        response.then().spec(ResponseSpecificationBuilder.create().withUnauthorizedStatus().withAuthenticationRequiredError().build());
+        softy.assertAll();
+    }
+
+
     @Test(description = "User should be able to create a Project with an XSS payload in name (payload stored as text)", groups = {"Positive", "Security", "CRUD"})
     public void userCreatesProjectWithXSSInNameTest() {
         Project projectWithXSS = TestDataGenerator.generate(Project.class, RandomData.getUniqueId(), XSS_PAYLOAD);

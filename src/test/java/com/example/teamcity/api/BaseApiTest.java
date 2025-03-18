@@ -4,6 +4,7 @@ import com.example.teamcity.BaseTest;
 import com.example.teamcity.api.enums.ApiEndpoint;
 import com.example.teamcity.api.enums.Role;
 import com.example.teamcity.api.generators.RandomData;
+import com.example.teamcity.api.generators.TestDataStorage;
 import com.example.teamcity.api.models.Project;
 import com.example.teamcity.api.models.Roles;
 import com.example.teamcity.api.models.User;
@@ -24,11 +25,14 @@ public abstract class BaseApiTest extends BaseTest {
     @BeforeMethod(alwaysRun = true)
     public void configureUserRequests() {
         super.beforeTest();
-        superUserCheckRequests.getRequest(ApiEndpoint.USERS).create(testData.getUser());
+        Response response = superUserCheckRequests.getRequest(ApiEndpoint.USERS).create(testData.getUser());
+        User createdUser = ResponseExtractor.extractModel(response, User.class);
+        TestDataStorage.getInstance().addCreatedEntity(ApiEndpoint.USERS, String.valueOf(createdUser.getId()));
+
+
         userCheckedRequest = new CheckedRequest(RequestSpecifications.authSpec(testData.getUser()));
         userUncheckedRequest = new UncheckedRequest(RequestSpecifications.authSpec(testData.getUser()));
     }
-
     protected Project createProjectAndExtractModel(Project project) {
         Response response = (Response) userCheckedRequest.getRequest(ApiEndpoint.PROJECTS).create(project);
         return ResponseExtractor.extractModel(response, Project.class);
