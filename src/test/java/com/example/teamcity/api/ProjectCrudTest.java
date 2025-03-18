@@ -4,6 +4,7 @@ import com.example.teamcity.api.constants.TestConstants;
 import com.example.teamcity.api.enums.ApiEndpoint;
 import com.example.teamcity.api.enums.Role;
 import com.example.teamcity.api.generators.RandomData;
+import com.example.teamcity.api.generators.TestData;
 import com.example.teamcity.api.generators.TestDataGenerator;
 import com.example.teamcity.api.models.ParentProject;
 import com.example.teamcity.api.models.Project;
@@ -29,19 +30,6 @@ import static com.example.teamcity.api.constants.TestConstants.XSS_PAYLOAD;
 public class ProjectCrudTest extends BaseApiTest {
 
 
-    @DataProvider(name = "invalidSpecialCharactersForId")
-    public static Object[][] invalidSpecialCharactersForId() {
-        return "!@#$%^&*()+-={}[]:\\".chars()
-                .mapToObj(c -> new Object[]{String.valueOf((char) c)})
-                .toArray(Object[][]::new);
-    }
-
-    @DataProvider
-    public static Object[][] nonLatinIdProviderForId() {
-        return new Object[][]{{"проект"}, {"项目"}, {"プロジェクト"}, {"مشروع"}, {"παράδειγμα"}, {"नमूना"}, {"בדיקה"}};
-    }
-
-
 
     @Test(description = "User should be able to create a project with the minimum required fields under Root project",
             groups = {"Positive", "CRUD"})
@@ -54,131 +42,80 @@ public class ProjectCrudTest extends BaseApiTest {
         softy.assertAll();
     }
 
+// =================== PROJECT COPY SETTINGS TESTS (COPY_SETTINGS_TAG) =================== //
+// Bug in API: projectsIdsMap, buildTypesIdsMap, vcsRootsIdsMap, sourceProject should be copied but are not
+@Feature("Project Copy Settings")
+@Story("Copy Project Parameters")
+@Test(description = "User should be able to create a Project with copyAllAssociatedSettings set to true and verify copied settings",
+        groups = {"Positive", "CRUD", "KnownBugs", "COPY_SETTINGS_TAG"})
+public void userCreatesProjectWithCopyAllAssociatedSettingsTrueTest() {
+    var sourceProject = createProjectAndExtractModel(testData.getProject());
+    var newProject = TestDataGenerator.generate(Project.class, RandomData.getString(), RandomData.getString(),sourceProject.getParentProject(), true, sourceProject);
+    var createdProject = createProjectAndExtractModel(newProject);
 
-//------------------//
+    // Баг в API: settings не копируются
+    EntityValidator.validateAllEntityFieldsIgnoring(sourceProject, createdProject, List.of("id", "name"), softy);
+    softy.assertEquals(createdProject.getProjectsIdsMap(), sourceProject.getProjectsIdsMap(), "projectsIdsMap не был скопирован");
+    softy.assertEquals(createdProject.getBuildTypesIdsMap(), sourceProject.getBuildTypesIdsMap(), "buildTypesIdsMap не был скопирован");
+    softy.assertEquals(createdProject.getVcsRootsIdsMap(), sourceProject.getVcsRootsIdsMap(), "vcsRootsIdsMap не был скопирован");
+    softy.assertEquals(createdProject.getSourceProject(), sourceProject, "sourceProject не был скопирован");
+    softy.assertAll();
+}
 
-//    //Bug in API
-//    @Test(description = "User should be able to create a Project with copyAllAssociatedSettings set to true and verify copied fields",
-//            groups = {"Positive", "CRUD", "KnownBugs"})
-//    public void userCreatesProjectWithCopyAllAssociatedSettingsTrueTest() {
-//        var sourceProject = testData.getProject();
-//        var createdSource = createProjectAndExtractModel(sourceProject);
-//        var newProject = new Project(RandomData.getString(), RandomData.getString(), new ParentProject("_Root", null), true, createdSource);
-//        var createdProject = createProjectAndExtractModel(newProject);
-//        EntityValidator.validateFieldsIgnoring(createdSource, createdProject, List.of("id", "name"), softy);
-//        softy.assertEquals(createdProject.getSourceProject().getId(), createdSource.getId(), "Source project ID не совпадает");
-//        softy.assertAll();
-//    }
-//
-//
-//
+    @Feature("Project Copy Settings")
+    @Story("Copy Settings Disabled")
+    @Test(description = "User should be able to create a Project with copyAllAssociatedSettings set to false and verify fields are NOT copied",
+            groups = {"Positive", "CRUD", "COPY_SETTINGS_TAG"})
+    public void userCreatesProjectWithCopyAllAssociatedSettingsFalseTest() {
+        var sourceProject = createProjectAndExtractModel(testData.getProject());
+        var newProject = TestDataGenerator.generate(Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("_Root", null), false, sourceProject);
+        var createdProject = createProjectAndExtractModel(newProject);
 
+        EntityValidator.validateAllEntityFieldsIgnoring(sourceProject, createdProject,
+                List.of("id", "name", "parentProject", "copyAllAssociatedSettings", "sourceProject",
+                        "projectsIdsMap", "buildTypesIdsMap", "vcsRootsIdsMap"), softy);
 
-    //    @Test(description = "User should be able to create a Project with copyAllAssociatedSettings set to false and verify fields are NOT copied", groups = {"Positive", "CRUD"})
-//    public void userCreatesProjectWithCopyAllAssociatedSettingsFalseTest() {
-//        // Создаем исходный проект
-//        var sourceProject = testData.getProject();
-//        Response sourceResponse = (Response) userCheckedRequest.getRequest(ApiEndpoint.PROJECTS).create(sourceProject);
-//        sourceResponse.then().spec(ResponseSpecifications.checkSuccess());
-//        var createdSource = ResponseExtractor.extractModel(sourceResponse, Project.class);
-//
-//        // Создаем новый проект без копирования настроек
-//        var newProject = generate(List.of(), Project.class, RandomData.getString(), RandomData.getString(),
-//                new ParentProject("_Root", null), false, createdSource);
-//
-//        Response response = (Response) userCheckedRequest.getRequest(ApiEndpoint.PROJECTS).create(newProject);
-//        response.then().spec(ResponseSpecifications.checkSuccess());
-//
-//        var createdProject = ResponseExtractor.extractModel(response, Project.class);
-//        EntityValidator.validateEntityFields(newProject, createdProject, softy);
-//        softy.assertAll();
-//    }
-//------------------//
-//    @Test(description = "User should be able to create a Project with copyAllAssociatedSettings set to false and verify fields are NOT copied", groups = {"Positive", "CRUD"})
-//    public void userCreatesProjectWithCopyAllAssociatedSettingsFalseTest() {
-//        // Создаем исходный проект
-//        var sourceProject = testData.getProject();
-//        Response sourceResponse = (Response) userCheckedRequest.getRequest(ApiEndpoint.PROJECTS).create(sourceProject);
-//        sourceResponse.then().spec(ResponseSpecifications.checkSuccess());
-//        var createdSource = ResponseExtractor.extractModel(sourceResponse, Project.class);
-//
-//        // Создаем новый проект без копирования настроек
-//        var newProject = testData.getProject();
-//        newProject.setCopyAllAssociatedSettings(false);
-//        newProject.setSourceProject(createdSource);
-//
-//        Response response = (Response) userCheckedRequest.getRequest(ApiEndpoint.PROJECTS).create(newProject);
-//        response.then().spec(ResponseSpecifications.checkSuccess());
-//
-//        var createdProject = ResponseExtractor.extractModel(response, Project.class);
-//        EntityValidator.validateEntityFields(newProject, createdProject, softy);
-//        softy.assertAll();
-//    }
-//    // Need to fix bug
-//    @DataProvider(name = "invalidCopySettings")
-//    public static Object[][] invalidCopySettings() {
-//        return new Object[][]{
-//                {"123"},
-//                {"null"},
-//                {"\"yes\""},
-//                {"\"no\""},
-//                {"{}"}
-//        };
-//    }
-//
-//    @Test(description = "User should not be able to create Project with invalid copyAllAssociatedSettings",
-//            groups = {"Negative", "CRUD", "KnownBugs"},
-//            dataProvider = "invalidCopySettings")
-//    public void userCannotCreateProjectWithInvalidCopySettingsTest(Object invalidValue) {
-//        String invalidProjectJson = """
-//            {
-//                "id": "%s",
-//                "name": "%s",
-//                "parentProject": { "id": "_Root" },
-//                "copyAllAssociatedSettings": %s
-//            }
-//            """.formatted(RandomData.getString(), RandomData.getString(), invalidValue);
-//        projectController.createInvalidProjectFromString(invalidProjectJson)
-//                .then().spec(ResponseSpecifications.checkInvalidCopySettings());
-//    }
-//    @DataProvider(name = "projectCreationScenarios")
-//    public static Object[][] projectCreationScenarios() {
-//        return new Object[][]{{true, 20}, {false, 20}};
-//    }
-//
-//    @Test(description = "User should be able to create multiple nested or sibling projects",
-//            dataProvider = "projectCreationScenarios", groups = {"Positive", "CRUD", "CornerCase"})
-//    public void userCreatesMultipleProjectsTest(boolean isNested, int projectCount) {
-//        var rootProject = generate(List.of(), Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("_Root", null));
-//        var createdRootProject = projectController.createAndReturnProject(rootProject);
-//        List<Project> projects = isNested
-//                ? projectController.createNestedProjects(createdRootProject.getId(), projectCount)
-//                : projectController.createSiblingProjects(createdRootProject.getId(), projectCount);
-//
-//        softy.assertEquals(projects.size(), projectCount, "The number of created projects is incorrect");
-//
-//        projects.forEach(project -> {
-//            if (isNested && projects.indexOf(project) > 0) {
-//                softy.assertEquals(
-//                        project.getParentProject().getId(),
-//                        projects.get(projects.indexOf(project) - 1).getId(),
-//                        "Parent project ID is incorrect for project " + project.getId()
-//                );
-//            } else {
-//                softy.assertEquals(
-//                        project.getParentProject().getId(),
-//                        createdRootProject.getId(),
-//                        "Parent project ID is incorrect for project " + project.getId()
-//                );
-//            }
-//        });
-//
-//        softy.assertAll();
-//    }
+        softy.assertNull(createdProject.getCopyAllAssociatedSettings(), "copyAllAssociatedSettings должен быть null");
+        softy.assertNull(createdProject.getSourceProject(), "sourceProject должен быть null");
+        softy.assertNull(createdProject.getProjectsIdsMap(), "projectsIdsMap должен быть null");
+        softy.assertNull(createdProject.getBuildTypesIdsMap(), "buildTypesIdsMap должен быть null");
+        softy.assertNull(createdProject.getVcsRootsIdsMap(), "vcsRootsIdsMap должен быть null");
+        softy.assertAll();
+    }
 
+    // =================== PROJECT COPY SETTINGS TESTS (COPY_SETTINGS_TAG) =================== //
 
+// =================== NESTED AND SIBLING PROJECTS TESTS (PROJECT_HIERARCHY_TAG) =================== //
+    @Feature("Project Management")
+    @Story("Creating nested projects")
+    @Test(description = "User should be able to create 20 nested projects",
+            groups = {"Positive", "CRUD", "CornerCase"})
+    public void userCreatesNestedProjectsTest() {
+        var rootProject = createProjectAndExtractModel(testData.getProject());
+        int projectCount = 20;
+        List<Project> projects = TestData.nestedProjects(projectCount);
+        projects.forEach(this::createProjectAndExtractModel);
+        softy.assertEquals(projects.size(), projectCount, "The number of created projects is incorrect");
+        projects.forEach(project -> softy.assertEquals(project.getParentProject().getId(),
+                projects.indexOf(project) > 0 ? projects.get(projects.indexOf(project) - 1).getId() : rootProject.getId(),
+                "Parent project ID is incorrect for project " + project.getId()));
+        softy.assertAll();
+    }
+    @Feature("Project Management")
+    @Story("Creating sibling projects")
+    @Test(description = "User should be able to create 20 sibling projects",
+            groups = {"Positive", "CRUD", "CornerCase"})
+    public void userCreatesSiblingProjectsTest() {
+        var rootProject = createProjectAndExtractModel(testData.getProject());
+        int projectCount = 20;
+        List<Project> projects = TestData.siblingProjects(rootProject.getId(), projectCount);
+        projects.forEach(this::createProjectAndExtractModel);
+        softy.assertEquals(projects.size(), projectCount, "The number of created projects is incorrect");
+        projects.forEach(project -> softy.assertEquals(project.getParentProject().getId(), rootProject.getId(), "Parent project ID is incorrect for project " + project.getId()));
+        softy.assertAll();
+    }
 
-    // =================== PROJECT ID VALIDATION TESTS (PROJECT_ID_VALIDATION_TAG) =================== //
+// =================== PROJECT ID VALIDATION TESTS (PROJECT_ID_VALIDATION_TAG) =================== //
     @Feature("Project ID Validation")
     @Story("Max Length ID")
     @Test(description = "User should be able to create a Project with an ID of maximum allowed length", groups = {"Positive", "CRUD", "PROJECT_ID_VALIDATION_TAG"})
@@ -211,52 +148,59 @@ public class ProjectCrudTest extends BaseApiTest {
         EntityValidator.validateAllEntityFieldsIgnoring(projectWithUnderscore, createdProject, List.of("parentProject"), softy);
         softy.assertAll();
     }
+    // Need to fix 500 error (Known Bugs)
+    @Feature("Project ID Validation")
+    @Story("Project ID Length Exceeded")
+    @Test(description = "User should not be able to create a Project with an ID longer than 225 characters",
+            groups = {"Negative", "CRUD", "KnownBugs", "CornerCase", "PROJECT_ID_VALIDATION_TAG"})
+    public void userCannotCreateProjectWithTooLongIdTest() {
+        var tooLongId = RandomData.getString(226);
+        var invalidProject = TestDataGenerator.generate(List.of(), Project.class, tooLongId, RandomData.getString());
+        var response = new UncheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
+        response.then().spec(ResponseSpecificationBuilder.create().withBadRequestStatus()
+                .withErrorMessage("Project ID \"%s\" is invalid: it is %d characters long while the maximum length is 225. ID should start with a latin letter and contain only latin letters, digits and underscores (at most 225 characters)."
+                        .formatted(tooLongId, tooLongId.length())).build());
+        softy.assertAll();
+    }
 
-//    //To fix 500 (Internal Server Error).
-//    @Test(description = "User should not be able to create a Project with an ID longer than 225 characters",
-//            groups = {"Negative", "CRUD", "KnownBugs", "CornerCase"})
-//    public void userCannotCreateProjectWithTooLongIdTest() {
-//        var tooLongId = "A".repeat(226);
-//        var invalidProject = generate(List.of(), Project.class, tooLongId, RandomData.getString());
-//        var response = projectController.createInvalidProjectFromProject(invalidProject);
-//        response.then().spec(ResponseSpecifications.checkProjectIdTooLong(225));
-//        softy.assertAll();
-//    }
+    @Feature("Project ID Validation")
+    @Story("Special Characters in Project ID")
+    @DataProvider(name = "invalidSpecialCharactersForId")
+    public static Object[][] invalidSpecialCharactersForId() {
+        return "!@#$%^&*()+-={}[]:\\".chars()
+                .mapToObj(c -> new Object[]{String.valueOf((char) c)})
+                .toArray(Object[][]::new);
+    }
+    // Need to fix 500 error (Known Bugs)
+    @Test(description = "User should not be able to create a Project with special characters in ID",
+            groups = {"Negative", "CRUD", "KnownBugs", "PROJECT_ID_VALIDATION_TAG"}, dataProvider = "invalidSpecialCharactersForId")
+    public void userCannotCreateProjectWithEachSpecialCharacterInIdTest(String specialChar) {
+        var invalidId = "test_" + specialChar;
+        var invalidProject = TestDataGenerator.generate(List.of(), Project.class, invalidId, RandomData.getString());
+        var response = new UncheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
+        response.then().spec(ResponseSpecificationBuilder.create().withBadRequestStatus()
+                .withErrorMessage("Project ID \"%s\" is invalid: contains unsupported character '%s'.".formatted(invalidId, specialChar)).build());
+        softy.assertAll();
+    }
 
-//
-//    // Need to fix 500 server Error
-//    @Test(description = "User should not be able to create a Project with special characters in ID",
-//            groups = {"Negative", "CRUD", "KnownBugs"}, dataProvider = "invalidSpecialCharactersForId")
-//    public void userCannotCreateProjectWithEachSpecialCharacterInIdTest(String specialChar) {
-//        var invalidId = "test_" + specialChar;
-//        var invalidProject = TestDataGenerator.generate(List.of(), Project.class, invalidId, "ValidName");
-//        var response = projectController.createInvalidProjectFromProject(invalidProject);
-//        response.then().spec(ResponseSpecifications.checkInvalidProjectId());
-//        softy.assertAll();
-//    }
-//
-//
-//    // Need to fix 500 server Error
-//    @Test(description = "User should not be able to create a Project with a non-Latin ID",
-//            groups = {"Negative", "CRUD", "KnownBugs"}, dataProvider = "nonLatinIdProviderForId")
-//    public void userCannotCreateProjectWithNonLatinIdTest(String invalidId) {
-//        var invalidProject = TestDataGenerator.generate(List.of(), Project.class, invalidId, RandomData.getString());
-//        var response = projectController.createInvalidProjectFromProject(invalidProject);
-//        response.then().spec(ResponseSpecifications.checkInvalidProjectId());
-//        softy.assertAll();
-//    }
-//
-//
-//    @Test(description = "User should not be able to create Project with empty name", groups = {"Negative", "CRUD"})
-//    public void userCannotCreateProjectWithEmptyNameTest() {
-//        var invalidProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), "");
-//        var response = projectController.createInvalidProjectFromProject(invalidProject);
-//        response.then().spec(ResponseSpecifications.checkBadRequest());
-//        softy.assertTrue(response.asString().contains("Project name cannot be empty"));
-//        softy.assertAll();
-//    }
-//
-//
+    @Feature("Project ID Validation")
+    @Story("Non-Latin Characters in Project ID")
+    @DataProvider
+    public static Object[][] nonLatinIdProviderForId() {
+        return new Object[][]{{"проект"}, {"项目"}, {"プロジェクト"}, {"مشروع"}, {"παράδειγμα"}, {"नमूना"}, {"בדיקה"}};
+    }
+    // Need to fix 500 error (Known Bugs)
+    @Test(description = "User should not be able to create a Project with a non-Latin ID",
+            groups = {"Negative", "CRUD", "KnownBugs", "PROJECT_ID_VALIDATION_TAG"}, dataProvider = "nonLatinIdProviderForId")
+    public void userCannotCreateProjectWithNonLatinIdTest(String invalidId) {
+        var invalidProject = TestDataGenerator.generate(List.of(), Project.class, invalidId, RandomData.getString());
+        var response = new UncheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
+        response.then().spec(ResponseSpecificationBuilder.create().withBadRequestStatus()
+                .withErrorMessage("Project ID \"%s\" is invalid: contains non-latin letter '%s'. ID should start with a latin letter and contain only latin letters, digits and underscores (at most 225 characters)."
+                        .formatted(invalidId, invalidId.charAt(0))).build());
+        softy.assertAll();
+    }
+
 @Feature("Project ID Validation")
 @Story("Empty ID")
 // Need to fix 500 error (Known Bugs)
@@ -323,6 +267,8 @@ public void userCannotCreateProjectWithEmptyIdTest() {
     }
 
     // Need to fix 500 error (Known Bugs)
+    @Feature("Project ID Validation")
+    @Story("Invalid Starting Character in Project ID")
     @Test(description = "User should not be able to create a Project with an ID starting with an underscore or a digit",
             groups = {"Negative", "CRUD", "KnownBugs", "PROJECT_ID_VALIDATION_TAG"},
             dataProvider = "invalidIdStartId")
@@ -331,10 +277,11 @@ public void userCannotCreateProjectWithEmptyIdTest() {
         Response response = new UncheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
         response.then().spec(ResponseSpecificationBuilder.create().withBadRequestStatus()
                 .withErrorMessage("Project ID \"%s\" is invalid: starts with non-letter character '%s'. ID should start with a latin letter and contain only latin letters, digits and underscores (at most 225 characters)."
-                 .formatted(invalidId, invalidId.charAt(0)))
+                        .formatted(invalidId, invalidId.charAt(0)))
                 .build());
         softy.assertAll();
     }
+
     // Need to fix 500 error (Known Bugs)
     @Feature("Project ID Validation")
     @Story("Spaces in Project ID")
@@ -346,34 +293,43 @@ public void userCannotCreateProjectWithEmptyIdTest() {
         response.then().spec(ResponseSpecificationBuilder.create().withBadRequestStatus().withErrorMessage("Project ID \"%s\" is invalid: contains unsupported character ' '. ID should start with a latin letter and contain only latin letters, digits and underscores (at most 225 characters).".formatted(invalidId)).build());
         softy.assertAll();
     }
-
-
-//
-//    @Test(description = "User should be able to create a Project with an ID containing Latin letters, digits, and underscores", groups = {"Positive", "CRUD"})
-//    public void userCreatesProjectWithValidIdCharactersTest() {
-//        var validProject = TestDataGenerator.generate(List.of(), Project.class, "valid_123_ID", RandomData.getString());
-//        var response = projectController.createProject(validProject);
-//        response.then().spec(ResponseSpecifications.checkBadRequest());
-//        var createdProject = ResponseExtractor.extractModel(response, Project.class);
-//        EntityValidator.validateEntityFields(validProject, createdProject, softy);
-//        softy.assertAll();
-//    }
-//
-//    @Test(description = "User should be able to create a Project with an empty ID String", groups = {"Positive", "CRUD"})
-//    public void userCreatesProjectWithEmptyIdStringTest() {
-//        var projectWithEmptyId = TestDataGenerator.generate(List.of(), Project.class, "", RandomData.getString());
-//        var response = projectController.createProject(projectWithEmptyId);
-//        response.then().spec(ResponseSpecifications.checkSuccess());
-//        var createdProject = ResponseExtractor.extractModel(response, Project.class);
-//        EntityValidator.validateEntityFields(projectWithEmptyId, createdProject, softy);
-//        softy.assertAll();
-//    }
-
+    @Feature("Project ID Validation")
+    @Story("Valid Project ID")
+    @Test(description = "User should be able to create a Project with an ID containing Latin letters, digits, and underscores", groups = {"Positive", "CRUD", "PROJECT_ID_VALIDATION_TAG"})
+    public void userCreatesProjectWithValidIdCharactersTest() {
+        Project validProject = TestDataGenerator.generate(List.of(), Project.class, "valid_123_ID", RandomData.getString());
+        Response response = new CheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(validProject);
+        Project createdProject = ResponseExtractor.extractModel(response, Project.class);
+        EntityValidator.validateAllEntityFieldsIgnoring(validProject, createdProject, List.of("parentProject"), softy);
+        softy.assertAll();
+    }
+    // Need to fix 500 error (Known Bugs)
+    @Feature("Project ID Validation")
+    @Story("Empty Project ID")
+    @Test(description = "User should not be able to create a Project with an empty ID String", groups = {"Negative", "CRUD", "PROJECT_ID_VALIDATION_TAG", "KnownBugs"})
+    public void userCannotCreateProjectWithEmptyIdStringTest() {
+        Project projectWithEmptyId = TestDataGenerator.generate(List.of(), Project.class, "", RandomData.getString());
+        Response response = new UncheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(projectWithEmptyId);
+        response.then().spec(ResponseSpecificationBuilder.create().withBadRequestStatus().withErrorMessage("Project ID must not be empty.").build());
+        softy.assertAll();
+    }
 
 // =================== PROJECT ID VALIDATION TESTS (PROJECT_ID_VALIDATION_TAG) =================== //
+
 // =================== PROJECT NAME VALIDATION TESTS (PROJECT_NAME_VALIDATION_TAG) =================== //
 @Feature("Project Name Validation")
-@Story("Special Characters in Project Name")
+@Story("Empty Project Name")
+@Test(description = "User should not be able to create Project with empty name", groups = {"Negative", "CRUD", "PROJECT_NAME_VALIDATION_TAG"})
+public void userCannotCreateProjectWithEmptyNameTest() {
+    var invalidProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), "");
+    var response = new UncheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
+    response.then().spec(ResponseSpecificationBuilder.create().withBadRequestStatus()
+            .withErrorMessage("Project name cannot be empty").build());
+    softy.assertAll();
+}
+
+    @Feature("Project Name Validation")
+@Story("Space in Project Name")
 // Need to fix incorrect response from server (Known bugs)
 @Test(description = "User should not be able to create a Project with a space as name", groups = {"Negative", "CRUD", "KnownBugs", "PROJECT_NAME_VALIDATION_TAG"})
 public void userCannotCreateProjectWithSpaceAsNameTest() {
