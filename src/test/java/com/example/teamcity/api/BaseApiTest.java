@@ -42,7 +42,7 @@ public abstract class BaseApiTest extends BaseTest {
     protected User createUserWithRole(Role role, String projectId) {
         var user = testData.getUser();
         user.setUsername(RandomData.getUniqueName());
-        String roleScope = "p:" + projectId;
+        String roleScope = projectId.equals("g") ? "p:_Root" : "p:" + projectId;
         user.setRoles(new Roles(List.of(new com.example.teamcity.api.models.Role(role.getRoleName(), roleScope))));
         superUserCheckRequests.getRequest(ApiEndpoint.USERS).create(user);
         return user;

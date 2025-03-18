@@ -3,14 +3,18 @@ package com.example.teamcity.api;
 import com.example.teamcity.api.enums.ApiEndpoint;
 import com.example.teamcity.api.enums.Role;
 import com.example.teamcity.api.generators.RandomData;
+import com.example.teamcity.api.generators.TestDataGenerator;
 import com.example.teamcity.api.models.Project;
 import com.example.teamcity.api.models.Roles;
+import com.example.teamcity.api.models.User;
 import com.example.teamcity.api.requests.CheckedRequest;
+import com.example.teamcity.api.requests.UncheckedRequest;
 import com.example.teamcity.api.responses.ResponseExtractor;
 import com.example.teamcity.api.spec.RequestSpecifications;
 import com.example.teamcity.api.spec.ResponseSpecificationBuilder;
 import com.example.teamcity.api.validation.EntityValidator;
 import io.restassured.response.Response;
+import org.apache.http.HttpStatus;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -45,13 +49,14 @@ public class ProjectTest extends BaseApiTest {
     @Test(description = "User should be able to create a project with the minimum required fields under Root project",
             groups = {"Positive", "CRUD"})
     public void userCreatesProjectWithMandatoryFieldsOnlyTest() {
-        var project = testData.getProject();
-        var createdProject = createProjectAndExtractModel(project);
+        final String ROOT_PROJECT_ID = "_Root";
+        Project project = testData.getProject();
+        Project createdProject = createProjectAndExtractModel(project);
         EntityValidator.validateAllEntityFieldsIgnoring(project, createdProject, List.of("parentProject"), softy);
-        softy.assertEquals(createdProject.getParentProject().getId(), "_Root",
-                "Parent project should be '_Root' when not specified");
+        softy.assertEquals(createdProject.getParentProject().getId(), ROOT_PROJECT_ID, "Parent project should be '_Root' when not specified");
         softy.assertAll();
     }
+
 
 
 
@@ -499,30 +504,28 @@ public class ProjectTest extends BaseApiTest {
 //        EntityValidator.validateFieldValueFromResponse(response, Project.class, Project::getName, sqlPayload, softy);
 //        softy.assertAll();
 //    }
-//    @DataProvider(name = "restrictedRoles")
-//    public static Object[][] restrictedRoles() {
-//        return new Object[][]{
-//                {Role.PROJECT_VIEWER},
-//                {Role.GUEST_ROLE},
-//                {Role.USER_ROLE},
-//                {Role.PROJECT_DEVELOPER},
-//                {Role.TOOLS_INTEGRATION}
-//        };
-//    }
-//
-//    @Test(description = "User with restricted role should not be able to create a project",
-//            dataProvider = "restrictedRoles")
-//    public void userWithRestrictedRoleCannotCreateProjectTest(Role role) {
-//        var restrictedUser = generate(User.class);
-//        restrictedUser.setRoles(new Roles(List.of(new com.example.teamcity.api.models.Role(role.getRoleName(), "g"))));
-//        superUserCheckRequests.getRequest(ApiEndpoint.USERS).create(restrictedUser);
-//        var restrictedUserController = new ProjectController(RequestSpecifications.authSpec(restrictedUser));
-//        var newProject = generate(Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("_Root", null));
-//        var response = restrictedUserController.createInvalidProjectFromProject(newProject);
-//        response.then().spec(ResponseSpecifications.checkForbiddenAccess());
-//        softy.assertAll();
-//    }
-//
+    @DataProvider(name = "restrictedRoles")
+    public static Object[][] restrictedRoles() {
+        return new Object[][]{
+                {Role.PROJECT_VIEWER},
+                {Role.GUEST_ROLE},
+                {Role.USER_ROLE},
+                {Role.PROJECT_DEVELOPER},
+                {Role.TOOLS_INTEGRATION}
+        };
+    }
+
+
+    @Test(description = "User with restricted role should not be able to create a project", dataProvider = "restrictedRoles", groups = {"Negative", "CRUD"})
+    public void userWithRestrictedRoleCannotCreateProjectTest(Role role) {
+        User restrictedUser = createUserWithRole(role, "g");
+        Project projectToCreate = testData.getProject();
+        UncheckedRequest restrictedUserRequest = new UncheckedRequest(RequestSpecifications.authSpec(restrictedUser));
+        Response response = restrictedUserRequest.getRequest(ApiEndpoint.PROJECTS).create(projectToCreate);
+        response.then().spec(ResponseSpecificationBuilder.create().withForbiddenStatus().withAccessDeniedError().build());
+        softy.assertAll();
+    }
+
 @DataProvider(name = "allowedRoles")
 public static Object[][] allowedRoles() {
     return new Object[][]{
@@ -533,32 +536,17 @@ public static Object[][] allowedRoles() {
 
     @Test(description = "User with allowed role should be able to create a project", dataProvider = "allowedRoles", groups = {"Positive", "CRUD"})
     public void userWithAllowedRoleCanCreateProjectTest(Role role) {
-        var scopeProject = createProjectAndExtractModel(testData.getProject());
-        var roleUser = createUserWithRole(role, scopeProject.getId());
-        
-        var newProject = testData.getProject();
-        newProject.setId(RandomData.getUniqueId());
-        newProject.setName(RandomData.getUniqueName());
-        
-        var roleUserRequest = new CheckedRequest(RequestSpecifications.authSpec(roleUser));
+        Project scopeProject = createProjectAndExtractModel(testData.getProject());
+        User roleUser = createUserWithRole(role, scopeProject.getId());
+        Project newProject = TestDataGenerator.generate(Project.class);
+        CheckedRequest roleUserRequest = new CheckedRequest(RequestSpecifications.authSpec(roleUser));
         Response response = roleUserRequest.getRequest(ApiEndpoint.PROJECTS).create(newProject);
-        var createdProject = ResponseExtractor.extractModel(response, Project.class);
-        
+        Project createdProject = ResponseExtractor.extractModel(response, Project.class);
         EntityValidator.validateAllEntityFieldsIgnoring(newProject, createdProject, List.of("parentProject"), softy);
         softy.assertAll();
     }
+
     
-
-
-
-
-
-
-
-
-
-
-
 
 }
 
