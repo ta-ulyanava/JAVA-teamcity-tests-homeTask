@@ -1,5 +1,6 @@
 package com.example.teamcity.api;
 
+import com.example.teamcity.api.constants.TestConstants;
 import com.example.teamcity.api.enums.ApiEndpoint;
 import com.example.teamcity.api.enums.Role;
 import com.example.teamcity.api.generators.RandomData;
@@ -25,7 +26,7 @@ import static com.example.teamcity.api.constants.TestConstants.SQL_INJECTION_PAY
 import static com.example.teamcity.api.constants.TestConstants.XSS_PAYLOAD;
 
 @Test(groups = {"Regression"})
-public class ProjectTest extends BaseApiTest {
+public class ProjectCrudTest extends BaseApiTest {
 
 
     @DataProvider(name = "invalidSpecialCharactersForId")
@@ -181,44 +182,31 @@ public class ProjectTest extends BaseApiTest {
 //        softy.assertAll();
 //    }
 
-    //    /****/
-//    @Test(description = "User should be able to create a Project with a name of 500 characters", groups = {"Positive", "CRUD", "CornerCase"})
-//    public void userCreatesProjectWith500LengthNameTest() {
-//        var maxLengthName = "A".repeat(500);
-//        var validProject = generate(List.of(), Project.class, RandomData.getString(), maxLengthName);
-//        var response = projectController.createProject(validProject);
-//        response.then().spec(ResponseSpecifications.checkSuccess());
-//        softy.assertAll();
-//    }
-//    /****/
-//
-//    @Test(description = "User should be able to create a Project with a name of length 1", groups = {"Positive", "CRUD"})
-//    public void userCreatesProjectWithOneCharacterNameTest() {
-//        var validProject = generate(List.of(), Project.class, RandomData.getString(), "A");
-//        var response = projectController.createProject(validProject);
-//        response.then().spec(ResponseSpecifications.checkSuccess());
-//        softy.assertAll();
-//    }
-//
-//
-//    @Test(description = "User should be able to create a Project with an ID of maximum allowed length", groups = {"Positive", "CRUD"})
-//    public void userCreatesProjectWithMaxLengthIdTest() {
-//        var maxLengthId = "A".repeat(225);
-//        var validProject = generate(List.of(), Project.class, maxLengthId, RandomData.getString());
-//        var response = projectController.createProject(validProject);
-//        response.then().spec(ResponseSpecifications.checkSuccess());
-//        softy.assertAll();
-//    }
-//
-//    @Test(description = "User should be able to create a Project with an ID of length 1", groups = {"Positive", "CRUD"})
-//    public void userCreatesProjectWithOneCharacterIdTest() {
-//        var validProject = generate(List.of(), Project.class, "A", RandomData.getString());
-//        var response = projectController.createProject(validProject);
-//        response.then().spec(ResponseSpecifications.checkSuccess());
-//        softy.assertAll();
-//    }
-//
-//
+
+
+    // =================== PROJECT ID VALIDATION TESTS (PROJECT_ID_VALIDATION_TAG) =================== //
+    @Feature("Project ID Validation")
+    @Story("Max Length ID")
+    @Test(description = "User should be able to create a Project with an ID of maximum allowed length", groups = {"Positive", "CRUD", "PROJECT_ID_VALIDATION_TAG"})
+    public void userCreatesProjectWithMaxLengthIdTest() {
+        Project validProject = TestDataGenerator.generate(Project.class, "A".repeat(225), RandomData.getString());
+        Response response = new CheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(validProject);
+        response.then().spec(ResponseSpecificationBuilder.create().withSuccessStatus().build());
+        softy.assertAll();
+    }
+
+    @Feature("Project ID Validation")
+    @Story("Min Length ID")
+    @Test(description = "User should be able to create a Project with an ID of length 1", groups = {"Positive", "CRUD", "PROJECT_ID_VALIDATION_TAG"})
+    public void userCreatesProjectWithOneCharacterIdTest() {
+        Project validProject = TestDataGenerator.generate(Project.class, "A", RandomData.getString());
+        Response response = new CheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(validProject);
+        response.then().spec(ResponseSpecificationBuilder.create().withSuccessStatus().build());
+        softy.assertAll();
+    }
+
+
+
 //
 //    //To fix 500 (Internal Server Error).
 //    @Test(description = "User should not be able to create a Project with an ID longer than 225 characters",
@@ -233,27 +221,7 @@ public class ProjectTest extends BaseApiTest {
 //
 //
 //
-//    @Test(description = "User should be able to create a Project with special characters in name",
-//            groups = {"Positive", "CRUD"})
-//    public void userCreatesProjectWithSpecialCharactersInNameTest() {
-//        var project = generate(List.of(), Project.class, RandomData.getString(), RandomData.getFullSpecialCharacterString());
-//        var response = projectController.createProject(project);
-//        response.then().spec(ResponseSpecifications.checkBadRequest());
-//        var createdProject = ResponseExtractor.extractModel(response, Project.class);
-//        EntityValidator.validateEntityFields(project, createdProject, softy);
-//        softy.assertAll();
-//    }
 //
-//    @Test(description = "User should be able to create a Project with a localized name",
-//            groups = {"Positive", "CRUD"})
-//    public void userCreatesProjectWithLocalizedNameTest() {
-//        var localizedProject = generate(List.of(), Project.class, RandomData.getString(), RandomData.getFullLocalizationString());
-//        var response = projectController.createProject(localizedProject);
-//        response.then().spec(ResponseSpecifications.checkSuccess());
-//        var createdProject = ResponseExtractor.extractModel(response, Project.class);
-//        EntityValidator.validateEntityFields(localizedProject, createdProject, softy);
-//        softy.assertAll();
-//    }
 //
 //    @Test(description = "User should be able to create a Project with an ID containing an underscore",
 //            groups = {"Positive", "CRUD"})
@@ -318,17 +286,6 @@ public class ProjectTest extends BaseApiTest {
 //        softy.assertTrue(response.asString().contains("Project ID must not be empty"));
 //        softy.assertAll();
 //    }
-//    //Need to fix 500 error
-//    @Test(description = "User should not be able to create a Project with a space as name", groups = {"Negative", "CRUD", "KnownBugs"})
-//    public void userCannotCreateProjectWithSpaceAsNameTest() {
-//        var invalidProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), " ");
-//        var response = projectController.createInvalidProjectFromProject(invalidProject);
-//        response.then().spec(ResponseSpecifications.checkBadRequest());
-//        softy.assertTrue(response.asString().contains("Given project name is empty"));
-//        softy.assertAll();
-//    }
-//
-//
 //
 //    @Test(description = "User should not be able to create a Project with an existing ID", groups = {"Negative", "CRUD"})
 //    public void userCannotCreateProjectWithExistingIdTest() {
@@ -339,24 +296,8 @@ public class ProjectTest extends BaseApiTest {
 //        softy.assertAll();
 //    }
 //
-//    @Test(description = "User should not be able to create a Project with an existing name", groups = {"Negative", "CRUD"})
-//    public void userCannotCreateProjectWithExistingNameTest() {
-//        var existingProject = projectController.createAndReturnProject(testData.getProject());
-//        var duplicateProject = TestDataGenerator.generate(List.of(existingProject), Project.class, RandomData.getString(), existingProject.getName());
-//        var response = projectController.createInvalidProjectFromProject(duplicateProject);
-//        response.then().spec(ResponseSpecifications.checkProjectWithNameAlreadyExists(existingProject.getName()));
-//        softy.assertAll();
-//    }
 //
-//    @Test(description = "User should not be able to create a Project with an existing name in a different case", groups = {"Negative", "CRUD"})
-//    public void userCannotCreateProjectWithExistingNameDifferentCaseTest() {
-//        var existingProject = projectController.createAndReturnProject(testData.getProject());
-//        var duplicateName = existingProject.getName().toUpperCase();
-//        var duplicateProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), duplicateName);
-//        var response = projectController.createInvalidProjectFromProject(duplicateProject);
-//        response.then().spec(ResponseSpecifications.checkProjectWithNameAlreadyExists(duplicateName));
-//        softy.assertAll();
-//    }
+//
 //
 //    @Test(description = "User should not be able to create a Project with an existing ID in a different case", groups = {"Negative", "CRUD"})
 //    public void userCannotCreateProjectWithExistingIdDifferentCaseTest() {
@@ -405,26 +346,6 @@ public class ProjectTest extends BaseApiTest {
 //        softy.assertAll();
 //    }
 //
-//    @Test(description = "User should be able to create a Project with a name consisting only of digits", groups = {"Positive", "CRUD"})
-//    public void userCreatesProjectWithDigitsOnlyNameTest() {
-//        var validProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), "123456");
-//        var response = projectController.createProject(validProject);
-//        response.then().spec(ResponseSpecifications.checkSuccess());
-//        var createdProject = ResponseExtractor.extractModel(response, Project.class);
-//        EntityValidator.validateEntityFields(validProject, createdProject, softy);
-//        softy.assertAll();
-//    }
-//
-//    @Test(description = "User should be able to create a Project with spaces in the middle of the name", groups = {"Positive", "CRUD"})
-//    public void userCreatesProjectWithSpacesInNameTest() {
-//        var validProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), "valid name with spaces");
-//        var response = projectController.createProject(validProject);
-//        response.then().spec(ResponseSpecifications.checkBadRequest());
-//        var createdProject = ResponseExtractor.extractModel(response, Project.class);
-//        EntityValidator.validateEntityFields(validProject, createdProject, softy);
-//        softy.assertAll();
-//    }
-//
 //    @Test(description = "User should be able to create a Project with an empty ID String", groups = {"Positive", "CRUD"})
 //    public void userCreatesProjectWithEmptyIdStringTest() {
 //        var projectWithEmptyId = TestDataGenerator.generate(List.of(), Project.class, "", RandomData.getString());
@@ -434,15 +355,124 @@ public class ProjectTest extends BaseApiTest {
 //        EntityValidator.validateEntityFields(projectWithEmptyId, createdProject, softy);
 //        softy.assertAll();
 //    }
-//
-//    @Test(description = "User should not be able to create a Project without specifying a name", groups = {"Negative", "CRUD"})
-//    public void userCannotCreateProjectWithoutNameTest() {
-//        var projectWithoutName = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), null);
-//        var response = projectController.createInvalidProjectFromProject(projectWithoutName);
-//        response.then().spec(ResponseSpecifications.checkBadRequest());
-//        softy.assertAll();
-//    }
-//
+
+
+// =================== PROJECT ID VALIDATION TESTS (PROJECT_ID_VALIDATION_TAG) =================== //
+// =================== PROJECT NAME VALIDATION TESTS (PROJECT_NAME_VALIDATION_TAG) =================== //
+@Feature("Project Name Validation")
+@Story("Special Characters in Project Name")
+// Need to fix incorrect response from server (Known bugs)
+@Test(description = "User should not be able to create a Project with a space as name", groups = {"Negative", "CRUD", "KnownBugs", "PROJECT_NAME_VALIDATION_TAG"})
+public void userCannotCreateProjectWithSpaceAsNameTest() {
+    Project invalidProject = TestDataGenerator.generate(Project.class, RandomData.getString(), " ");
+    Response response = new UncheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
+    response.then().spec(ResponseSpecificationBuilder.create().withBadRequestStatus().withErrorMessage("Given project name is empty").build());
+    softy.assertAll();
+}
+
+    @Feature("Project Name Validation")
+    @Story("Special Characters in Project Name")
+    @Test(description = "User should be able to create a Project with special characters in name", groups = {"Positive", "CRUD", "PROJECT_NAME_VALIDATION_TAG"})
+    public void userCreatesProjectWithSpecialCharactersInNameTest() {
+        Project project = TestDataGenerator.generate(Project.class, RandomData.getString(), TestConstants.SPECIAL_CHARACTERS);
+        Response response = new CheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(project);
+        Project createdProject = ResponseExtractor.extractModel(response, Project.class);
+        EntityValidator.validateAllEntityFieldsIgnoring(project, createdProject, List.of("parentProject"), softy);
+        softy.assertAll();
+    }
+
+    @Feature("Project Name Validation")
+    @Story("Localized Project Name")
+    @Test(description = "User should be able to create a Project with a localized name", groups = {"Positive", "CRUD", "PROJECT_NAME_VALIDATION_TAG"})
+    public void userCreatesProjectWithLocalizedNameTest() {
+        Project localizedProject = TestDataGenerator.generate(Project.class, RandomData.getString(), TestConstants.LOCALIZATION_CHARACTERS);
+        Response response = new CheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(localizedProject);
+        Project createdProject = ResponseExtractor.extractModel(response, Project.class);
+        EntityValidator.validateAllEntityFieldsIgnoring(localizedProject, createdProject, List.of("parentProject"), softy);
+        softy.assertAll();
+    }
+    @Feature("Project Name Validation")
+    @Story("One Character Project Name")
+    @Test(description = "User should be able to create a Project with a name of length 1", groups = {"Positive", "CRUD", "PROJECT_NAME_VALIDATION_TAG"})
+    public void userCreatesProjectWithOneCharacterNameTest() {
+        Project validProject = TestDataGenerator.generate(Project.class, RandomData.getString(), "A");
+        Response response = new CheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(validProject);
+        Project createdProject = ResponseExtractor.extractModel(response, Project.class);
+        EntityValidator.validateAllEntityFieldsIgnoring(validProject, createdProject, List.of("parentProject"), softy);
+        softy.assertAll();
+    }
+
+    @Feature("Project Name Validation")
+    @Story("Maximum Length Project Name")
+    @Test(description = "User should be able to create a Project with a name of 500 characters", groups = {"Positive", "CRUD", "CornerCase", "PROJECT_NAME_VALIDATION_TAG"})
+    public void userCreatesProjectWith500LengthNameTest() {
+        String maxLengthName = "A".repeat(500);
+        Project validProject = TestDataGenerator.generate(Project.class, RandomData.getString(), maxLengthName);
+        Response response = new CheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(validProject);
+        Project createdProject = ResponseExtractor.extractModel(response, Project.class);
+        EntityValidator.validateAllEntityFieldsIgnoring(validProject, createdProject, List.of("parentProject"), softy);
+        softy.assertAll();
+    }
+    @Feature("Project Name Validation")
+    @Story("Duplicate Name with Different Case")
+    @Test(description = "User should not be able to create a Project with an existing name in a different case", groups = {"Negative", "CRUD", "PROJECT_NAME_VALIDATION_TAG"})
+    public void userCannotCreateProjectWithExistingNameDifferentCaseTest() {
+        Project existingProject = createProjectAndExtractModel(testData.getProject());
+        String duplicateName = existingProject.getName().toUpperCase();
+        Project duplicateProject = TestDataGenerator.generate(Project.class, RandomData.getString(), duplicateName);
+        Response response = new UncheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(duplicateProject);
+        response.then().spec(ResponseSpecificationBuilder.create().withBadRequestStatus().withEntityExistsError(duplicateName).build());
+        softy.assertAll();
+    }
+
+    @Feature("Project Name Validation")
+    @Story("Duplicate Name")
+    @Test(description = "User should not be able to create a Project with an existing name", groups = {"Negative", "CRUD", "PROJECT_NAME_VALIDATION_TAG"})
+    public void userCannotCreateProjectWithExistingNameTest() {
+        Project existingProject = createProjectAndExtractModel(testData.getProject());
+        Project duplicateProject = TestDataGenerator.generate(Project.class, RandomData.getString(), existingProject.getName());
+        Response response = new UncheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(duplicateProject);
+        response.then().spec(ResponseSpecificationBuilder.create().withBadRequestStatus().withEntityExistsError(existingProject.getName()).build());
+        softy.assertAll();
+    }
+
+    @Feature("Project Name Validation")
+    @Story("Digits Only Name")
+    @Test(description = "User should be able to create a Project with a name consisting only of digits", groups = {"Positive", "CRUD", "PROJECT_NAME_VALIDATION_TAG"})
+    public void userCreatesProjectWithDigitsOnlyNameTest() {
+        Project validProject = TestDataGenerator.generate(Project.class, RandomData.getUniqueId(), "123456");
+        Response response = new CheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(validProject);
+        Project createdProject = ResponseExtractor.extractModel(response, Project.class);
+        EntityValidator.validateAllEntityFieldsIgnoring(validProject, createdProject, List.of("parentProject"), softy);
+        softy.assertAll();
+    }
+
+    @Feature("Project Name Validation")
+    @Story("Spaces In Name")
+    @Test(description = "User should be able to create a Project with spaces in the middle of the name", groups = {"Positive", "CRUD", "PROJECT_NAME_VALIDATION_TAG"})
+    public void userCreatesProjectWithSpacesInNameTest() {
+        String uniqueProjectName = RandomData.getUniqueName().substring(0, 5) + " " + RandomData.getUniqueName().substring(5);
+        Project validProject = TestDataGenerator.generate(Project.class, RandomData.getUniqueId(), uniqueProjectName);
+        Response response = new CheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(validProject);
+        Project createdProject = ResponseExtractor.extractModel(response, Project.class);
+        EntityValidator.validateAllEntityFieldsIgnoring(validProject, createdProject, List.of("parentProject"), softy);
+        softy.assertAll();
+    }
+
+
+    @Feature("Project Name Validation")
+    @Story("Missing Name")
+    @Test(description = "User should not be able to create a Project without specifying a name", groups = {"Negative", "CRUD", "PROJECT_NAME_VALIDATION_TAG"})
+    public void userCannotCreateProjectWithoutNameTest() {
+        Project projectWithoutName = TestDataGenerator.generate(Project.class, RandomData.getUniqueId(), null);
+        Response response = new UncheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(projectWithoutName);
+        response.then().spec(ResponseSpecificationBuilder.create().withBadRequestStatus().build());
+        softy.assertAll();
+    }
+
+
+// =================== PROJECT NAME VALIDATION TESTS (PROJECT_NAME_VALIDATION_TAG) =================== //
+
 // =================== PARENT PROJECT VALIDATION TESTS (PARENT_VALIDATION_TAG) =================== //
     @Feature("Parent Project Validation")
     @Story("Non-Existent Parent Project")
