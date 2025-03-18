@@ -31,4 +31,8 @@ public final class RandomData {
     public static String getUniqueId() {
         return TEST_PREFIX + System.currentTimeMillis() + RandomStringUtils.randomAlphanumeric(MAX_LENGTH);
     }
+    public static String getDigits(int length) {
+        return RandomStringUtils.randomNumeric(length);
+    }
+
 }
