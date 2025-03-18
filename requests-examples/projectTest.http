@@ -10,7 +10,12 @@
 @buildTypeId= buildType10
 
 ### GET all projects
-GET http://{{user}}:{{password}}@{{host}}:{{port}}/app/rest/projects
+//GET http://{{user}}:{{password}}@{{host}}:{{port}}/app/rest/projects/name:test_0CeXMseNlR
+// all prpjects with the given criteria
+GET http://{{user}}:{{password}}@{{host}}:{{port}}/app/rest/projects?locator=name:Build
+//GET http://{{user}}:{{password}}@{{host}}:{{port}}/app/rest/projects?locator=name:contains(test)
+//GET http://{{user}}:{{password}}@{{host}}:{{port}}/app/rest/projects?locator=name:startsWith(test)
+//GET http://{{user}}:{{password}}@{{host}}:{{port}}/app/rest/projects?locator=name:contains(roe)
 Content-Type: application/json
 Accept: application/json
 
