@@ -5,7 +5,6 @@ import com.example.teamcity.api.enums.Role;
 import com.example.teamcity.api.generators.RandomData;
 import com.example.teamcity.api.generators.TestDataGenerator;
 import com.example.teamcity.api.models.Project;
-import com.example.teamcity.api.models.Roles;
 import com.example.teamcity.api.models.User;
 import com.example.teamcity.api.requests.CheckedRequest;
 import com.example.teamcity.api.requests.UncheckedRequest;
@@ -14,13 +13,13 @@ import com.example.teamcity.api.spec.RequestSpecifications;
 import com.example.teamcity.api.spec.ResponseSpecificationBuilder;
 import com.example.teamcity.api.validation.EntityValidator;
 import io.restassured.response.Response;
-import org.apache.http.HttpStatus;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.util.List;
 
-import static com.example.teamcity.api.generators.TestDataGenerator.generate;
+import static com.example.teamcity.api.constants.TestConstants.SQL_INJECTION_PAYLOAD;
+import static com.example.teamcity.api.constants.TestConstants.XSS_PAYLOAD;
 
 @Test(groups = {"Regression"})
 public class ProjectTest extends BaseApiTest {
@@ -58,8 +57,6 @@ public class ProjectTest extends BaseApiTest {
     }
 
 
-
-
 //------------------//
 
 //    //Bug in API
@@ -79,8 +76,7 @@ public class ProjectTest extends BaseApiTest {
 //
 
 
-
-//    @Test(description = "User should be able to create a Project with copyAllAssociatedSettings set to false and verify fields are NOT copied", groups = {"Positive", "CRUD"})
+    //    @Test(description = "User should be able to create a Project with copyAllAssociatedSettings set to false and verify fields are NOT copied", groups = {"Positive", "CRUD"})
 //    public void userCreatesProjectWithCopyAllAssociatedSettingsFalseTest() {
 //        // Создаем исходный проект
 //        var sourceProject = testData.getProject();
@@ -487,23 +483,28 @@ public class ProjectTest extends BaseApiTest {
 //        softy.assertAll();
 //    }
 //
-//    @Test(description = "User should be able to create a Project with an XSS payload in name (payload stored as text)", groups = {"Positive", "Security"})
-//    public void userCreatesProjectWithXSSInNameTest() {
-//        var xssPayload = "<script>alert('XSSd')</script>";
-//        var projectWithXSS = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), xssPayload);
-//        Response response = projectController.createProject(projectWithXSS);
-//        EntityValidator.validateFieldValueFromResponse(response, Project.class, Project::getName, xssPayload, softy);
-//        softy.assertAll();
-//    }
-//
-//    @Test(description = "User should be able to create a Project with an SQL injection payload in name (payload stored as text)", groups = {"Positive", "Security"})
-//    public void userCreatesProjectWithSQLInjectionTest() {
-//        var sqlPayload = "'; DROP TABLE projects; --";
-//        var projectWithSQL = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), sqlPayload);
-//        Response response = projectController.createProject(projectWithSQL);
-//        EntityValidator.validateFieldValueFromResponse(response, Project.class, Project::getName, sqlPayload, softy);
-//        softy.assertAll();
-//    }
+    @Test(description = "User should be able to create a Project with an XSS payload in name (payload stored as text)", groups = {"Positive", "Security", "CRUD"})
+    public void userCreatesProjectWithXSSInNameTest() {
+        Project projectWithXSS = TestDataGenerator.generate(Project.class, RandomData.getUniqueId(), XSS_PAYLOAD);
+        CheckedRequest request = new CheckedRequest(RequestSpecifications.superUserAuthSpec());
+        Response response = request.getRequest(ApiEndpoint.PROJECTS).create(projectWithXSS);
+        Project createdProject = ResponseExtractor.extractModel(response, Project.class);
+
+        EntityValidator.validateAllEntityFieldsIgnoring(projectWithXSS, createdProject, List.of("parentProject"), softy);
+        softy.assertAll();
+    }
+
+    @Test(description = "User should be able to create a Project with an SQL injection payload in name (payload stored as text)", groups = {"Positive", "Security", "CRUD"})
+    public void userCreatesProjectWithSQLInjectionTest() {
+        Project projectWithSQL = TestDataGenerator.generate(Project.class, RandomData.getUniqueId(), SQL_INJECTION_PAYLOAD);
+        CheckedRequest request = new CheckedRequest(RequestSpecifications.superUserAuthSpec());
+        Response response = request.getRequest(ApiEndpoint.PROJECTS).create(projectWithSQL);
+        Project createdProject = ResponseExtractor.extractModel(response, Project.class);
+
+        EntityValidator.validateAllEntityFieldsIgnoring(projectWithSQL, createdProject, List.of("parentProject"), softy);
+        softy.assertAll();
+    }
+
     @DataProvider(name = "restrictedRoles")
     public static Object[][] restrictedRoles() {
         return new Object[][]{
@@ -526,13 +527,13 @@ public class ProjectTest extends BaseApiTest {
         softy.assertAll();
     }
 
-@DataProvider(name = "allowedRoles")
-public static Object[][] allowedRoles() {
-    return new Object[][]{
-            {Role.PROJECT_ADMIN},
-            {Role.AGENT_MANAGER}
-    };
-}
+    @DataProvider(name = "allowedRoles")
+    public static Object[][] allowedRoles() {
+        return new Object[][]{
+                {Role.PROJECT_ADMIN},
+                {Role.AGENT_MANAGER}
+        };
+    }
 
     @Test(description = "User with allowed role should be able to create a project", dataProvider = "allowedRoles", groups = {"Positive", "CRUD"})
     public void userWithAllowedRoleCanCreateProjectTest(Role role) {
@@ -546,7 +547,6 @@ public static Object[][] allowedRoles() {
         softy.assertAll();
     }
 
-    
 
 }
 
