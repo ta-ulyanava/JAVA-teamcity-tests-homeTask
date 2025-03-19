@@ -125,18 +125,15 @@ public final class CheckedBase<T extends BaseModel> extends Request implements C
      * Ищет одну сущность по локатору
      * Если `count == 0`, возвращает `Optional.empty()`.
      */
-    @Override
     public Optional<T> findSingleByLocator(String locator) {
         Response response = uncheckedBase.findSingleByLocator(locator);
         validateResponse(response, locator);
 
-        Integer count = response.jsonPath().getInt("count");
-        if (count == null || count == 0) {
-            return Optional.empty();
-        }
-
-        return Optional.of(extractSingleEntity(response));
+        // Берём первый элемент массива "project"
+        List<T> projects = response.jsonPath().getList("project", (Class<T>) apiEndpoint.getModelClass());
+        return projects.isEmpty() ? Optional.empty() : Optional.of(projects.get(0));
     }
+
 
     /**
      * Ищет все сущности по локатору
