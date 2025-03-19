@@ -12,6 +12,7 @@ import io.restassured.specification.RequestSpecification;
 import org.apache.http.HttpStatus;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Базовый класс для проверяемых запросов к API.
@@ -23,7 +24,8 @@ public final class CheckedBase<T extends BaseModel> extends Request implements C
 
     /**
      * Создает новый экземпляр проверяемых запросов
-     * @param spec спецификация запроса
+     *
+     * @param spec        спецификация запроса
      * @param apiEndpoint эндпоинт API
      */
     public CheckedBase(RequestSpecification spec, ApiEndpoint apiEndpoint) {
@@ -32,14 +34,14 @@ public final class CheckedBase<T extends BaseModel> extends Request implements C
     }
 
     /**
-     * Проверяет ответ на корректность
+     * Проверяет ответ на корректность.
      * @param response ответ от сервера
      * @param locator идентификатор запроса для сообщения об ошибке
      * @throws IllegalStateException если ответ пустой или статус не OK
      */
     private void validateResponse(Response response, String locator) {
         response.then().assertThat().statusCode(HttpStatus.SC_OK);
-        if (response.getBody().asString().equals("")) {
+        if (response.getBody().asString().isEmpty()) {
             throw new IllegalStateException("Empty response for locator '%s'".formatted(locator));
         }
     }
@@ -59,7 +61,7 @@ public final class CheckedBase<T extends BaseModel> extends Request implements C
      * @return список сущностей типа T
      */
     private List<T> extractEntityList(Response response) {
-        return response.jsonPath().getList(".", (Class<T>) apiEndpoint.getModelClass());
+        return response.jsonPath().getList("project", (Class<T>) apiEndpoint.getModelClass());
     }
 
     /**
@@ -92,7 +94,7 @@ public final class CheckedBase<T extends BaseModel> extends Request implements C
 
     /**
      * Обновляет существующую сущность
-     * @param id идентификатор сущности
+     * @param id    идентификатор сущности
      * @param model новые данные
      * @return обновленная сущность
      * @throws IllegalStateException если обновление не удалось
@@ -117,50 +119,56 @@ public final class CheckedBase<T extends BaseModel> extends Request implements C
         return response.asString();
     }
 
+    // --- Методы поиска --- //
+
     /**
-     * Находит одну сущность по локатору
-     * @param locator локатор для поиска
-     * @return найденная сущность
-     * @throws IllegalStateException если сущность не найдена
+     * Ищет одну сущность по локатору
+     * Если `count == 0`, возвращает `Optional.empty()`.
      */
     @Override
-    public T findSingleByLocator(String locator) {
+    public Optional<T> findSingleByLocator(String locator) {
         Response response = uncheckedBase.findSingleByLocator(locator);
         validateResponse(response, locator);
-        List<T> entities = extractEntityList(response);
-        if (entities.isEmpty()) {
-            throw new IllegalStateException("Entity with locator '%s' not found".formatted(locator));
+
+        Integer count = response.jsonPath().getInt("count");
+        if (count == null || count == 0) {
+            return Optional.empty();
         }
-        return entities.get(0);
+
+        return Optional.of(extractSingleEntity(response));
     }
 
     /**
-     * Получает список всех сущностей
-     * @return список всех сущностей
-     * @throws IllegalStateException если получение списка не удалось
-     */
-    @Override
-    public List<T> readAll() {
-        Response response = uncheckedBase.readAll();
-        validateResponse(response, "all");
-        return extractEntityList(response);
-    }
-
-    /**
-     * Находит все сущности по локатору
-     * @param locator локатор для поиска
-     * @return список найденных сущностей
-     * @throws IllegalStateException если сущности не найдены
+     * Ищет все сущности по локатору
+     * Если `count == 0`, возвращает пустой список.
      */
     @Override
     public List<T> findAllByLocator(String locator) {
         Response response = uncheckedBase.findAllByLocator(locator);
         validateResponse(response, locator);
-        List<T> entities = extractEntityList(response);
-        if (entities.isEmpty()) {
-            throw new IllegalStateException("No entities found for locator '%s'".formatted(locator));
+
+        Integer count = response.jsonPath().getInt("count");
+        if (count == null || count == 0) {
+            return List.of();
         }
-        return entities;
+
+        return extractEntityList(response);
+    }
+
+    /**
+     * Читает все сущности без локатора
+     * Если `count == 0`, возвращает пустой список.
+     */
+    @Override
+    public List<T> readAll() {
+        Response response = uncheckedBase.readAll();
+        validateResponse(response, "all");
+
+        Integer count = response.jsonPath().getInt("count");
+        if (count == null || count == 0) {
+            return List.of();
+        }
+
+        return extractEntityList(response);
     }
 }
-

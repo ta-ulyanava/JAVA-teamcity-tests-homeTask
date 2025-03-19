@@ -10,6 +10,7 @@ import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 
 public class UncheckedBase extends Request implements CrudInterface, SearchInterface {
+
     public UncheckedBase(RequestSpecification spec, ApiEndpoint apiEndpoint) {
         super(spec, apiEndpoint);
     }
@@ -34,23 +35,21 @@ public class UncheckedBase extends Request implements CrudInterface, SearchInter
     @Override
     public Response read(String idOrLocator) {
         if (idOrLocator.contains(":")) {
-            // Если это локатор, делегируем findSingleByLocator
-            return findSingleByLocator(idOrLocator);
-        } else {
-            // Если это ID, используем как часть пути
-            return RestAssured
-                    .given()
-                    .spec(spec)
-                    .get(apiEndpoint.getUrl() + "/" + idOrLocator);
+            return findSingleByLocator(idOrLocator); // Если передан локатор, используем поиск
         }
+        return RestAssured
+                .given()
+                .spec(spec)
+                .get(apiEndpoint.getUrl() + "/" + idOrLocator); // Если передан ID, используем как путь
     }
+
 
     @Override
     public Response update(String locator, BaseModel model) {
         return RestAssured
                 .given()
-                .body(model)
                 .spec(spec)
+                .body(model)
                 .put(apiEndpoint.getUrl() + "/" + locator);
     }
 
@@ -62,10 +61,18 @@ public class UncheckedBase extends Request implements CrudInterface, SearchInter
                 .delete(apiEndpoint.getUrl() + "/" + locator);
     }
 
-    // --- Реализация SearchInterface ---//
+    // --- Методы поиска --- //
+
     @Override
     public Response findSingleByLocator(String locator) {
-        // Всегда используем локатор как параметр запроса
+        return RestAssured
+                .given()
+                .spec(spec)
+                .get(apiEndpoint.getUrl() + "?locator=" + locator);
+    }
+
+    @Override
+    public Response findAllByLocator(String locator) {
         return RestAssured
                 .given()
                 .spec(spec)
@@ -74,11 +81,9 @@ public class UncheckedBase extends Request implements CrudInterface, SearchInter
 
     @Override
     public Response readAll() {
-        return RestAssured.given().spec(spec).get(apiEndpoint.getUrl());
-    }
-
-    @Override
-    public Response findAllByLocator(String criteria) {
-        return findSingleByLocator(criteria);
+        return RestAssured
+                .given()
+                .spec(spec)
+                .get(apiEndpoint.getUrl());
     }
 }

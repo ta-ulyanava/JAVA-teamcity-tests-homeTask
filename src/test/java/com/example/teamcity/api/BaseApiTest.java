@@ -19,8 +19,8 @@ import java.util.List;
 
 public abstract class BaseApiTest extends BaseTest {
 
-    private CheckedRequest userCheckedRequest;
-    private UncheckedRequest userUncheckedRequest;
+    protected CheckedRequest userCheckedRequest;
+    protected UncheckedRequest userUncheckedRequest;
 
     @BeforeMethod(alwaysRun = true)
     public void configureUserRequests() {

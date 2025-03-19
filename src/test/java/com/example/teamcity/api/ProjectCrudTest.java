@@ -1,5 +1,4 @@
 package com.example.teamcity.api;
-
 import com.example.teamcity.api.constants.TestConstants;
 import com.example.teamcity.api.enums.ApiEndpoint;
 import com.example.teamcity.api.enums.Role;
