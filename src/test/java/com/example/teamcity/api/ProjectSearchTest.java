@@ -11,6 +11,7 @@ import io.restassured.response.Response;
 import org.testng.annotations.Test;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ProjectSearchTest extends BaseApiTest {
 
@@ -27,21 +28,34 @@ public class ProjectSearchTest extends BaseApiTest {
         EntityValidator.validateAllEntityFieldsIgnoring(createdProject, foundProject, List.of("parentProject"), softy);
         softy.assertAll();
     }
+    @Feature("Project Search")
+    @Story("User should be able to find a project by its substring")
+    @Test(description = "User should be able to find a project by its substring", groups = {"Positive", "Search", "PROJECT_SEARCH_TAG"})
+    public void userShouldBeAbleToFindProjectBySubstringTest() {
+        Project createdProject = createProjectAndExtractModel(testData.getProject());
+
+        // Загружаем все проекты и фильтруем на клиенте
+        List<Project> foundProjects = userCheckedRequest.getRequest(ApiEndpoint.PROJECTS)
+                .readAll()
+                .stream()
+                .map(p -> (Project) p) // Приводим BaseModel к Project
+                .filter(p -> p.getName().contains(createdProject.getName().substring(0, 3)))
+                .collect(Collectors.toList());
+
+
+        softy.assertTrue(!foundProjects.isEmpty(), "Expected at least one project in search results");
+
+        Project matchedProject = foundProjects.stream()
+                .filter(p -> p.getId().equals(createdProject.getId()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Created project not found in search results"));
+
+        EntityValidator.validateAllEntityFieldsIgnoring(createdProject, matchedProject, List.of("parentProject"), softy);
+        softy.assertAll();
+    }
 
 
 
-
-
-//    @Feature("Project Search")
-//    @Story("User should be able to find a project by its substring")
-//    @Test(description = "User should be able to find a project by its substring", groups = {"Positive", "Search", "PROJECT_SEARCH_TAG"})
-//    public void userShouldBeAbleToFindProjectBySubstringTest() {
-//        Project project = testData.getProject();
-//        Project createdProject = createProjectAndExtractModel(project);
-//        Project foundProject = (Project) userCheckedRequest.getRequest(ApiEndpoint.PROJECTS).findSingleByLocator("name:" + createdProject.getName().substring(0, 4));
-//        EntityValidator.validateAllEntityFieldsIgnoring(createdProject, foundProject, List.of("parentProject"), softy);
-//        softy.assertAll();
-//    }
 
     // =================== SEARCH BY NAME TESTS (PROJECT_SEARCH_TAG) =================== //
 }

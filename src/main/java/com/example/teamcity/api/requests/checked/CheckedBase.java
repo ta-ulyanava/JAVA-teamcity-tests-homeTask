@@ -140,17 +140,13 @@ public final class CheckedBase<T extends BaseModel> extends Request implements C
      * Если `count == 0`, возвращает пустой список.
      */
     @Override
-    public List<T> findAllByLocator(String locator) {
+    public Object findAllByLocator(String locator) {
         Response response = uncheckedBase.findAllByLocator(locator);
         validateResponse(response, locator);
-
-        Integer count = response.jsonPath().getInt("count");
-        if (count == null || count == 0) {
-            return List.of();
-        }
-
-        return extractEntityList(response);
+        return response.jsonPath().getList("project", apiEndpoint.getModelClass());
     }
+
+
 
     /**
      * Читает все сущности без локатора
