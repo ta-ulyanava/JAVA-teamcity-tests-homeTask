@@ -11,7 +11,7 @@ import com.example.teamcity.api.models.User;
 import com.example.teamcity.api.requests.CheckedRequest;
 import com.example.teamcity.api.requests.UncheckedRequest;
 import com.example.teamcity.api.responses.ResponseExtractor;
-import com.example.teamcity.api.spec.RequestSpecifications;
+import com.example.teamcity.api.spec.request.RequestSpecs;
 import io.restassured.response.Response;
 import org.testng.annotations.BeforeMethod;
 
@@ -30,8 +30,8 @@ public abstract class BaseApiTest extends BaseTest {
         TestDataStorage.getInstance().addCreatedEntity(ApiEndpoint.USERS, String.valueOf(createdUser.getId()));
 
 
-        userCheckedRequest = new CheckedRequest(RequestSpecifications.authSpec(testData.getUser()));
-        userUncheckedRequest = new UncheckedRequest(RequestSpecifications.authSpec(testData.getUser()));
+        userCheckedRequest = new CheckedRequest(RequestSpecs.authSpec(testData.getUser()));
+        userUncheckedRequest = new UncheckedRequest(RequestSpecs.authSpec(testData.getUser()));
     }
     protected Project createProjectAndExtractModel(Project project) {
         Response response = (Response) userCheckedRequest.getRequest(ApiEndpoint.PROJECTS).create(project);
@@ -56,6 +56,11 @@ public abstract class BaseApiTest extends BaseTest {
                 .findSingleByLocator(locatorType + ":" + locatorValue)
                 .orElse(null);
     }
+//    protected Project findSingleProjectByLocatorUnchecked(String locatorType, String locatorValue) {
+//        return (Project) userUncheckedRequest.getRequest(ApiEndpoint.PROJECTS)
+//                .findSingleByLocator(locatorType + ":" + locatorValue)
+//                .orElse(null);
+//    }
 
 
 }

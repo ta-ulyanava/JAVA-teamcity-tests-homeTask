@@ -7,7 +7,7 @@
 //import com.example.teamcity.api.models.Project;
 //import com.example.teamcity.api.responses.ResponseExtractor;
 //import com.example.teamcity.api.validation.EntityValidator;
-//import com.example.teamcity.api.spec.RequestSpecifications;
+//import com.example.teamcity.api.spec.request.RequestSpecifications;
 //import com.example.teamcity.api.spec.ResponseSpecifications;
 //import io.restassured.response.Response;
 //import org.testng.annotations.BeforeMethod;

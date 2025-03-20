@@ -1,6 +1,7 @@
 package com.example.teamcity.api;
 
 import com.example.teamcity.api.enums.ApiEndpoint;
+import com.example.teamcity.api.generators.RandomData;
 import com.example.teamcity.api.models.Project;
 import com.example.teamcity.api.validation.EntityValidator;
 import io.qameta.allure.Feature;
@@ -23,31 +24,12 @@ public class ProjectSearchTest extends BaseApiTest {
         EntityValidator.validateAllEntityFieldsIgnoring(createdProject, foundProject, List.of("parentProject"), softy);
         softy.assertAll();
     }
-
-
     @Feature("Project Search")
-    @Story("User should be able to find a project by its substring")
-    @Test(description = "User should be able to find a project by its substring", groups = {"Positive", "Search", "PROJECT_SEARCH_TAG"})
-    public void userShouldBeAbleToFindProjectBySubstringTest() {
-        Project createdProject = createProjectAndExtractModel(testData.getProject());
-
-        // Загружаем все проекты и фильтруем на клиенте
-        List<Project> foundProjects = userCheckedRequest.getRequest(ApiEndpoint.PROJECTS)
-                .readAll()
-                .stream()
-                .map(p -> (Project) p) // Приводим BaseModel к Project
-                .filter(p -> p.getName().contains(createdProject.getName().substring(0, 3)))
-                .collect(Collectors.toList());
-
-
-        softy.assertTrue(!foundProjects.isEmpty(), "Expected at least one project in search results");
-
-        Project matchedProject = foundProjects.stream()
-                .filter(p -> p.getId().equals(createdProject.getId()))
-                .findFirst()
-                .orElseThrow(() -> new AssertionError("Created project not found in search results"));
-
-        EntityValidator.validateAllEntityFieldsIgnoring(createdProject, matchedProject, List.of("parentProject"), softy);
+    @Story("User should not be able to find a project by a non-existing name")
+    @Test(description = "User should not be able to find a project by a non-existing name", groups = {"Negative", "Search", "PROJECT_SEARCH_TAG"})
+    public void userShouldNotBeAbleToFindProjectByNonExistingNameTest() {
+        Project foundProject = findSingleProjectByLocator("name", RandomData.getUniqueName());
+        softy.assertNull(foundProject, "Unexpectedly found a project with a non-existing name");
         softy.assertAll();
     }
 

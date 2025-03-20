@@ -4,7 +4,7 @@
 //import com.example.teamcity.api.enums.ApiEndpoint;
 //import com.example.teamcity.api.enums.WebRoute;
 //import com.example.teamcity.api.models.BuildType;
-//import com.example.teamcity.api.spec.RequestSpecifications;
+//import com.example.teamcity.api.spec.request.RequestSpecifications;
 //import com.example.teamcity.ui.pages.BuildTypePage;
 //import com.example.teamcity.ui.pages.admin.CreateBuildTypePage;
 //import com.example.teamcity.api.requests.UncheckedRequest;

@@ -11,8 +11,9 @@ import com.example.teamcity.api.models.User;
 import com.example.teamcity.api.requests.CheckedRequest;
 import com.example.teamcity.api.requests.UncheckedRequest;
 import com.example.teamcity.api.responses.ResponseExtractor;
-import com.example.teamcity.api.spec.RequestSpecifications;
-import com.example.teamcity.api.spec.ResponseSpecificationBuilder;
+import com.example.teamcity.api.spec.request.RequestSpecs;
+import com.example.teamcity.api.spec.responce.AccessErrorSpecs;
+import com.example.teamcity.api.spec.responce.IncorrectDataSpecs;
 import com.example.teamcity.api.validation.EntityValidator;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
@@ -115,16 +116,15 @@ public void userCreatesProjectWithCopyAllAssociatedSettingsTrueTest() {
     }
 
 // =================== PROJECT ID VALIDATION TESTS (PROJECT_ID_VALIDATION_TAG) =================== //
-    @Feature("Project ID Validation")
-    @Story("Max Length ID")
-    @Test(description = "User should be able to create a Project with an ID of maximum allowed length", groups = {"Positive", "CRUD", "PROJECT_ID_VALIDATION_TAG"})
-    public void userCreatesProjectWithMaxLengthIdTest() {
-        String maxLengthId = RandomData.getString(225);
-        Project validProject = TestDataGenerator.generate(Project.class, maxLengthId, RandomData.getString());
-        Response response = new CheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(validProject);
-        response.then().spec(ResponseSpecificationBuilder.create().withSuccessStatus().build());
-        softy.assertAll();
-    }
+@Feature("Project ID Validation")
+@Story("Max Length ID")
+@Test(description = "User should be able to create a Project with an ID of maximum allowed length", groups = {"Positive", "CRUD", "PROJECT_ID_VALIDATION_TAG"})
+public void userCreatesProjectWithMaxLengthIdTest() {
+    Project validProject = TestDataGenerator.generate(Project.class, RandomData.getString(225), RandomData.getString());
+    Project createdProject = ResponseExtractor.extractModel(new CheckedRequest(RequestSpecs.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(validProject), Project.class);
+    EntityValidator.validateAllEntityFieldsIgnoring(validProject, createdProject, List.of("parentProject"), softy);
+    softy.assertAll();
+}
 
     @Feature("Project ID Validation")
     @Story("Min Length ID")
@@ -132,8 +132,8 @@ public void userCreatesProjectWithCopyAllAssociatedSettingsTrueTest() {
     public void userCreatesProjectWithOneCharacterIdTest() {
         String minLengthId = RandomData.getString(1);
         Project validProject = TestDataGenerator.generate(Project.class, minLengthId, RandomData.getString());
-        Response response = new CheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(validProject);
-        response.then().spec(ResponseSpecificationBuilder.create().withSuccessStatus().build());
+        Project createdProject = ResponseExtractor.extractModel(new CheckedRequest(RequestSpecs.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(validProject), Project.class);
+        EntityValidator.validateAllEntityFieldsIgnoring(validProject, createdProject, List.of("parentProject"), softy);
         softy.assertAll();
     }
     @Feature("Project ID Validation")
@@ -142,23 +142,21 @@ public void userCreatesProjectWithCopyAllAssociatedSettingsTrueTest() {
     public void userCreatesProjectWithUnderscoreInIdTest() {
         String idWithUnderscore = RandomData.getString() + "_test";
         Project projectWithUnderscore = TestDataGenerator.generate(Project.class, idWithUnderscore, RandomData.getString());
-        Response response = new CheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(projectWithUnderscore);
+        Response response = new CheckedRequest(RequestSpecs.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(projectWithUnderscore);
         Project createdProject = ResponseExtractor.extractModel(response, Project.class);
         EntityValidator.validateAllEntityFieldsIgnoring(projectWithUnderscore, createdProject, List.of("parentProject"), softy);
         softy.assertAll();
     }
-    // Need to fix 500 error (Known Bugs)
+
+
     @Feature("Project ID Validation")
     @Story("Project ID Length Exceeded")
-    @Test(description = "User should not be able to create a Project with an ID longer than 225 characters",
-            groups = {"Negative", "CRUD", "KnownBugs", "CornerCase", "PROJECT_ID_VALIDATION_TAG"})
+    @Test(description = "User should not be able to create a Project with an ID longer than 225 characters", groups = {"Negative","CRUD","KnownBugs","CornerCase","PROJECT_ID_VALIDATION_TAG"})
     public void userCannotCreateProjectWithTooLongIdTest() {
         var tooLongId = RandomData.getString(226);
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, tooLongId, RandomData.getString());
-        var response = new UncheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
-        response.then().spec(ResponseSpecificationBuilder.create().withBadRequestStatus()
-                .withErrorMessage("Project ID \"%s\" is invalid: it is %d characters long while the maximum length is 225. ID should start with a latin letter and contain only latin letters, digits and underscores (at most 225 characters)."
-                        .formatted(tooLongId, tooLongId.length())).build());
+        var response = new UncheckedRequest(RequestSpecs.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
+        response.then().spec(IncorrectDataSpecs.badRequestFieldTooLong("Project", "ID", tooLongId, 225));
         softy.assertAll();
     }
 
@@ -171,16 +169,15 @@ public void userCreatesProjectWithCopyAllAssociatedSettingsTrueTest() {
                 .toArray(Object[][]::new);
     }
     // Need to fix 500 error (Known Bugs)
-    @Test(description = "User should not be able to create a Project with special characters in ID",
-            groups = {"Negative", "CRUD", "KnownBugs", "PROJECT_ID_VALIDATION_TAG"}, dataProvider = "invalidSpecialCharactersForId")
+    @Test(description = "User should not be able to create a Project with special characters in ID", groups = {"Negative", "CRUD", "KnownBugs", "PROJECT_ID_VALIDATION_TAG"}, dataProvider = "invalidSpecialCharactersForId")
     public void userCannotCreateProjectWithEachSpecialCharacterInIdTest(String specialChar) {
         var invalidId = "test_" + specialChar;
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, invalidId, RandomData.getString());
-        var response = new UncheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
-        response.then().spec(ResponseSpecificationBuilder.create().withBadRequestStatus()
-                .withErrorMessage("Project ID \"%s\" is invalid: contains unsupported character '%s'.".formatted(invalidId, specialChar)).build());
+        var response = new UncheckedRequest(RequestSpecs.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
+        response.then().spec(IncorrectDataSpecs.badRequestUnsupportedCharacter("Project", "ID", invalidId, specialChar));
         softy.assertAll();
     }
+
 
     @Feature("Project ID Validation")
     @Story("Non-Latin Characters in Project ID")
@@ -193,10 +190,8 @@ public void userCreatesProjectWithCopyAllAssociatedSettingsTrueTest() {
             groups = {"Negative", "CRUD", "KnownBugs", "PROJECT_ID_VALIDATION_TAG"}, dataProvider = "nonLatinIdProviderForId")
     public void userCannotCreateProjectWithNonLatinIdTest(String invalidId) {
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, invalidId, RandomData.getString());
-        var response = new UncheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
-        response.then().spec(ResponseSpecificationBuilder.create().withBadRequestStatus()
-                .withErrorMessage("Project ID \"%s\" is invalid: contains non-latin letter '%s'. ID should start with a latin letter and contain only latin letters, digits and underscores (at most 225 characters)."
-                        .formatted(invalidId, invalidId.charAt(0))).build());
+        var response = new UncheckedRequest(RequestSpecs.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
+        response.then().spec(IncorrectDataSpecs.badRequestNonLatinLetter("Project","ID", invalidId));
         softy.assertAll();
     }
 
@@ -206,8 +201,8 @@ public void userCreatesProjectWithCopyAllAssociatedSettingsTrueTest() {
 @Test(description = "User should not be able to create Project with empty id", groups = {"Negative", "CRUD", "KnownBugs", "PROJECT_ID_VALIDATION_TAG"})
 public void userCannotCreateProjectWithEmptyIdTest() {
     Project invalidProject = TestDataGenerator.generate(Project.class, "", RandomData.getString());
-    Response response = new UncheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
-    response.then().spec(ResponseSpecificationBuilder.create().withBadRequestStatus().withErrorMessage("Project ID must not be empty.").build());
+    Response response = new UncheckedRequest(RequestSpecs.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
+    response.then().spec(IncorrectDataSpecs.badRequestEmptyField("Project", "ID"));
     softy.assertAll();
 }
 
@@ -217,8 +212,8 @@ public void userCannotCreateProjectWithEmptyIdTest() {
     @Test(description = "User should not be able to create a Project with a space as ID", groups = {"Negative", "CRUD", "KnownBugs", "PROJECT_ID_VALIDATION_TAG"})
     public void userCannotCreateProjectWithSpaceAsIdTest() {
         Project invalidProject = TestDataGenerator.generate(Project.class, " ", RandomData.getString());
-        Response response = new UncheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
-        response.then().spec(ResponseSpecificationBuilder.create().withBadRequestStatus().withErrorMessage("Project ID must not be empty").build());
+        Response response = new UncheckedRequest(RequestSpecs.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
+        response.then().spec(IncorrectDataSpecs.badRequestEmptyField("Project", "ID"));
         softy.assertAll();
     }
     @Feature("Project ID Validation")
@@ -227,8 +222,8 @@ public void userCannotCreateProjectWithEmptyIdTest() {
     public void userCannotCreateProjectWithExistingIdTest() {
         Project existingProject = createProjectAndExtractModel(testData.getProject());
         Project duplicateProject = TestDataGenerator.generate(List.of(existingProject), Project.class, existingProject.getId(), RandomData.getString());
-        Response response = new UncheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(duplicateProject);
-        response.then().spec(ResponseSpecificationBuilder.create().withBadRequestStatus().withErrorMessage("Project ID \"%s\" is already used by another project".formatted(existingProject.getId())).build());
+        Response response = new UncheckedRequest(RequestSpecs.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(duplicateProject);
+        response.then().spec(IncorrectDataSpecs.badRequestDuplicatedField("Project","ID", existingProject.getId() ));
         softy.assertAll();
     }
 
@@ -239,19 +234,21 @@ public void userCannotCreateProjectWithEmptyIdTest() {
         Project existingProject = createProjectAndExtractModel(testData.getProject());
         String duplicateId = existingProject.getId().toUpperCase();
         Project duplicateProject = TestDataGenerator.generate(List.of(), Project.class, duplicateId, RandomData.getString());
-        Response response = new UncheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(duplicateProject);
-        response.then().spec(ResponseSpecificationBuilder.create().withBadRequestStatus().withErrorMessage("Project ID \"%s\" is already used by another project".formatted(duplicateId)).build());
+        Response response = new UncheckedRequest(RequestSpecs.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(duplicateProject);
+        response.then().spec(IncorrectDataSpecs.badRequestDuplicatedField("Project", "ID", duplicateId));
         softy.assertAll();
     }
 
     // Need to fix 500 error (Known Bugs)
     @Feature("Project ID Validation")
     @Story("Invalid Project ID")
-    @Test(description = "User should not be able to create a Project with an ID consisting only of digits", groups = {"Negative", "CRUD", "KnownBugs", "PROJECT_ID_VALIDATION_TAG"})
+    @Test(description = "User should not be able to create a Project with an ID consisting only of digits",
+            groups = {"Negative", "CRUD", "KnownBugs", "PROJECT_ID_VALIDATION_TAG"})
     public void userCannotCreateProjectWithDigitsOnlyIdTest() {
-        Project invalidProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getDigits(6), RandomData.getString());
-        Response response = new UncheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
-        response.then().spec(ResponseSpecificationBuilder.create().withBadRequestStatus().withErrorMessage("Project ID \"%s\" is invalid: starts with non-letter character '%s'. ID should start with a latin letter and contain only latin letters, digits and underscores (at most 225 characters).".formatted(invalidProject.getId(), invalidProject.getId().charAt(0))).build());
+        String invalidId = RandomData.getDigits(6);
+        Project invalidProject = TestDataGenerator.generate(List.of(), Project.class, invalidId, RandomData.getString());
+        Response response = new UncheckedRequest(RequestSpecs.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
+        response.then().spec(IncorrectDataSpecs.badRequestWithIncorrectFieldFormat("Project", "ID", invalidId , String.valueOf(invalidId.charAt(0))));
         softy.assertAll();
     }
     @Feature("Project ID Validation")
@@ -273,11 +270,8 @@ public void userCannotCreateProjectWithEmptyIdTest() {
             dataProvider = "invalidIdStartId")
     public void userCannotCreateProjectWithInvalidStartingCharacterIdTest(String invalidId) {
         Project invalidProject = TestDataGenerator.generate(List.of(), Project.class, invalidId, RandomData.getString());
-        Response response = new UncheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
-        response.then().spec(ResponseSpecificationBuilder.create().withBadRequestStatus()
-                .withErrorMessage("Project ID \"%s\" is invalid: starts with non-letter character '%s'. ID should start with a latin letter and contain only latin letters, digits and underscores (at most 225 characters)."
-                        .formatted(invalidId, invalidId.charAt(0)))
-                .build());
+        Response response = new UncheckedRequest(RequestSpecs.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
+        response.then().spec(IncorrectDataSpecs.badRequestWithIncorrectFieldFormat("Project", "ID", invalidId, String.valueOf(invalidId.charAt(0))));
         softy.assertAll();
     }
 
@@ -288,8 +282,8 @@ public void userCannotCreateProjectWithEmptyIdTest() {
     public void userCannotCreateProjectWithSpacesInIdTest() {
         String invalidId = RandomData.getString(5) + " " + RandomData.getString(5);
         Project invalidProject = TestDataGenerator.generate(List.of(), Project.class, invalidId, RandomData.getString());
-        Response response = new UncheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
-        response.then().spec(ResponseSpecificationBuilder.create().withBadRequestStatus().withErrorMessage("Project ID \"%s\" is invalid: contains unsupported character ' '. ID should start with a latin letter and contain only latin letters, digits and underscores (at most 225 characters).".formatted(invalidId)).build());
+        Response response = new UncheckedRequest(RequestSpecs.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
+        response.then().spec(IncorrectDataSpecs.badRequestUnsupportedCharacter("Project", "ID", invalidId, " "));
         softy.assertAll();
     }
     @Feature("Project ID Validation")
@@ -297,7 +291,7 @@ public void userCannotCreateProjectWithEmptyIdTest() {
     @Test(description = "User should be able to create a Project with an ID containing Latin letters, digits, and underscores", groups = {"Positive", "CRUD", "PROJECT_ID_VALIDATION_TAG"})
     public void userCreatesProjectWithValidIdCharactersTest() {
         Project validProject = TestDataGenerator.generate(List.of(), Project.class, "valid_123_ID", RandomData.getString());
-        Response response = new CheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(validProject);
+        Response response = new CheckedRequest(RequestSpecs.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(validProject);
         Project createdProject = ResponseExtractor.extractModel(response, Project.class);
         EntityValidator.validateAllEntityFieldsIgnoring(validProject, createdProject, List.of("parentProject"), softy);
         softy.assertAll();
@@ -308,8 +302,8 @@ public void userCannotCreateProjectWithEmptyIdTest() {
     @Test(description = "User should not be able to create a Project with an empty ID String", groups = {"Negative", "CRUD", "PROJECT_ID_VALIDATION_TAG", "KnownBugs"})
     public void userCannotCreateProjectWithEmptyIdStringTest() {
         Project projectWithEmptyId = TestDataGenerator.generate(List.of(), Project.class, "", RandomData.getString());
-        Response response = new UncheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(projectWithEmptyId);
-        response.then().spec(ResponseSpecificationBuilder.create().withBadRequestStatus().withErrorMessage("Project ID must not be empty.").build());
+        Response response = new UncheckedRequest(RequestSpecs.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(projectWithEmptyId);
+        response.then().spec(IncorrectDataSpecs.badRequestEmptyField("Project", "ID"));
         softy.assertAll();
     }
 
@@ -321,9 +315,8 @@ public void userCannotCreateProjectWithEmptyIdTest() {
 @Test(description = "User should not be able to create Project with empty name", groups = {"Negative", "CRUD", "PROJECT_NAME_VALIDATION_TAG"})
 public void userCannotCreateProjectWithEmptyNameTest() {
     var invalidProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), "");
-    var response = new UncheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
-    response.then().spec(ResponseSpecificationBuilder.create().withBadRequestStatus()
-            .withErrorMessage("Project name cannot be empty").build());
+    var response = new UncheckedRequest(RequestSpecs.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
+    response.then().spec(IncorrectDataSpecs.badRequestEmptyField("Project", "name"));
     softy.assertAll();
 }
 
@@ -333,8 +326,8 @@ public void userCannotCreateProjectWithEmptyNameTest() {
 @Test(description = "User should not be able to create a Project with a space as name", groups = {"Negative", "CRUD", "KnownBugs", "PROJECT_NAME_VALIDATION_TAG"})
 public void userCannotCreateProjectWithSpaceAsNameTest() {
     Project invalidProject = TestDataGenerator.generate(Project.class, RandomData.getString(), " ");
-    Response response = new UncheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
-    response.then().spec(ResponseSpecificationBuilder.create().withBadRequestStatus().withErrorMessage("Given project name is empty").build());
+    Response response = new UncheckedRequest(RequestSpecs.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
+    response.then().spec(IncorrectDataSpecs.badRequestEmptyField("project","name"));
     softy.assertAll();
 }
 
@@ -343,7 +336,7 @@ public void userCannotCreateProjectWithSpaceAsNameTest() {
     @Test(description = "User should be able to create a Project with special characters in name", groups = {"Positive", "CRUD", "PROJECT_NAME_VALIDATION_TAG"})
     public void userCreatesProjectWithSpecialCharactersInNameTest() {
         Project project = TestDataGenerator.generate(Project.class, RandomData.getString(), TestConstants.SPECIAL_CHARACTERS);
-        Response response = new CheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(project);
+        Response response = new CheckedRequest(RequestSpecs.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(project);
         Project createdProject = ResponseExtractor.extractModel(response, Project.class);
         EntityValidator.validateAllEntityFieldsIgnoring(project, createdProject, List.of("parentProject"), softy);
         softy.assertAll();
@@ -354,7 +347,7 @@ public void userCannotCreateProjectWithSpaceAsNameTest() {
     @Test(description = "User should be able to create a Project with a localized name", groups = {"Positive", "CRUD", "PROJECT_NAME_VALIDATION_TAG"})
     public void userCreatesProjectWithLocalizedNameTest() {
         Project localizedProject = TestDataGenerator.generate(Project.class, RandomData.getString(), TestConstants.LOCALIZATION_CHARACTERS);
-        Response response = new CheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(localizedProject);
+        Response response = new CheckedRequest(RequestSpecs.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(localizedProject);
         Project createdProject = ResponseExtractor.extractModel(response, Project.class);
         EntityValidator.validateAllEntityFieldsIgnoring(localizedProject, createdProject, List.of("parentProject"), softy);
         softy.assertAll();
@@ -364,7 +357,7 @@ public void userCannotCreateProjectWithSpaceAsNameTest() {
     @Test(description = "User should be able to create a Project with a name of length 1", groups = {"Positive", "CRUD", "PROJECT_NAME_VALIDATION_TAG"})
     public void userCreatesProjectWithOneCharacterNameTest() {
         Project validProject = TestDataGenerator.generate(Project.class, RandomData.getString(), "A");
-        Response response = new CheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(validProject);
+        Response response = new CheckedRequest(RequestSpecs.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(validProject);
         Project createdProject = ResponseExtractor.extractModel(response, Project.class);
         EntityValidator.validateAllEntityFieldsIgnoring(validProject, createdProject, List.of("parentProject"), softy);
         softy.assertAll();
@@ -376,7 +369,7 @@ public void userCannotCreateProjectWithSpaceAsNameTest() {
     public void userCreatesProjectWith500LengthNameTest() {
         String maxLengthName = "A".repeat(500);
         Project validProject = TestDataGenerator.generate(Project.class, RandomData.getString(), maxLengthName);
-        Response response = new CheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(validProject);
+        Response response = new CheckedRequest(RequestSpecs.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(validProject);
         Project createdProject = ResponseExtractor.extractModel(response, Project.class);
         EntityValidator.validateAllEntityFieldsIgnoring(validProject, createdProject, List.of("parentProject"), softy);
         softy.assertAll();
@@ -388,8 +381,8 @@ public void userCannotCreateProjectWithSpaceAsNameTest() {
         Project existingProject = createProjectAndExtractModel(testData.getProject());
         String duplicateName = existingProject.getName().toUpperCase();
         Project duplicateProject = TestDataGenerator.generate(Project.class, RandomData.getString(), duplicateName);
-        Response response = new UncheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(duplicateProject);
-        response.then().spec(ResponseSpecificationBuilder.create().withBadRequestStatus().withEntityExistsError(duplicateName).build());
+        Response response = new UncheckedRequest(RequestSpecs.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(duplicateProject);
+        response.then().spec(IncorrectDataSpecs.badRequestDuplicatedField("Project","name",duplicateName));
         softy.assertAll();
     }
 
@@ -399,8 +392,8 @@ public void userCannotCreateProjectWithSpaceAsNameTest() {
     public void userCannotCreateProjectWithExistingNameTest() {
         Project existingProject = createProjectAndExtractModel(testData.getProject());
         Project duplicateProject = TestDataGenerator.generate(Project.class, RandomData.getString(), existingProject.getName());
-        Response response = new UncheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(duplicateProject);
-        response.then().spec(ResponseSpecificationBuilder.create().withBadRequestStatus().withEntityExistsError(existingProject.getName()).build());
+        Response response = new UncheckedRequest(RequestSpecs.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(duplicateProject);
+        response.then().spec(IncorrectDataSpecs.badRequestDuplicatedField("Project", "name", existingProject.getName()));
         softy.assertAll();
     }
 
@@ -409,7 +402,7 @@ public void userCannotCreateProjectWithSpaceAsNameTest() {
     @Test(description = "User should be able to create a Project with a name consisting only of digits", groups = {"Positive", "CRUD", "PROJECT_NAME_VALIDATION_TAG"})
     public void userCreatesProjectWithDigitsOnlyNameTest() {
         Project validProject = TestDataGenerator.generate(Project.class, RandomData.getUniqueId(), RandomData.getDigits(6));
-        Response response = new CheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(validProject);
+        Response response = new CheckedRequest(RequestSpecs.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(validProject);
         Project createdProject = ResponseExtractor.extractModel(response, Project.class);
         EntityValidator.validateAllEntityFieldsIgnoring(validProject, createdProject, List.of("parentProject"), softy);
         softy.assertAll();
@@ -421,23 +414,11 @@ public void userCannotCreateProjectWithSpaceAsNameTest() {
     public void userCreatesProjectWithSpacesInNameTest() {
         String uniqueProjectName = RandomData.getUniqueName().substring(0, 5) + " " + RandomData.getUniqueName().substring(5);
         Project validProject = TestDataGenerator.generate(Project.class, RandomData.getUniqueId(), uniqueProjectName);
-        Response response = new CheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(validProject);
+        Response response = new CheckedRequest(RequestSpecs.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(validProject);
         Project createdProject = ResponseExtractor.extractModel(response, Project.class);
         EntityValidator.validateAllEntityFieldsIgnoring(validProject, createdProject, List.of("parentProject"), softy);
         softy.assertAll();
     }
-
-
-    @Feature("Project Name Validation")
-    @Story("Missing Name")
-    @Test(description = "User should not be able to create a Project without specifying a name", groups = {"Negative", "CRUD", "PROJECT_NAME_VALIDATION_TAG"})
-    public void userCannotCreateProjectWithoutNameTest() {
-        Project projectWithoutName = TestDataGenerator.generate(Project.class, RandomData.getUniqueId(), null);
-        Response response = new UncheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(projectWithoutName);
-        response.then().spec(ResponseSpecificationBuilder.create().withBadRequestStatus().build());
-        softy.assertAll();
-    }
-
 
 // =================== PROJECT NAME VALIDATION TESTS (PROJECT_NAME_VALIDATION_TAG) =================== //
 
@@ -448,8 +429,8 @@ public void userCannotCreateProjectWithSpaceAsNameTest() {
     public void userCannotCreateProjectWithNonExistentParentProjectTest() {
         Project invalidProject = TestDataGenerator.generate(Project.class);
         invalidProject.setParentProject(new ParentProject("non_existent_locator", null));
-        Response response = new UncheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
-        response.then().spec(ResponseSpecificationBuilder.create().withNotFoundStatus().withErrorMessage("No project found by locator").build());
+        Response response = new UncheckedRequest(RequestSpecs.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
+        response.then().spec(IncorrectDataSpecs.notFoundWithDynamicErrorMessage("No project found by locator"));
         softy.assertAll();
     }
     @Feature("Parent Project Validation")
@@ -459,8 +440,8 @@ public void userCannotCreateProjectWithSpaceAsNameTest() {
         String projectId = testData.getProject().getId();
         Project invalidProject = TestDataGenerator.generate(Project.class, projectId, RandomData.getUniqueId());
         invalidProject.setParentProject(new ParentProject(projectId, null));
-        Response response = new UncheckedRequest(RequestSpecifications.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
-        response.then().spec(ResponseSpecificationBuilder.create().withNotFoundStatus().withErrorMessage("No project found by locator").build());
+        Response response = new UncheckedRequest(RequestSpecs.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
+        response.then().spec(IncorrectDataSpecs.notFoundWithDynamicErrorMessage("No project found by locator"));
         softy.assertAll();
     }
 
@@ -470,20 +451,9 @@ public void userCannotCreateProjectWithSpaceAsNameTest() {
     public void userCannotCreateProjectWithEmptyParentProjectLocatorTest() {
         Project invalidProject = TestDataGenerator.generate(Project.class);
         invalidProject.setParentProject(new ParentProject("", null));
-        UncheckedRequest request = new UncheckedRequest(RequestSpecifications.superUserAuthSpec());
+        UncheckedRequest request = new UncheckedRequest(RequestSpecs.superUserAuthSpec());
         Response response = request.getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
-        response.then().spec(ResponseSpecificationBuilder.create().withNotFoundStatus().withErrorMessage("No project found by locator").build());
-        softy.assertAll();
-    }
-    @Feature("Parent Project Validation")
-    @Story("Parent ID not provided")
-    @Test(description = "User should not be able to create a Project if parent project locator is not provided", groups = {"Negative", "CRUD", "PARENT_VALIDATION_TAG"})
-    public void userCannotCreateProjectWithoutParentProjectLocatorTest() {
-        Project invalidProject = TestDataGenerator.generate(Project.class);
-        invalidProject.setParentProject(new ParentProject(null, null));
-        UncheckedRequest request = new UncheckedRequest(RequestSpecifications.superUserAuthSpec());
-        Response response = request.getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
-        response.then().spec(ResponseSpecificationBuilder.create().withBadRequestStatus().build());
+        response.then().spec(IncorrectDataSpecs.notFoundWithDynamicErrorMessage("No project found by locator"));
         softy.assertAll();
     }
     // =================== PARENT PROJECT VALIDATION TESTS (PARENT_VALIDATION_TAG) =================== //
@@ -494,9 +464,9 @@ public void userCannotCreateProjectWithSpaceAsNameTest() {
     @Test(description = "User should not be able to create a project without authentication", groups = {"Negative", "Auth"})
     public void userCannotCreateProjectWithoutAuthTest() {
         Project invalidProject = TestDataGenerator.generate(Project.class);
-        UncheckedRequest request = new UncheckedRequest(RequestSpecifications.unauthSpec());
+        UncheckedRequest request = new UncheckedRequest(RequestSpecs.unauthSpec());
         Response response = request.getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
-        response.then().spec(ResponseSpecificationBuilder.create().withUnauthorizedStatus().withAuthenticationRequiredError().build());
+        response.then().spec(AccessErrorSpecs.authenticationRequired());
         softy.assertAll();
     }
     // =================== AUTHORIZATIONS TESTS (AUTH_TAG) =================== //
@@ -511,7 +481,7 @@ public void userCannotCreateProjectWithSpaceAsNameTest() {
     @Test(description = "User should be able to create a Project with an XSS payload in name (payload stored as text)", groups = {"Positive", "Security", "CRUD", "SEC_TAG"})
     public void userCreatesProjectWithXSSInNameTest() {
         Project projectWithXSS = TestDataGenerator.generate(Project.class, RandomData.getUniqueId(), XSS_PAYLOAD);
-        CheckedRequest request = new CheckedRequest(RequestSpecifications.superUserAuthSpec());
+        CheckedRequest request = new CheckedRequest(RequestSpecs.superUserAuthSpec());
         Response response = request.getRequest(ApiEndpoint.PROJECTS).create(projectWithXSS);
         Project createdProject = ResponseExtractor.extractModel(response, Project.class);
 
@@ -524,7 +494,7 @@ public void userCannotCreateProjectWithSpaceAsNameTest() {
     @Test(description = "User should be able to create a Project with an SQL injection payload in name (payload stored as text)", groups = {"Positive", "Security", "CRUD", "SEC_TAG"})
     public void userCreatesProjectWithSQLInjectionTest() {
         Project projectWithSQL = TestDataGenerator.generate(Project.class, RandomData.getUniqueId(), SQL_INJECTION_PAYLOAD);
-        CheckedRequest request = new CheckedRequest(RequestSpecifications.superUserAuthSpec());
+        CheckedRequest request = new CheckedRequest(RequestSpecs.superUserAuthSpec());
         Response response = request.getRequest(ApiEndpoint.PROJECTS).create(projectWithSQL);
         Project createdProject = ResponseExtractor.extractModel(response, Project.class);
 
@@ -551,9 +521,9 @@ public void userCannotCreateProjectWithSpaceAsNameTest() {
     public void userWithRestrictedRoleCannotCreateProjectTest(Role role) {
         User restrictedUser = createUserWithRole(role, "g");
         Project projectToCreate = testData.getProject();
-        UncheckedRequest restrictedUserRequest = new UncheckedRequest(RequestSpecifications.authSpec(restrictedUser));
+        UncheckedRequest restrictedUserRequest = new UncheckedRequest(RequestSpecs.authSpec(restrictedUser));
         Response response = restrictedUserRequest.getRequest(ApiEndpoint.PROJECTS).create(projectToCreate);
-        response.then().spec(ResponseSpecificationBuilder.create().withForbiddenStatus().withAccessDeniedError().build());
+        response.then().spec(AccessErrorSpecs.accessDenied());
         softy.assertAll();
     }
     @Feature("Access Control")
@@ -570,7 +540,7 @@ public void userCannotCreateProjectWithSpaceAsNameTest() {
         Project scopeProject = createProjectAndExtractModel(testData.getProject());
         User roleUser = createUserWithRole(role, scopeProject.getId());
         Project newProject = TestDataGenerator.generate(Project.class);
-        CheckedRequest roleUserRequest = new CheckedRequest(RequestSpecifications.authSpec(roleUser));
+        CheckedRequest roleUserRequest = new CheckedRequest(RequestSpecs.authSpec(roleUser));
         Response response = roleUserRequest.getRequest(ApiEndpoint.PROJECTS).create(newProject);
         Project createdProject = ResponseExtractor.extractModel(response, Project.class);
         EntityValidator.validateAllEntityFieldsIgnoring(newProject, createdProject, List.of("parentProject"), softy);
