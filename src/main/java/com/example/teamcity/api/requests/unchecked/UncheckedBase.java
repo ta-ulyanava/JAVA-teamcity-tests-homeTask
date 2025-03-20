@@ -9,6 +9,8 @@ import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 
+import java.util.List;
+
 public class UncheckedBase extends Request implements CrudInterface, SearchInterface {
 
     public UncheckedBase(RequestSpecification spec, ApiEndpoint apiEndpoint) {
@@ -60,7 +62,6 @@ public class UncheckedBase extends Request implements CrudInterface, SearchInter
                 .spec(spec)
                 .delete(apiEndpoint.getUrl() + "/" + locator);
     }
-
     // --- Методы поиска --- //
 
     @Override
@@ -68,22 +69,42 @@ public class UncheckedBase extends Request implements CrudInterface, SearchInter
         return RestAssured
                 .given()
                 .spec(spec)
-                .get(apiEndpoint.getUrl() + "?locator=" + locator);
+                .get(apiEndpoint.getUrl() + "/" + locator);
     }
 
     @Override
     public Response findAllByLocator(String locator) {
+        return findAllByLocator(locator, 100, 0);
+    }
+
+    @Override
+    public Response findAllByLocator(String locator, int limit, int offset) {
         return RestAssured
                 .given()
                 .spec(spec)
-                .get(apiEndpoint.getUrl() + "?locator=" + locator);
+                .queryParam("locator", locator)
+                .queryParam("count", limit)
+                .queryParam("start", offset)
+                .get(apiEndpoint.getUrl());
     }
 
     @Override
     public Response readAll() {
+        return readAll(100, 0);
+    }
+
+    @Override
+    public Response readAll(int limit, int offset) {
         return RestAssured
                 .given()
                 .spec(spec)
+                .queryParam("count", limit)
+                .queryParam("start", offset)
                 .get(apiEndpoint.getUrl());
+    }
+
+    public <T extends BaseModel> List<T> findAllEntitiesByLocator(String locator, int limit, int offset) {
+        Response response = findAllByLocator(locator, limit, offset);
+        return response.jsonPath().getList("", (Class<T>) apiEndpoint.getModelClass());
     }
 }

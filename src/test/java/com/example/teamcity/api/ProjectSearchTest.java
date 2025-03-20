@@ -2,12 +2,9 @@ package com.example.teamcity.api;
 
 import com.example.teamcity.api.enums.ApiEndpoint;
 import com.example.teamcity.api.models.Project;
-import com.example.teamcity.api.requests.UncheckedRequest;
-import com.example.teamcity.api.responses.ResponseExtractor;
 import com.example.teamcity.api.validation.EntityValidator;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
-import io.restassured.response.Response;
 import org.testng.annotations.Test;
 
 import java.util.List;
@@ -21,13 +18,13 @@ public class ProjectSearchTest extends BaseApiTest {
     @Test(description = "User should be able to find a project by its exact name", groups = {"Positive", "Search", "PROJECT_SEARCH_TAG"})
     public void userShouldBeAbleToFindProjectByNameTest() {
         Project createdProject = createProjectAndExtractModel(testData.getProject());
-        Project foundProject = (Project) userCheckedRequest.getRequest(ApiEndpoint.PROJECTS)
-                .findSingleByLocator("name:" + createdProject.getName())
-                .orElseThrow(() -> new AssertionError("Project with name '" + createdProject.getName() + "' not found"));
-
+        Project foundProject = findSingleProjectByLocator("name", createdProject.getName());
+        softy.assertNotNull(foundProject, "Project with name '" + createdProject.getName() + "' was not found");
         EntityValidator.validateAllEntityFieldsIgnoring(createdProject, foundProject, List.of("parentProject"), softy);
         softy.assertAll();
     }
+
+
     @Feature("Project Search")
     @Story("User should be able to find a project by its substring")
     @Test(description = "User should be able to find a project by its substring", groups = {"Positive", "Search", "PROJECT_SEARCH_TAG"})

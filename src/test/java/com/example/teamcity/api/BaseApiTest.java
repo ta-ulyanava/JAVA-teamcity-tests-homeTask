@@ -51,4 +51,11 @@ public abstract class BaseApiTest extends BaseTest {
         superUserCheckRequests.getRequest(ApiEndpoint.USERS).create(user);
         return user;
     }
+    protected Project findSingleProjectByLocator(String locatorType, String locatorValue) {
+        return (Project) userCheckedRequest.getRequest(ApiEndpoint.PROJECTS)
+                .findSingleByLocator(locatorType + ":" + locatorValue)
+                .orElse(null);
+    }
+
+
 }
