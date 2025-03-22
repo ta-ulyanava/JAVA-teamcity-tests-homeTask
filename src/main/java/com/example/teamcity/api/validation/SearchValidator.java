@@ -6,6 +6,12 @@ import java.lang.reflect.Field;
 import java.util.List;
 
 public class SearchValidator {
+    public static <T> void validateSearchResults(List<T> expectedList, List<T> actualList, String entityType, String identifierField, List<String> ignoredFields, SoftAssert softAssert) {
+        softAssert.assertEquals(actualList.size(), expectedList.size(), "Number of found " + entityType + "s doesn't match expected");
+        for (int i = 0; i < expectedList.size(); i++) {
+            validateSearchResult(expectedList.get(i), actualList.get(i), entityType, identifierField, ignoredFields, softAssert);
+        }
+    }
 
     public static <T> void validateSearchResult(T expected, T actual, String entityType, String identifierField, List<String> ignoredFields, SoftAssert softAssert) {
         try {
