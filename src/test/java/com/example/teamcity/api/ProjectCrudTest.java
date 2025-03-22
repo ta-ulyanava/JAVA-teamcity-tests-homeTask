@@ -70,11 +70,9 @@ public void userCreatesProjectWithCopyAllAssociatedSettingsTrueTest() {
         var sourceProject = createProjectAndExtractModel(testData.getProject());
         var newProject = TestDataGenerator.generate(Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("_Root", null), false, sourceProject);
         var createdProject = createProjectAndExtractModel(newProject);
-
         EntityValidator.validateAllEntityFieldsIgnoring(sourceProject, createdProject,
                 List.of("id", "name", "parentProject", "copyAllAssociatedSettings", "sourceProject",
                         "projectsIdsMap", "buildTypesIdsMap", "vcsRootsIdsMap"), softy);
-
         softy.assertNull(createdProject.getCopyAllAssociatedSettings(), "copyAllAssociatedSettings должен быть null");
         softy.assertNull(createdProject.getSourceProject(), "sourceProject должен быть null");
         softy.assertNull(createdProject.getProjectsIdsMap(), "projectsIdsMap должен быть null");
@@ -148,7 +146,6 @@ public void userCreatesProjectWithMaxLengthIdTest() {
         softy.assertAll();
     }
 
-
     @Feature("Project ID Validation")
     @Story("Project ID Length Exceeded")
     @Test(description = "User should not be able to create a Project with an ID longer than 225 characters", groups = {"Negative","CRUD","KnownBugs","CornerCase","PROJECT_ID_VALIDATION_TAG"})
@@ -177,7 +174,6 @@ public void userCreatesProjectWithMaxLengthIdTest() {
         response.then().spec(IncorrectDataSpecs.badRequestUnsupportedCharacter("Project", "ID", invalidId, specialChar));
         softy.assertAll();
     }
-
 
     @Feature("Project ID Validation")
     @Story("Non-Latin Characters in Project ID")
@@ -330,7 +326,6 @@ public void userCannotCreateProjectWithSpaceAsNameTest() {
     response.then().spec(IncorrectDataSpecs.badRequestEmptyField("project","name"));
     softy.assertAll();
 }
-
     @Feature("Project Name Validation")
     @Story("Special Characters in Project Name")
     @Test(description = "User should be able to create a Project with special characters in name", groups = {"Positive", "CRUD", "PROJECT_NAME_VALIDATION_TAG"})
@@ -430,21 +425,22 @@ public void userCannotCreateProjectWithSpaceAsNameTest() {
         Project invalidProject = TestDataGenerator.generate(Project.class);
         invalidProject.setParentProject(new ParentProject("non_existent_locator", null));
         Response response = new UncheckedRequest(RequestSpecs.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
-        response.then().spec(IncorrectDataSpecs.notFoundWithDynamicErrorMessage("No project found by locator"));
+        response.then().spec(IncorrectDataSpecs.entityNotFoundByLocator("Project", "id", invalidProject.getId()));
         softy.assertAll();
     }
+
     @Feature("Parent Project Validation")
     @Story("Parent ID Conflict")
-    @Test(description = "User should not be able to create a Project with the same ID as its parent ID", groups = {"Negative", "CRUD", "PARENT_VALIDATION_TAG"})
+    @Test(description = "User should not be able to create a Project with the same ID as its parent ID",
+            groups = {"Negative", "CRUD", "PARENT_VALIDATION_TAG"})
     public void userCannotCreateProjectWithSameParentIdTest() {
         String projectId = testData.getProject().getId();
         Project invalidProject = TestDataGenerator.generate(Project.class, projectId, RandomData.getUniqueId());
         invalidProject.setParentProject(new ParentProject(projectId, null));
         Response response = new UncheckedRequest(RequestSpecs.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
-        response.then().spec(IncorrectDataSpecs.notFoundWithDynamicErrorMessage("No project found by locator"));
+        response.then().spec(IncorrectDataSpecs.entityNotFoundByLocator("Project", "id", projectId));
         softy.assertAll();
     }
-
     @Feature("Parent Project Validation")
     @Story("Parent ID Empty")
     @Test(description = "User should not be able to create a Project if parent project locator is empty", groups = {"Negative", "CRUD", "PARENT_VALIDATION_TAG"})
@@ -453,7 +449,7 @@ public void userCannotCreateProjectWithSpaceAsNameTest() {
         invalidProject.setParentProject(new ParentProject("", null));
         UncheckedRequest request = new UncheckedRequest(RequestSpecs.superUserAuthSpec());
         Response response = request.getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
-        response.then().spec(IncorrectDataSpecs.notFoundWithDynamicErrorMessage("No project found by locator"));
+        response.then().spec(IncorrectDataSpecs.entityNotFoundByLocator("Project", "id", invalidProject.getId()));
         softy.assertAll();
     }
     // =================== PARENT PROJECT VALIDATION TESTS (PARENT_VALIDATION_TAG) =================== //
@@ -484,7 +480,6 @@ public void userCannotCreateProjectWithSpaceAsNameTest() {
         CheckedRequest request = new CheckedRequest(RequestSpecs.superUserAuthSpec());
         Response response = request.getRequest(ApiEndpoint.PROJECTS).create(projectWithXSS);
         Project createdProject = ResponseExtractor.extractModel(response, Project.class);
-
         EntityValidator.validateAllEntityFieldsIgnoring(projectWithXSS, createdProject, List.of("parentProject"), softy);
         softy.assertAll();
     }
@@ -497,7 +492,6 @@ public void userCannotCreateProjectWithSpaceAsNameTest() {
         CheckedRequest request = new CheckedRequest(RequestSpecs.superUserAuthSpec());
         Response response = request.getRequest(ApiEndpoint.PROJECTS).create(projectWithSQL);
         Project createdProject = ResponseExtractor.extractModel(response, Project.class);
-
         EntityValidator.validateAllEntityFieldsIgnoring(projectWithSQL, createdProject, List.of("parentProject"), softy);
         softy.assertAll();
     }

@@ -3,9 +3,11 @@ package com.example.teamcity.api;
 import com.example.teamcity.api.enums.ApiEndpoint;
 import com.example.teamcity.api.generators.RandomData;
 import com.example.teamcity.api.models.Project;
+import com.example.teamcity.api.spec.responce.IncorrectDataSpecs;
 import com.example.teamcity.api.validation.EntityValidator;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
+import io.restassured.response.Response;
 import org.testng.annotations.Test;
 
 import java.util.List;
@@ -24,14 +26,18 @@ public class ProjectSearchTest extends BaseApiTest {
         EntityValidator.validateAllEntityFieldsIgnoring(createdProject, foundProject, List.of("parentProject"), softy);
         softy.assertAll();
     }
+
     @Feature("Project Search")
     @Story("User should not be able to find a project by a non-existing name")
-    @Test(description = "User should not be able to find a project by a non-existing name", groups = {"Negative", "Search", "PROJECT_SEARCH_TAG"})
+    @Test(description = "User should not be able to find a project by a non-existing name",
+            groups = {"Negative", "Search", "PROJECT_SEARCH_TAG"})
     public void userShouldNotBeAbleToFindProjectByNonExistingNameTest() {
-        Project foundProject = findSingleProjectByLocator("name", RandomData.getUniqueName());
-        softy.assertNull(foundProject, "Unexpectedly found a project with a non-existing name");
+        String nonExistingProjectName = RandomData.getUniqueName();
+        Response response = userUncheckedRequest.getRequest(ApiEndpoint.PROJECTS).findSingleByLocator("name:" + nonExistingProjectName);
+        response.then().spec(IncorrectDataSpecs.entityNotFoundByLocator("Project", "name", nonExistingProjectName));
         softy.assertAll();
     }
+
 
 
 

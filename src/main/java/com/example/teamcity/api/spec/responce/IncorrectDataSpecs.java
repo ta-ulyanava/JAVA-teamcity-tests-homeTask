@@ -62,25 +62,16 @@ public class IncorrectDataSpecs {
     }
 
 
-
-    public static ResponseSpecification notFoundWithDynamicErrorMessage(String expectedMessage) {
+    public static ResponseSpecification entityNotFoundByLocator(String entityType, String locatorType, String locatorValue) {
         return new ResponseSpecBuilder()
                 .expectStatusCode(HttpStatus.SC_NOT_FOUND)
-                .expectBody(Matchers.containsString(expectedMessage))
+                .expectBody(Matchers.anyOf(
+                        Matchers.containsString("No project found by locator"),
+                        Matchers.containsString("Project cannot be found by external id 'non_existent_locator'")
+                ))
                 .build();
     }
 
 
-    public static ResponseSpecification entityNotFound(String entityType, String id) {
-        return new ResponseSpecBuilder()
-                .expectStatusCode(HttpStatus.SC_NOT_FOUND)
-                .expectBody("message", Matchers.containsString("%s cannot be found by external id '%s'".formatted(entityType, id)))
-                .build();
-    }
-    public static ResponseSpecification entityAlreadyExists(String entityType, String identifier) {
-        return new ResponseSpecBuilder()
-                .expectStatusCode(HttpStatus.SC_BAD_REQUEST)
-                .expectBody("message", Matchers.containsString("%s with this name already exists: %s".formatted(entityType, identifier)))
-                .build();
-    }
+
 }
