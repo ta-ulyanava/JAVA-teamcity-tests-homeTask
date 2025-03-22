@@ -22,12 +22,11 @@ public class ProjectSearchTest extends BaseApiTest {
     @Story("User should be able to find a project by its exact name")
     @Test(description = "User should be able to find a project by its exact name", groups = {"Positive", "PROJECT_SEARCH_NAME_TAG"})
     public void userShouldBeAbleToFindProjectByNameTest() {
-        Project createdProject = createProjectAndExtractModel(ProjectTestData.projectWithName(RandomData.getUniqueName()));
+        String projectName = RandomData.getUniqueName();
+        Project createdProject = createProjectAndExtractModel(ProjectTestData.projectWithParams(projectName, null, null, null));
         Project foundProject = findSingleProjectByLocator("name", createdProject.getName());
         SearchValidator.validateSearchResult(createdProject, foundProject, "Project", "name", List.of("parentProject"), softy);
-
     }
-
 
     @Feature("Project Search")
     @Story("User should not be able to find a project by a non-existing name")
@@ -41,29 +40,31 @@ public class ProjectSearchTest extends BaseApiTest {
 
     @Feature("Project Search")
     @Story("User should be able to find a project by multiple words in its name")
-    @Test(description = "User should be able to find a project by its name containing multiple words", groups = {"Positive","PROJECT_SEARCH_NAME_TAG"})
+    @Test(description = "User should be able to find a project by its name containing multiple words", groups = {"Positive", "PROJECT_SEARCH_NAME_TAG"})
     public void userShouldBeAbleToFindProjectByMultiWordNameTest() {
         String multiWordName = "Test Project " + RandomData.getString();
-        Project createdProject = createProjectAndExtractModel(ProjectTestData.projectWithName(multiWordName));
+        Project createdProject = createProjectAndExtractModel(ProjectTestData.projectWithParams(null, multiWordName, null, null));
         Project foundProject = findSingleProjectByLocator("name", createdProject.getName());
         SearchValidator.validateSearchResult(createdProject, foundProject, "Project", "name", List.of("parentProject"), softy);
     }
 
     @Feature("Project Search")
     @Story("Search by Name with Special Characters")
-    @Test(description = "User should be able to find a project by name containing special characters", groups = {"Positive","PROJECT_SEARCH_NAME_TAG"})
+    @Test(description = "User should be able to find a project by name containing special characters", groups = {"Positive", "PROJECT_SEARCH_NAME_TAG"})
     public void userShouldBeAbleToFindProjectByNameWithSpecialCharactersTest() {
         String specialCharName = TestConstants.SPECIAL_CHARACTERS + RandomData.getString();
-        Project createdProject = createProjectAndExtractModel(ProjectTestData.projectWithName(specialCharName));
+        Project createdProject = createProjectAndExtractModel(ProjectTestData.projectWithParams(null, specialCharName, null, null));
         Project foundProject = findSingleProjectByLocator("name", createdProject.getName());
         SearchValidator.validateSearchResult(createdProject, foundProject, "Project", "name", List.of("parentProject"), softy);
     }
+
+
     @Feature("Project Search")
     @Story("Search by maximum allowed name length")
     @Test(description = "User should be able to search for a project with the maximum allowed name length", groups = {"Positive", "PROJECT_SEARCH_NAME_TAG"})
     public void userShouldBeAbleToSearchProjectByMaxLengthNameTest() {
         String longName = RandomData.getString(500);
-        Project createdProject = createProjectAndExtractModel(ProjectTestData.projectWithName(longName));
+        Project createdProject = createProjectAndExtractModel(ProjectTestData.projectWithParams(null, longName, null, null)); // Передаем длинное имя
         Project foundProject = findSingleProjectByLocator("name", createdProject.getName());
         SearchValidator.validateSearchResult(createdProject, foundProject, "Project", "name", List.of("parentProject"), softy);
     }
@@ -93,7 +94,7 @@ public class ProjectSearchTest extends BaseApiTest {
     @Test(description = "User should not be able to find a project by name with different letter case", groups = {"Negative", "PROJECT_SEARCH_NAME_TAG"})
     public void userShouldNotBeAbleToFindProjectByNameWithDifferentLetterCaseTest() {
         String originalName = "testproject" + RandomData.getString();
-        createProjectAndExtractModel(ProjectTestData.projectWithName(originalName));
+        createProjectAndExtractModel(ProjectTestData.projectWithParams(null, originalName, null, null));
         String upperCasedName = originalName.toUpperCase();
         Response response = userUncheckedRequest.getRequest(ApiEndpoint.PROJECTS).findSingleByLocator("name:" + upperCasedName);
         response.then().spec(IncorrectDataSpecs.emptyEntityListReturned("Project", "name", upperCasedName));

@@ -1,4 +1,5 @@
 package com.example.teamcity.api;
+
 import com.example.teamcity.api.constants.TestConstants;
 import com.example.teamcity.api.enums.ApiEndpoint;
 import com.example.teamcity.api.enums.Role;
@@ -30,7 +31,6 @@ import static com.example.teamcity.api.constants.TestConstants.XSS_PAYLOAD;
 public class ProjectCrudTest extends BaseApiTest {
 
 
-
     @Test(description = "User should be able to create a project with the minimum required fields under Root project",
             groups = {"Positive", "CRUD"})
     public void userCreatesProjectWithMandatoryFieldsOnlyTest() {
@@ -42,25 +42,25 @@ public class ProjectCrudTest extends BaseApiTest {
         softy.assertAll();
     }
 
-// =================== PROJECT COPY SETTINGS TESTS (COPY_SETTINGS_TAG) =================== //
+    // =================== PROJECT COPY SETTINGS TESTS (COPY_SETTINGS_TAG) =================== //
 // Bug in API: projectsIdsMap, buildTypesIdsMap, vcsRootsIdsMap, sourceProject should be copied but are not
-@Feature("Project Copy Settings")
-@Story("Copy Project Parameters")
-@Test(description = "User should be able to create a Project with copyAllAssociatedSettings set to true and verify copied settings",
-        groups = {"Positive", "CRUD", "KnownBugs", "COPY_SETTINGS_TAG"})
-public void userCreatesProjectWithCopyAllAssociatedSettingsTrueTest() {
-    var sourceProject = createProjectAndExtractModel(testData.getProject());
-    var newProject = TestDataGenerator.generate(Project.class, RandomData.getString(), RandomData.getString(),sourceProject.getParentProject(), true, sourceProject);
-    var createdProject = createProjectAndExtractModel(newProject);
+    @Feature("Project Copy Settings")
+    @Story("Copy Project Parameters")
+    @Test(description = "User should be able to create a Project with copyAllAssociatedSettings set to true and verify copied settings",
+            groups = {"Positive", "CRUD", "KnownBugs", "COPY_SETTINGS_TAG"})
+    public void userCreatesProjectWithCopyAllAssociatedSettingsTrueTest() {
+        var sourceProject = createProjectAndExtractModel(testData.getProject());
+        var newProject = TestDataGenerator.generate(Project.class, RandomData.getString(), RandomData.getString(), sourceProject.getParentProject(), true, sourceProject);
+        var createdProject = createProjectAndExtractModel(newProject);
 
-    // Баг в API: settings не копируются
-    EntityValidator.validateAllEntityFieldsIgnoring(sourceProject, createdProject, List.of("id", "name"), softy);
-    softy.assertEquals(createdProject.getProjectsIdsMap(), sourceProject.getProjectsIdsMap(), "projectsIdsMap не был скопирован");
-    softy.assertEquals(createdProject.getBuildTypesIdsMap(), sourceProject.getBuildTypesIdsMap(), "buildTypesIdsMap не был скопирован");
-    softy.assertEquals(createdProject.getVcsRootsIdsMap(), sourceProject.getVcsRootsIdsMap(), "vcsRootsIdsMap не был скопирован");
-    softy.assertEquals(createdProject.getSourceProject(), sourceProject, "sourceProject не был скопирован");
-    softy.assertAll();
-}
+        // Баг в API: settings не копируются
+        EntityValidator.validateAllEntityFieldsIgnoring(sourceProject, createdProject, List.of("id", "name"), softy);
+        softy.assertEquals(createdProject.getProjectsIdsMap(), sourceProject.getProjectsIdsMap(), "projectsIdsMap не был скопирован");
+        softy.assertEquals(createdProject.getBuildTypesIdsMap(), sourceProject.getBuildTypesIdsMap(), "buildTypesIdsMap не был скопирован");
+        softy.assertEquals(createdProject.getVcsRootsIdsMap(), sourceProject.getVcsRootsIdsMap(), "vcsRootsIdsMap не был скопирован");
+        softy.assertEquals(createdProject.getSourceProject(), sourceProject, "sourceProject не был скопирован");
+        softy.assertAll();
+    }
 
     @Feature("Project Copy Settings")
     @Story("Copy Settings Disabled")
@@ -83,7 +83,7 @@ public void userCreatesProjectWithCopyAllAssociatedSettingsTrueTest() {
 
     // =================== PROJECT COPY SETTINGS TESTS (COPY_SETTINGS_TAG) =================== //
 
-// =================== NESTED AND SIBLING PROJECTS TESTS (PROJECT_HIERARCHY_TAG) =================== //
+    // =================== NESTED AND SIBLING PROJECTS TESTS (PROJECT_HIERARCHY_TAG) =================== //
     @Feature("Project Management")
     @Story("Creating nested projects")
     @Test(description = "User should be able to create 20 nested projects",
@@ -99,6 +99,7 @@ public void userCreatesProjectWithCopyAllAssociatedSettingsTrueTest() {
                 "Parent project ID is incorrect for project " + project.getId()));
         softy.assertAll();
     }
+
     @Feature("Project Management")
     @Story("Creating sibling projects")
     @Test(description = "User should be able to create 20 sibling projects",
@@ -113,16 +114,16 @@ public void userCreatesProjectWithCopyAllAssociatedSettingsTrueTest() {
         softy.assertAll();
     }
 
-// =================== PROJECT ID VALIDATION TESTS (PROJECT_ID_VALIDATION_TAG) =================== //
-@Feature("Project ID Validation")
-@Story("Max Length ID")
-@Test(description = "User should be able to create a Project with an ID of maximum allowed length", groups = {"Positive", "CRUD", "PROJECT_ID_VALIDATION_TAG"})
-public void userCreatesProjectWithMaxLengthIdTest() {
-    Project validProject = TestDataGenerator.generate(Project.class, RandomData.getString(225), RandomData.getString());
-    Project createdProject = ResponseExtractor.extractModel(new CheckedRequest(RequestSpecs.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(validProject), Project.class);
-    EntityValidator.validateAllEntityFieldsIgnoring(validProject, createdProject, List.of("parentProject"), softy);
-    softy.assertAll();
-}
+    // =================== PROJECT ID VALIDATION TESTS (PROJECT_ID_VALIDATION_TAG) =================== //
+    @Feature("Project ID Validation")
+    @Story("Max Length ID")
+    @Test(description = "User should be able to create a Project with an ID of maximum allowed length", groups = {"Positive", "CRUD", "PROJECT_ID_VALIDATION_TAG"})
+    public void userCreatesProjectWithMaxLengthIdTest() {
+        Project validProject = TestDataGenerator.generate(Project.class, RandomData.getString(225), RandomData.getString());
+        Project createdProject = ResponseExtractor.extractModel(new CheckedRequest(RequestSpecs.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(validProject), Project.class);
+        EntityValidator.validateAllEntityFieldsIgnoring(validProject, createdProject, List.of("parentProject"), softy);
+        softy.assertAll();
+    }
 
     @Feature("Project ID Validation")
     @Story("Min Length ID")
@@ -134,6 +135,7 @@ public void userCreatesProjectWithMaxLengthIdTest() {
         EntityValidator.validateAllEntityFieldsIgnoring(validProject, createdProject, List.of("parentProject"), softy);
         softy.assertAll();
     }
+
     @Feature("Project ID Validation")
     @Story("Underscore in ID")
     @Test(description = "User should be able to create a Project with an ID containing an underscore", groups = {"Positive", "CRUD", "PROJECT_ID_VALIDATION_TAG"})
@@ -148,7 +150,7 @@ public void userCreatesProjectWithMaxLengthIdTest() {
 
     @Feature("Project ID Validation")
     @Story("Project ID Length Exceeded")
-    @Test(description = "User should not be able to create a Project with an ID longer than 225 characters", groups = {"Negative","CRUD","KnownBugs","CornerCase","PROJECT_ID_VALIDATION_TAG"})
+    @Test(description = "User should not be able to create a Project with an ID longer than 225 characters", groups = {"Negative", "CRUD", "KnownBugs", "CornerCase", "PROJECT_ID_VALIDATION_TAG"})
     public void userCannotCreateProjectWithTooLongIdTest() {
         var tooLongId = RandomData.getString(226);
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, tooLongId, RandomData.getString());
@@ -165,6 +167,7 @@ public void userCreatesProjectWithMaxLengthIdTest() {
                 .mapToObj(c -> new Object[]{String.valueOf((char) c)})
                 .toArray(Object[][]::new);
     }
+
     // Need to fix 500 error (Known Bugs)
     @Test(description = "User should not be able to create a Project with special characters in ID", groups = {"Negative", "CRUD", "KnownBugs", "PROJECT_ID_VALIDATION_TAG"}, dataProvider = "invalidSpecialCharactersForId")
     public void userCannotCreateProjectWithEachSpecialCharacterInIdTest(String specialChar) {
@@ -181,26 +184,27 @@ public void userCreatesProjectWithMaxLengthIdTest() {
     public static Object[][] nonLatinIdProviderForId() {
         return new Object[][]{{"проект"}, {"项目"}, {"プロジェクト"}, {"مشروع"}, {"παράδειγμα"}, {"नमूना"}, {"בדיקה"}};
     }
+
     // Need to fix 500 error (Known Bugs)
     @Test(description = "User should not be able to create a Project with a non-Latin ID",
             groups = {"Negative", "CRUD", "KnownBugs", "PROJECT_ID_VALIDATION_TAG"}, dataProvider = "nonLatinIdProviderForId")
     public void userCannotCreateProjectWithNonLatinIdTest(String invalidId) {
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, invalidId, RandomData.getString());
         var response = new UncheckedRequest(RequestSpecs.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
-        response.then().spec(IncorrectDataSpecs.badRequestNonLatinLetter("Project","ID", invalidId));
+        response.then().spec(IncorrectDataSpecs.badRequestNonLatinLetter("Project", "ID", invalidId));
         softy.assertAll();
     }
 
-@Feature("Project ID Validation")
-@Story("Empty ID")
+    @Feature("Project ID Validation")
+    @Story("Empty ID")
 // Need to fix 500 error (Known Bugs)
-@Test(description = "User should not be able to create Project with empty id", groups = {"Negative", "CRUD", "KnownBugs", "PROJECT_ID_VALIDATION_TAG"})
-public void userCannotCreateProjectWithEmptyIdTest() {
-    Project invalidProject = TestDataGenerator.generate(Project.class, "", RandomData.getString());
-    Response response = new UncheckedRequest(RequestSpecs.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
-    response.then().spec(IncorrectDataSpecs.badRequestEmptyField("Project", "ID"));
-    softy.assertAll();
-}
+    @Test(description = "User should not be able to create Project with empty id", groups = {"Negative", "CRUD", "KnownBugs", "PROJECT_ID_VALIDATION_TAG"})
+    public void userCannotCreateProjectWithEmptyIdTest() {
+        Project invalidProject = TestDataGenerator.generate(Project.class, "", RandomData.getString());
+        Response response = new UncheckedRequest(RequestSpecs.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
+        response.then().spec(IncorrectDataSpecs.badRequestEmptyField("Project", "ID"));
+        softy.assertAll();
+    }
 
     @Feature("Project ID Validation")
     @Story("ID with Space")
@@ -212,6 +216,7 @@ public void userCannotCreateProjectWithEmptyIdTest() {
         response.then().spec(IncorrectDataSpecs.badRequestEmptyField("Project", "ID"));
         softy.assertAll();
     }
+
     @Feature("Project ID Validation")
     @Story("Duplicate Project ID")
     @Test(description = "User should not be able to create a Project with an existing ID", groups = {"Negative", "CRUD", "PROJECT_ID_VALIDATION_TAG"})
@@ -219,7 +224,7 @@ public void userCannotCreateProjectWithEmptyIdTest() {
         Project existingProject = createProjectAndExtractModel(testData.getProject());
         Project duplicateProject = TestDataGenerator.generate(List.of(existingProject), Project.class, existingProject.getId(), RandomData.getString());
         Response response = new UncheckedRequest(RequestSpecs.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(duplicateProject);
-        response.then().spec(IncorrectDataSpecs.badRequestDuplicatedField("Project","ID", existingProject.getId() ));
+        response.then().spec(IncorrectDataSpecs.badRequestDuplicatedField("Project", "ID", existingProject.getId()));
         softy.assertAll();
     }
 
@@ -244,9 +249,10 @@ public void userCannotCreateProjectWithEmptyIdTest() {
         String invalidId = RandomData.getDigits(6);
         Project invalidProject = TestDataGenerator.generate(List.of(), Project.class, invalidId, RandomData.getString());
         Response response = new UncheckedRequest(RequestSpecs.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
-        response.then().spec(IncorrectDataSpecs.badRequestWithIncorrectFieldFormat("Project", "ID", invalidId , String.valueOf(invalidId.charAt(0))));
+        response.then().spec(IncorrectDataSpecs.badRequestWithIncorrectFieldFormat("Project", "ID", invalidId, String.valueOf(invalidId.charAt(0))));
         softy.assertAll();
     }
+
     @Feature("Project ID Validation")
     @Story("Invalid Starting Character in Project ID")
     @DataProvider
@@ -282,6 +288,7 @@ public void userCannotCreateProjectWithEmptyIdTest() {
         response.then().spec(IncorrectDataSpecs.badRequestUnsupportedCharacter("Project", "ID", invalidId, " "));
         softy.assertAll();
     }
+
     @Feature("Project ID Validation")
     @Story("Valid Project ID")
     @Test(description = "User should be able to create a Project with an ID containing Latin letters, digits, and underscores", groups = {"Positive", "CRUD", "PROJECT_ID_VALIDATION_TAG"})
@@ -292,6 +299,7 @@ public void userCannotCreateProjectWithEmptyIdTest() {
         EntityValidator.validateAllEntityFieldsIgnoring(validProject, createdProject, List.of("parentProject"), softy);
         softy.assertAll();
     }
+
     // Need to fix 500 error (Known Bugs)
     @Feature("Project ID Validation")
     @Story("Empty Project ID")
@@ -305,27 +313,28 @@ public void userCannotCreateProjectWithEmptyIdTest() {
 
 // =================== PROJECT ID VALIDATION TESTS (PROJECT_ID_VALIDATION_TAG) =================== //
 
-// =================== PROJECT NAME VALIDATION TESTS (PROJECT_NAME_VALIDATION_TAG) =================== //
-@Feature("Project Name Validation")
-@Story("Empty Project Name")
-@Test(description = "User should not be able to create Project with empty name", groups = {"Negative", "CRUD", "PROJECT_NAME_VALIDATION_TAG"})
-public void userCannotCreateProjectWithEmptyNameTest() {
-    var invalidProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), "");
-    var response = new UncheckedRequest(RequestSpecs.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
-    response.then().spec(IncorrectDataSpecs.badRequestEmptyField("Project", "name"));
-    softy.assertAll();
-}
+    // =================== PROJECT NAME VALIDATION TESTS (PROJECT_NAME_VALIDATION_TAG) =================== //
+    @Feature("Project Name Validation")
+    @Story("Empty Project Name")
+    @Test(description = "User should not be able to create Project with empty name", groups = {"Negative", "CRUD", "PROJECT_NAME_VALIDATION_TAG"})
+    public void userCannotCreateProjectWithEmptyNameTest() {
+        var invalidProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), "");
+        var response = new UncheckedRequest(RequestSpecs.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
+        response.then().spec(IncorrectDataSpecs.badRequestEmptyField("Project", "name"));
+        softy.assertAll();
+    }
 
     @Feature("Project Name Validation")
-@Story("Space in Project Name")
+    @Story("Space in Project Name")
 // Need to fix incorrect response from server (Known bugs)
-@Test(description = "User should not be able to create a Project with a space as name", groups = {"Negative", "CRUD", "KnownBugs", "PROJECT_NAME_VALIDATION_TAG"})
-public void userCannotCreateProjectWithSpaceAsNameTest() {
-    Project invalidProject = TestDataGenerator.generate(Project.class, RandomData.getString(), " ");
-    Response response = new UncheckedRequest(RequestSpecs.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
-    response.then().spec(IncorrectDataSpecs.badRequestEmptyField("project","name"));
-    softy.assertAll();
-}
+    @Test(description = "User should not be able to create a Project with a space as name", groups = {"Negative", "CRUD", "KnownBugs", "PROJECT_NAME_VALIDATION_TAG"})
+    public void userCannotCreateProjectWithSpaceAsNameTest() {
+        Project invalidProject = TestDataGenerator.generate(Project.class, RandomData.getString(), " ");
+        Response response = new UncheckedRequest(RequestSpecs.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
+        response.then().spec(IncorrectDataSpecs.badRequestEmptyField("project", "name"));
+        softy.assertAll();
+    }
+
     @Feature("Project Name Validation")
     @Story("Special Characters in Project Name")
     @Test(description = "User should be able to create a Project with special characters in name", groups = {"Positive", "CRUD", "PROJECT_NAME_VALIDATION_TAG"})
@@ -347,6 +356,7 @@ public void userCannotCreateProjectWithSpaceAsNameTest() {
         EntityValidator.validateAllEntityFieldsIgnoring(localizedProject, createdProject, List.of("parentProject"), softy);
         softy.assertAll();
     }
+
     @Feature("Project Name Validation")
     @Story("One Character Project Name")
     @Test(description = "User should be able to create a Project with a name of length 1", groups = {"Positive", "CRUD", "PROJECT_NAME_VALIDATION_TAG"})
@@ -369,6 +379,7 @@ public void userCannotCreateProjectWithSpaceAsNameTest() {
         EntityValidator.validateAllEntityFieldsIgnoring(validProject, createdProject, List.of("parentProject"), softy);
         softy.assertAll();
     }
+
     @Feature("Project Name Validation")
     @Story("Duplicate Name with Different Case")
     @Test(description = "User should not be able to create a Project with an existing name in a different case", groups = {"Negative", "CRUD", "PROJECT_NAME_VALIDATION_TAG"})
@@ -377,7 +388,7 @@ public void userCannotCreateProjectWithSpaceAsNameTest() {
         String duplicateName = existingProject.getName().toUpperCase();
         Project duplicateProject = TestDataGenerator.generate(Project.class, RandomData.getString(), duplicateName);
         Response response = new UncheckedRequest(RequestSpecs.superUserAuthSpec()).getRequest(ApiEndpoint.PROJECTS).create(duplicateProject);
-        response.then().spec(IncorrectDataSpecs.badRequestDuplicatedField("Project","name",duplicateName));
+        response.then().spec(IncorrectDataSpecs.badRequestDuplicatedField("Project", "name", duplicateName));
         softy.assertAll();
     }
 
@@ -417,7 +428,7 @@ public void userCannotCreateProjectWithSpaceAsNameTest() {
 
 // =================== PROJECT NAME VALIDATION TESTS (PROJECT_NAME_VALIDATION_TAG) =================== //
 
-// =================== PARENT PROJECT VALIDATION TESTS (PARENT_VALIDATION_TAG) =================== //
+    // =================== PARENT PROJECT VALIDATION TESTS (PARENT_VALIDATION_TAG) =================== //
     @Feature("Parent Project Validation")
     @Story("Non-Existent Parent Project")
     @Test(description = "User should not be able to create a Project with a non-existent parentProject locator", groups = {"Negative", "CRUD", "PARENT_VALIDATION_TAG"})
@@ -441,6 +452,7 @@ public void userCannotCreateProjectWithSpaceAsNameTest() {
         response.then().spec(IncorrectDataSpecs.entityNotFoundByLocator("Project", "id", projectId));
         softy.assertAll();
     }
+
     @Feature("Parent Project Validation")
     @Story("Parent ID Empty")
     @Test(description = "User should not be able to create a Project if parent project locator is empty", groups = {"Negative", "CRUD", "PARENT_VALIDATION_TAG"})
@@ -497,9 +509,9 @@ public void userCannotCreateProjectWithSpaceAsNameTest() {
     }
 // =================== SECURITY TESTS (SEC_TAG) =================== //
 
-// =================== ROLE-BASED ACCESS TESTS (ROLE_TAG) =================== //
-@Feature("Access Control")
-@Story("Restricted Roles - No Project Creation")
+    // =================== ROLE-BASED ACCESS TESTS (ROLE_TAG) =================== //
+    @Feature("Access Control")
+    @Story("Restricted Roles - No Project Creation")
     @DataProvider(name = "restrictedRoles")
     public static Object[][] restrictedRoles() {
         return new Object[][]{
@@ -511,15 +523,24 @@ public void userCannotCreateProjectWithSpaceAsNameTest() {
         };
     }
 
-    @Test(description = "User with restricted role should not be able to create a project", dataProvider = "restrictedRoles", groups = {"Negative", "CRUD", "ROLE_TAG"})
-    public void userWithRestrictedRoleCannotCreateProjectTest(Role role) {
-        User restrictedUser = createUserWithRole(role, "g");
-        Project projectToCreate = testData.getProject();
-        UncheckedRequest restrictedUserRequest = new UncheckedRequest(RequestSpecs.authSpec(restrictedUser));
-        Response response = restrictedUserRequest.getRequest(ApiEndpoint.PROJECTS).create(projectToCreate);
-        response.then().spec(AccessErrorSpecs.accessDenied());
+    @Feature("Project Search")
+    @Story("Search should be case-sensitive")
+    @Test(description = "User should not be able to find a project by name with different letter case", groups = {"Negative", "PROJECT_SEARCH_NAME_TAG"})
+    public void userShouldNotBeAbleToFindProjectByNameWithDifferentLetterCaseTest() {
+        String originalName = "testproject" + RandomData.getString();
+        // Создаем проект с помощью projectWithParams
+        Project createdProject = createProjectAndExtractModel(ProjectTestData.projectWithParams(null, originalName, null, null));
+
+        // Имя с измененным регистром
+        String upperCasedName = originalName.toUpperCase();
+
+        // Поиск проекта с верхним регистром
+        Response response = userUncheckedRequest.getRequest(ApiEndpoint.PROJECTS).findSingleByLocator("name:" + upperCasedName);
+        response.then().spec(IncorrectDataSpecs.emptyEntityListReturned("Project", "name", upperCasedName));
         softy.assertAll();
     }
+
+
     @Feature("Access Control")
     @Story("Allowed Roles - Project Creation")
     @DataProvider(name = "allowedRoles")
@@ -529,6 +550,7 @@ public void userCannotCreateProjectWithSpaceAsNameTest() {
                 {Role.AGENT_MANAGER}
         };
     }
+
     @Test(description = "User with allowed role should be able to create a project", dataProvider = "allowedRoles", groups = {"Positive", "CRUD", "ROLE_TAG"})
     public void userWithAllowedRoleCanCreateProjectTest(Role role) {
         Project scopeProject = createProjectAndExtractModel(testData.getProject());
