@@ -29,7 +29,7 @@ public final class CheckedBase<T extends BaseModel> extends Request implements C
         }
     }
 
-    private T extractSingleEntity(Response response) {
+    private T extractEntity(Response response) {
         return response.as((Class<T>) apiEndpoint.getModelClass());
     }
 
@@ -50,14 +50,14 @@ public final class CheckedBase<T extends BaseModel> extends Request implements C
     public T read(String id) {
         Response response = uncheckedBase.read(id);
         validateResponse(response, id);
-        return extractSingleEntity(response);
+        return extractEntity(response);
     }
 
     @Override
     public T update(String id, BaseModel model) {
         Response response = uncheckedBase.update(id, model);
         validateResponse(response, id);
-        return extractSingleEntity(response);
+        return extractEntity(response);
     }
 
     @Override
@@ -67,10 +67,18 @@ public final class CheckedBase<T extends BaseModel> extends Request implements C
         return response.asString();
     }
 
+    //    public Optional<T> findSingleByLocator(String locator) {
+//        Response response = uncheckedBase.findSingleByLocator(locator);
+//        validateResponse(response, locator);
+//        return Optional.of(response.as((Class<T>) apiEndpoint.getModelClass()));
+//    }
+    @Override
     public Optional<T> findSingleByLocator(String locator) {
         Response response = uncheckedBase.findSingleByLocator(locator);
         validateResponse(response, locator);
-        return Optional.of(response.as((Class<T>) apiEndpoint.getModelClass()));
+        List<T> projects = response.jsonPath().getList("project", (Class<T>) apiEndpoint.getModelClass());
+        if (projects.isEmpty()) return Optional.empty();
+        return Optional.of(projects.get(0));
     }
 
     @Override

@@ -1,7 +1,10 @@
 package com.example.teamcity.api;
 
+import com.example.teamcity.api.constants.TestConstants;
 import com.example.teamcity.api.enums.ApiEndpoint;
 import com.example.teamcity.api.generators.RandomData;
+import com.example.teamcity.api.generators.TestData;
+import com.example.teamcity.api.generators.TestDataGenerator;
 import com.example.teamcity.api.models.Project;
 import com.example.teamcity.api.spec.responce.IncorrectDataSpecs;
 import com.example.teamcity.api.validation.EntityValidator;
@@ -34,7 +37,36 @@ public class ProjectSearchTest extends BaseApiTest {
     public void userShouldNotBeAbleToFindProjectByNonExistingNameTest() {
         String nonExistingProjectName = RandomData.getUniqueName();
         Response response = userUncheckedRequest.getRequest(ApiEndpoint.PROJECTS).findSingleByLocator("name:" + nonExistingProjectName);
-        response.then().spec(IncorrectDataSpecs.entityNotFoundByLocator("Project", "name", nonExistingProjectName));
+        response.then().spec(IncorrectDataSpecs.emptyEntityListReturned("Project", "name", nonExistingProjectName));
+        softy.assertAll();
+    }
+
+    @Feature("Project Search")
+    @Story("User should be able to find a project by multiple words in its name")
+    @Test(description = "User should be able to find a project by its name containing multiple words",
+            groups = {"Positive", "Search", "PROJECT_SEARCH_TAG"})
+    public void userShouldBeAbleToFindProjectByMultiWordNameTest() {
+        String multiWordName = "Test Project " + RandomData.getString();
+        String validId = TestData.projectId();
+        Project project = TestDataGenerator.generate(Project.class, validId, multiWordName);
+        Project createdProject = createProjectAndExtractModel(project);
+        Project foundProject = findSingleProjectByLocator("name", createdProject.getName());
+        softy.assertNotNull(foundProject, "Project with name '" + createdProject.getName() + "' was not found");
+        EntityValidator.validateAllEntityFieldsIgnoring(createdProject, foundProject, List.of("parentProject"), softy);
+        softy.assertAll();
+    }
+    @Feature("Project Search")
+    @Story("Search by Name with Special Characters")
+    @Test(description = "User should be able to find a project by name containing special characters",
+            groups = {"Positive", "Search", "PROJECT_SEARCH_TAG"})
+    public void userShouldBeAbleToFindProjectByNameWithSpecialCharactersTest() {
+        String specialCharName = TestConstants.SPECIAL_CHARACTERS + RandomData.getString();
+        String validId = TestData.projectId();
+        Project project = TestDataGenerator.generate(Project.class, validId, specialCharName);
+        Project createdProject = createProjectAndExtractModel(project);
+        Project foundProject = findSingleProjectByLocator("name", createdProject.getName());
+        softy.assertNotNull(foundProject, "Project with name '" + createdProject.getName() + "' was not found");
+        EntityValidator.validateAllEntityFieldsIgnoring(createdProject, foundProject, List.of("parentProject"), softy);
         softy.assertAll();
     }
 
@@ -53,10 +85,7 @@ public class ProjectSearchTest extends BaseApiTest {
  *    - Поиск по части имени → найден проект, содержащий эту подстроку.
  *    - `/app/rest/projects?locator=name:proj`
  *
- * 3. **Поиск по нескольким словам**
- *    - Поиск по нескольким словам в имени → найден проект с таким названием.
- *    - `/app/rest/projects?locator=name:Test Project`
- *
+
  * 4. **Поиск с учетом спецсимволов**
  *    - Поиск проекта, содержащего спецсимволы (например, `-`, `_`, `.`) → найден проект.
  *    - `/app/rest/projects?locator=name:Test-Project_2025`

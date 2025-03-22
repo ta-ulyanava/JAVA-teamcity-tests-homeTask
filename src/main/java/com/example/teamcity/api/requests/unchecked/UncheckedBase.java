@@ -69,7 +69,8 @@ public class UncheckedBase extends Request implements CrudInterface, SearchInter
         return RestAssured
                 .given()
                 .spec(spec)
-                .get(apiEndpoint.getUrl() + "/" + locator);
+                .queryParam("locator", locator)
+                .get(apiEndpoint.getUrl());
     }
 
     @Override

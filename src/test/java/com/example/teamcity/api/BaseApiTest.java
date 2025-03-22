@@ -10,6 +10,7 @@ import com.example.teamcity.api.models.Roles;
 import com.example.teamcity.api.models.User;
 import com.example.teamcity.api.requests.CheckedRequest;
 import com.example.teamcity.api.requests.UncheckedRequest;
+import com.example.teamcity.api.requests.helpers.LocatorUtils;
 import com.example.teamcity.api.responses.ResponseExtractor;
 import com.example.teamcity.api.spec.request.RequestSpecs;
 import io.restassured.response.Response;
@@ -52,15 +53,11 @@ public abstract class BaseApiTest extends BaseTest {
         return user;
     }
     protected Project findSingleProjectByLocator(String locatorType, String locatorValue) {
+        String locator = locatorType + ":" + locatorValue;
         return (Project) userCheckedRequest.getRequest(ApiEndpoint.PROJECTS)
-                .findSingleByLocator(locatorType + ":" + locatorValue)
+                .findSingleByLocator(locator)
                 .orElse(null);
     }
-//    protected Project findSingleProjectByLocatorUnchecked(String locatorType, String locatorValue) {
-//        return (Project) userUncheckedRequest.getRequest(ApiEndpoint.PROJECTS)
-//                .findSingleByLocator(locatorType + ":" + locatorValue)
-//                .orElse(null);
-//    }
 
 
 }
