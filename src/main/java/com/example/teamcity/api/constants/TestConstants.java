@@ -11,6 +11,8 @@ public final class TestConstants {
     public static final String SPECIAL_CHARACTERS = "!@#$%^&*()_+-={}[]:\\";
     public static final String LOCALIZATION_CHARACTERS = "äöüßéèñçøπдёж漢字日本語한글";
 
+    public static final String ROOT_PROJECT_ID = "_Root";
+
     public static final List<String> LOCALIZATION_STRINGS = List.of(
             "München", "北京", "Москва", "Español", "São Paulo", "東京", "فارسی", "नमस्ते", "한국어", "العربية"
     );

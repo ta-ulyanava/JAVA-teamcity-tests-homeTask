@@ -23,7 +23,6 @@ public final class ProjectHelper {
 
     public static List<Project> createNestedProjects(CheckedRequest request, List<Project> nestedProjects) {
         List<Project> created = new ArrayList<>();
-        nestedProjects.get(0).setParentProject(null);
         Project parent = createProject(request, nestedProjects.get(0));
         created.add(parent);
 
@@ -52,11 +51,11 @@ public final class ProjectHelper {
     public static void assertLinearHierarchy(List<Project> createdProjects, SoftAssert softy) {
         for (int i = 0; i < createdProjects.size(); i++) {
             Project current = createdProjects.get(i);
-            String expectedParentId = (i == 0) ? null : createdProjects.get(i - 1).getId();
+            String expectedParentId = (i == 0) ? "_Root" : createdProjects.get(i - 1).getId();
             String actualParentId = current.getParentProject() != null ? current.getParentProject().getId() : null;
 
             if (i == 0) {
-                softy.assertNull(current.getParentProject(), "Root project should not have a parent");
+                softy.assertEquals(actualParentId, "_Root", "Root project should have '_Root' as a parent");
             } else {
                 softy.assertEquals(actualParentId, expectedParentId,
                         "Parent project ID is incorrect for project " + current.getId());

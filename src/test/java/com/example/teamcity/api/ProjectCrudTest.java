@@ -37,11 +37,11 @@ public class ProjectCrudTest extends BaseApiTest {
     @Test(description = "User should be able to create a project with the minimum required fields under Root project",
             groups = {"Positive", "CRUD"})
     public void userCreatesProjectWithMandatoryFieldsOnlyTest() {
-        final String ROOT_PROJECT_ID = "_Root";
+
         Project project = testData.getProject();
         Project createdProject = ProjectHelper.createProject(userCheckedRequest, project);
         EntityValidator.validateAllEntityFieldsIgnoring(project, createdProject, List.of("parentProject"), softy);
-        softy.assertEquals(createdProject.getParentProject().getId(), ROOT_PROJECT_ID, "Parent project should be '_Root' when not specified");
+        softy.assertEquals(createdProject.getParentProject().getId(), TestConstants.ROOT_PROJECT_ID, "Parent project should be '_Root' when not specified");
         softy.assertAll();
     }
 
@@ -71,7 +71,8 @@ public class ProjectCrudTest extends BaseApiTest {
             groups = {"Positive", "CRUD", "COPY_SETTINGS_TAG"})
     public void userCreatesProjectWithCopyAllAssociatedSettingsFalseTest() {
         var sourceProject = ProjectHelper.createProject(userCheckedRequest, testData.getProject());
-        var newProject = TestDataGenerator.generate(Project.class, RandomData.getString(), RandomData.getString(), new ParentProject("_Root", null), false, sourceProject);
+        var newProject = TestDataGenerator.generate(Project.class, RandomData.getString(), RandomData.getString(), new ParentProject(TestConstants.ROOT_PROJECT_ID, null), false, sourceProject);
+
         var createdProject = ProjectHelper.createProject(userCheckedRequest, newProject);
         EntityValidator.validateAllEntityFieldsIgnoring(sourceProject, createdProject,
                 List.of("id", "name", "parentProject", "copyAllAssociatedSettings", "sourceProject",
@@ -87,12 +88,14 @@ public class ProjectCrudTest extends BaseApiTest {
     // =================== PROJECT COPY SETTINGS TESTS (COPY_SETTINGS_TAG) =================== //
 
     // =================== NESTED AND SIBLING PROJECTS TESTS (PROJECT_HIERARCHY_TAG) =================== //
-    @Test(description = "User should be able to create 20 nested projects", groups = {"Positive", "CRUD", "CornerCase"})
+    @Test(description = "User should be able to create nested projects", groups = {"Positive", "CRUD", "CornerCase"})
     public void userCreatesNestedProjectsTest() {
         int projectCount = 20;
         List<Project> projects = ProjectTestData.nestedProjects(projectCount);
         List<Project> createdProjects = ProjectHelper.createNestedProjects(userCheckedRequest, projects);
         softy.assertEquals(createdProjects.size(), projectCount, "The number of created projects is incorrect");
+        softy.assertEquals(createdProjects.get(0).getName(), projects.get(0).getName(), "First project name should match");
+        softy.assertEquals(createdProjects.get(projectCount-1).getName(), projects.get(projectCount-1).getName(), "Last project name should match");
         ProjectHelper.assertLinearHierarchy(createdProjects, softy);
         softy.assertAll();
     }
@@ -458,8 +461,9 @@ public class ProjectCrudTest extends BaseApiTest {
     @Story("User without authentication should not create a project")
     @Test(description = "User should not be able to create a project without authentication", groups = {"Negative", "Auth"})
     public void userCannotCreateProjectWithoutAuthTest() {
-        Project invalidProject = TestDataGenerator.generate(Project.class);
-        Response response = userUncheckedRequest.getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
+        var unauthRequest = new UncheckedRequest(RequestSpecs.unauthSpec());
+        var invalidProject = TestDataGenerator.generate(List.of(), Project.class, RandomData.getString(), RandomData.getString());
+        var response = unauthRequest.getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
         response.then().spec(AccessErrorSpecs.authenticationRequired());
         softy.assertAll();
     }
