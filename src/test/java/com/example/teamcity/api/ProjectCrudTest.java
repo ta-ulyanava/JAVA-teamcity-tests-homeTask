@@ -34,10 +34,8 @@ import static com.example.teamcity.api.constants.TestConstants.XSS_PAYLOAD;
 public class ProjectCrudTest extends BaseApiTest {
 
 
-    @Test(description = "User should be able to create a project with the minimum required fields under Root project",
-            groups = {"Positive", "CRUD"})
+    @Test(description = "User should be able to create a project with the minimum required fields under Root project", groups = {"Positive", "CRUD"})
     public void userCreatesProjectWithMandatoryFieldsOnlyTest() {
-
         Project project = testData.getProject();
         Project createdProject = ProjectHelper.createProject(userCheckedRequest, project);
         EntityValidator.validateAllEntityFieldsIgnoring(project, createdProject, List.of("parentProject"), softy);
@@ -49,13 +47,11 @@ public class ProjectCrudTest extends BaseApiTest {
  //Bug in API: projectsIdsMap, buildTypesIdsMap, vcsRootsIdsMap, sourceProject should be copied but are not
     @Feature("Project Copy Settings")
     @Story("Copy Project Parameters")
-    @Test(description = "User should be able to create a Project with copyAllAssociatedSettings set to true and verify copied settings",
-            groups = {"Positive", "CRUD", "KnownBugs", "COPY_SETTINGS_TAG"})
+    @Test(description = "User should be able to create a Project with copyAllAssociatedSettings set to true and verify copied settings", groups = {"Positive", "CRUD", "KnownBugs", "COPY_SETTINGS_TAG"})
     public void userCreatesProjectWithCopyAllAssociatedSettingsTrueTest() {
         var sourceProject = ProjectHelper.createProject(userCheckedRequest, testData.getProject());
         var newProject = TestDataGenerator.generate(Project.class, RandomData.getString(), RandomData.getString(), sourceProject.getParentProject(), true, sourceProject);
         var createdProject = ProjectHelper.createProject(userCheckedRequest, newProject);
-
         // Баг в API: settings не копируются
         EntityValidator.validateAllEntityFieldsIgnoring(sourceProject, createdProject, List.of("id", "name"), softy);
         softy.assertEquals(createdProject.getProjectsIdsMap(), sourceProject.getProjectsIdsMap(), "projectsIdsMap не был скопирован");
@@ -67,16 +63,12 @@ public class ProjectCrudTest extends BaseApiTest {
 
     @Feature("Project Copy Settings")
     @Story("Copy Settings Disabled")
-    @Test(description = "User should be able to create a Project with copyAllAssociatedSettings set to false and verify fields are NOT copied",
-            groups = {"Positive", "CRUD", "COPY_SETTINGS_TAG"})
+    @Test(description = "User should be able to create a Project with copyAllAssociatedSettings set to false and verify fields are NOT copied", groups = {"Positive", "CRUD", "COPY_SETTINGS_TAG"})
     public void userCreatesProjectWithCopyAllAssociatedSettingsFalseTest() {
         var sourceProject = ProjectHelper.createProject(userCheckedRequest, testData.getProject());
         var newProject = TestDataGenerator.generate(Project.class, RandomData.getString(), RandomData.getString(), new ParentProject(TestConstants.ROOT_PROJECT_ID, null), false, sourceProject);
-
         var createdProject = ProjectHelper.createProject(userCheckedRequest, newProject);
-        EntityValidator.validateAllEntityFieldsIgnoring(sourceProject, createdProject,
-                List.of("id", "name", "parentProject", "copyAllAssociatedSettings", "sourceProject",
-                        "projectsIdsMap", "buildTypesIdsMap", "vcsRootsIdsMap"), softy);
+        EntityValidator.validateAllEntityFieldsIgnoring(sourceProject, createdProject, List.of("id", "name", "parentProject", "copyAllAssociatedSettings", "sourceProject", "projectsIdsMap", "buildTypesIdsMap", "vcsRootsIdsMap"), softy);
         softy.assertNull(createdProject.getCopyAllAssociatedSettings(), "copyAllAssociatedSettings должен быть null");
         softy.assertNull(createdProject.getSourceProject(), "sourceProject должен быть null");
         softy.assertNull(createdProject.getProjectsIdsMap(), "projectsIdsMap должен быть null");
@@ -84,6 +76,7 @@ public class ProjectCrudTest extends BaseApiTest {
         softy.assertNull(createdProject.getVcsRootsIdsMap(), "vcsRootsIdsMap должен быть null");
         softy.assertAll();
     }
+
 
     // =================== PROJECT COPY SETTINGS TESTS (COPY_SETTINGS_TAG) =================== //
 
@@ -514,32 +507,14 @@ public class ProjectCrudTest extends BaseApiTest {
 
     @Test(description = "User with restricted role should not be able to create a project", dataProvider = "restrictedRoles", groups = {"Negative", "CRUD", "ROLE_TAG"})
     public void userWithRestrictedRoleCannotCreateProjectTest(Role role) {
-        // Используем проект из тестовых данных вместо создания нового
         Project createdProject = ProjectHelper.createProject(userCheckedRequest, testData.getProject());
-
-        // Получаем уже существующего пользователя из тестовых данных
         User userWithRole = testData.getUser();
-
-        // Назначаем пользователю роль для конкретного проекта
         User updatedUser = UserHelper.updateUserRole(superUserCheckRequests, userWithRole, role, createdProject.getId());
-
-        // Проверяем, что у пользователя правильная роль
         softy.assertNotNull(updatedUser);
         softy.assertEquals(updatedUser.getRoles().getRole().get(0).getRoleId(), role.getRoleName());
-
-        // Создаем список из одного вложенного проекта
-        Project nestedProject = TestDataGenerator.generate(
-            Project.class, 
-            RandomData.getUniqueId(), 
-            "Nested Project with " + role.getRoleName() + " " + RandomData.getString(8)
-        );
-        
-        // Пытаемся создать вложенный проект с учетными данными пользователя с ограниченной ролью
-        // Используем UncheckedRequest, так как ожидаем ошибку
+        Project nestedProject = TestDataGenerator.generate(Project.class, RandomData.getUniqueId(), "Nested Project with " + role.getRoleName() + " " + RandomData.getString(8));
         UncheckedRequest restrictedUserRequest = new UncheckedRequest(RequestSpecs.authSpec(updatedUser));
         Response response = restrictedUserRequest.getRequest(ApiEndpoint.PROJECTS).create(nestedProject);
-        
-        // Проверяем, что сервер вернул ошибку доступа
         response.then().spec(AccessErrorSpecs.accessDenied());
         softy.assertAll();
     }
@@ -557,40 +532,19 @@ public class ProjectCrudTest extends BaseApiTest {
 
     @Test(dataProvider = "allowedRoles")
     public void userWithAllowedRoleCanCreateProjectTest(Role role) {
-        // Используем проект из тестовых данных вместо создания нового
         Project createdProject = ProjectHelper.createProject(userCheckedRequest, testData.getProject());
-
-        // Получаем уже существующего пользователя из тестовых данных
         User userWithRole = testData.getUser();
-
-        // Назначаем пользователю роль для конкретного проекта
         User updatedUser = UserHelper.updateUserRole(superUserCheckRequests, userWithRole, role, createdProject.getId());
-
-        // Проверяем, что у пользователя правильная роль
         softy.assertNotNull(updatedUser);
         softy.assertEquals(updatedUser.getRoles().getRole().get(0).getRoleId(), role.getRoleName());
-
-        // Создаем список из одного вложенного проекта
-        Project nestedProject = TestDataGenerator.generate(
-            Project.class, 
-            RandomData.getUniqueId(), 
-            "Nested Project with " + role.getRoleName() + " " + RandomData.getString(8)
-        );
+        Project nestedProject = TestDataGenerator.generate(Project.class, RandomData.getUniqueId(), "Nested Project with " + role.getRoleName() + " " + RandomData.getString(8));
         List<Project> nestedProjects = new ArrayList<>();
         nestedProjects.add(nestedProject);
-        
-        // Используем существующий метод createNestedProjects для создания вложенного проекта
         CheckedRequest requestForNestedProject = new CheckedRequest(RequestSpecs.authSpec(updatedUser));
         List<Project> createdNestedProjects = ProjectHelper.createNestedProjects(requestForNestedProject, nestedProjects);
-        
-        // Получаем созданный вложенный проект из списка
         Project createdNestedProject = createdNestedProjects.get(0);
-
-        // Проверка, что проект был успешно создан
         softy.assertNotNull(createdNestedProject);
         softy.assertEquals(createdNestedProject.getName(), nestedProject.getName());
-
-        // Валидация проекта
         EntityValidator.validateAllEntityFieldsIgnoring(nestedProject, createdNestedProject, List.of("parentProject"), softy);
         softy.assertAll();
     }
