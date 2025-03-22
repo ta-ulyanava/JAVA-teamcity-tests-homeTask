@@ -3,7 +3,7 @@ import com.example.teamcity.api.constants.TestConstants;
 import com.example.teamcity.api.enums.ApiEndpoint;
 import com.example.teamcity.api.enums.Role;
 import com.example.teamcity.api.generators.RandomData;
-import com.example.teamcity.api.generators.TestData;
+import com.example.teamcity.api.generators.domain.ProjectTestData;
 import com.example.teamcity.api.generators.TestDataGenerator;
 import com.example.teamcity.api.models.ParentProject;
 import com.example.teamcity.api.models.Project;
@@ -91,7 +91,7 @@ public void userCreatesProjectWithCopyAllAssociatedSettingsTrueTest() {
     public void userCreatesNestedProjectsTest() {
         var rootProject = createProjectAndExtractModel(testData.getProject());
         int projectCount = 20;
-        List<Project> projects = TestData.nestedProjects(projectCount);
+        List<Project> projects = ProjectTestData.nestedProjects(projectCount);
         projects.forEach(this::createProjectAndExtractModel);
         softy.assertEquals(projects.size(), projectCount, "The number of created projects is incorrect");
         projects.forEach(project -> softy.assertEquals(project.getParentProject().getId(),
@@ -106,7 +106,7 @@ public void userCreatesProjectWithCopyAllAssociatedSettingsTrueTest() {
     public void userCreatesSiblingProjectsTest() {
         var rootProject = createProjectAndExtractModel(testData.getProject());
         int projectCount = 20;
-        List<Project> projects = TestData.siblingProjects(rootProject.getId(), projectCount);
+        List<Project> projects = ProjectTestData.siblingProjects(rootProject.getId(), projectCount);
         projects.forEach(this::createProjectAndExtractModel);
         softy.assertEquals(projects.size(), projectCount, "The number of created projects is incorrect");
         projects.forEach(project -> softy.assertEquals(project.getParentProject().getId(), rootProject.getId(), "Parent project ID is incorrect for project " + project.getId()));

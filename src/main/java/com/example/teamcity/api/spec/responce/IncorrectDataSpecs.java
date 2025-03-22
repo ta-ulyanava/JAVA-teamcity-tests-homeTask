@@ -82,13 +82,16 @@ public class IncorrectDataSpecs {
     }
 
     public static ResponseSpecification emptyEntityListReturned(String entityType, String locatorType, String locatorValue) {
-        String encodedLocator = URLEncoder.encode(locatorType + ":" + locatorValue, StandardCharsets.UTF_8);
+        String encodedLocator = URLEncoder.encode(locatorType + ":" + locatorValue, StandardCharsets.UTF_8)
+                .replace("+", "%20"); // TeamCity возвращает %20, а не +
         return new ResponseSpecBuilder()
                 .expectStatusCode(HttpStatus.SC_OK)
                 .expectBody("count", equalTo(0))
                 .expectBody("href", containsString(encodedLocator))
                 .build();
     }
+
+
 
 
 }
