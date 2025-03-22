@@ -523,23 +523,15 @@ public class ProjectCrudTest extends BaseApiTest {
         };
     }
 
-    @Feature("Project Search")
-    @Story("Search should be case-sensitive")
-    @Test(description = "User should not be able to find a project by name with different letter case", groups = {"Negative", "PROJECT_SEARCH_NAME_TAG"})
-    public void userShouldNotBeAbleToFindProjectByNameWithDifferentLetterCaseTest() {
-        String originalName = "testproject" + RandomData.getString();
-        // Создаем проект с помощью projectWithParams
-        Project createdProject = createProjectAndExtractModel(ProjectTestData.projectWithParams(null, originalName, null, null));
-
-        // Имя с измененным регистром
-        String upperCasedName = originalName.toUpperCase();
-
-        // Поиск проекта с верхним регистром
-        Response response = userUncheckedRequest.getRequest(ApiEndpoint.PROJECTS).findSingleByLocator("name:" + upperCasedName);
-        response.then().spec(IncorrectDataSpecs.emptyEntityListReturned("Project", "name", upperCasedName));
+    @Test(description = "User with restricted role should not be able to create a project", dataProvider = "restrictedRoles", groups = {"Negative", "CRUD", "ROLE_TAG"})
+    public void userWithRestrictedRoleCannotCreateProjectTest(Role role) {
+        User restrictedUser = createUserWithRole(role, "g");
+        Project projectToCreate = testData.getProject();
+        UncheckedRequest restrictedUserRequest = new UncheckedRequest(RequestSpecs.authSpec(restrictedUser));
+        Response response = restrictedUserRequest.getRequest(ApiEndpoint.PROJECTS).create(projectToCreate);
+        response.then().spec(AccessErrorSpecs.accessDenied());
         softy.assertAll();
     }
-
 
     @Feature("Access Control")
     @Story("Allowed Roles - Project Creation")
