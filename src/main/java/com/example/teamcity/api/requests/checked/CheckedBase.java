@@ -73,8 +73,8 @@ public final class CheckedBase<T extends BaseModel> extends Request implements C
 //        return Optional.of(response.as((Class<T>) apiEndpoint.getModelClass()));
 //    }
     @Override
-    public Optional<T> findSingleByLocator(String locator) {
-        Response response = uncheckedBase.findSingleByLocator(locator);
+    public Optional<T> findFirstEntityByLocatorQuery(String locator) {
+        Response response = uncheckedBase.findFirstEntityByLocatorQuery(locator);
         validateResponse(response, locator);
         List<T> projects = response.jsonPath().getList("project", (Class<T>) apiEndpoint.getModelClass());
         if (projects.isEmpty()) return Optional.empty();
@@ -82,31 +82,38 @@ public final class CheckedBase<T extends BaseModel> extends Request implements C
     }
 
     @Override
-    public List<T> findAllByLocator(String locator) {
-        Response response = uncheckedBase.findAllByLocator(locator);
+    public List<T> findEntitiesByLocatorQueryWithPagination(String locator) {
+        Response response = uncheckedBase.findEntitiesByLocatorQueryWithPagination(locator);
         validateResponse(response, locator);
         return extractEntityList(response);
     }
 
 
     @Override
-    public List<T> findAllByLocator(String locator, int limit, int offset) {
-        Response response = uncheckedBase.findAllByLocator(locator, limit, offset);
+    public List<T> findEntitiesByLocatorQueryWithPagination(String locator, int limit, int offset) {
+        Response response = uncheckedBase.findEntitiesByLocatorQueryWithPagination(locator, limit, offset);
         validateResponse(response, locator);
         return extractEntityList(response);
     }
 
     @Override
-    public List<T> readAll() {
-        Response response = uncheckedBase.readAll();
+    public List<T> readEntitiesQueryWithPagination() {
+        Response response = uncheckedBase.readEntitiesQueryWithPagination();
         validateResponse(response, "all");
         return extractEntityList(response);
     }
 
     @Override
-    public List<T> readAll(int limit, int offset) {
-        Response response = uncheckedBase.readAll(limit, offset);
+    public List<T> readEntitiesQueryWithPagination(int limit, int offset) {
+        Response response = uncheckedBase.readEntitiesQueryWithPagination(limit, offset);
         validateResponse(response, "all");
         return extractEntityList(response);
     }
+    @Override
+    public T findEntityByPathParam(String pathParam) {
+        Response response = uncheckedBase.read(pathParam);
+        validateResponse(response, pathParam);
+        return extractEntity(response);
+    }
+
 }

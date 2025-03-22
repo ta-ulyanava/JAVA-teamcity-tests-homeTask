@@ -37,7 +37,7 @@ public class UncheckedBase extends Request implements CrudInterface, SearchInter
     @Override
     public Response read(String idOrLocator) {
         if (idOrLocator.contains(":")) {
-            return findSingleByLocator(idOrLocator); // Если передан локатор, используем поиск
+            return findFirstEntityByLocatorQuery(idOrLocator); // Если передан локатор, используем поиск
         }
         return RestAssured
                 .given()
@@ -65,7 +65,7 @@ public class UncheckedBase extends Request implements CrudInterface, SearchInter
     // --- Методы поиска --- //
 
     @Override
-    public Response findSingleByLocator(String locator) {
+    public Response findFirstEntityByLocatorQuery(String locator) {
         return RestAssured
                 .given()
                 .spec(spec)
@@ -74,12 +74,12 @@ public class UncheckedBase extends Request implements CrudInterface, SearchInter
     }
 
     @Override
-    public Response findAllByLocator(String locator) {
-        return findAllByLocator(locator, 100, 0);
+    public Response findEntitiesByLocatorQueryWithPagination(String locator) {
+        return findEntitiesByLocatorQueryWithPagination(locator, 100, 0);
     }
 
     @Override
-    public Response findAllByLocator(String locator, int limit, int offset) {
+    public Response findEntitiesByLocatorQueryWithPagination(String locator, int limit, int offset) {
         return RestAssured
                 .given()
                 .spec(spec)
@@ -90,12 +90,12 @@ public class UncheckedBase extends Request implements CrudInterface, SearchInter
     }
 
     @Override
-    public Response readAll() {
-        return readAll(100, 0);
+    public Response readEntitiesQueryWithPagination() {
+        return readEntitiesQueryWithPagination(100, 0);
     }
 
     @Override
-    public Response readAll(int limit, int offset) {
+    public Response readEntitiesQueryWithPagination(int limit, int offset) {
         return RestAssured
                 .given()
                 .spec(spec)
@@ -103,9 +103,17 @@ public class UncheckedBase extends Request implements CrudInterface, SearchInter
                 .queryParam("start", offset)
                 .get(apiEndpoint.getUrl());
     }
+    @Override
+    public Response findEntityByPathParam(String pathParam) {
+        return RestAssured
+                .given()
+                .spec(spec)
+                .get(apiEndpoint.getUrl() + "/" + pathParam);
+    }
+
 
     public <T extends BaseModel> List<T> findAllEntitiesByLocator(String locator, int limit, int offset) {
-        Response response = findAllByLocator(locator, limit, offset);
+        Response response = findEntitiesByLocatorQueryWithPagination(locator, limit, offset);
         return response.jsonPath().getList("", (Class<T>) apiEndpoint.getModelClass());
     }
 }
