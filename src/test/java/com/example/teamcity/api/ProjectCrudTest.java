@@ -533,8 +533,7 @@ public class ProjectCrudTest extends BaseApiTest {
     @Test(dataProvider = "allowedRoles")
     public void userWithAllowedRoleCanCreateProjectTest(Role role) {
         Project createdProject = ProjectHelper.createProject(userCheckedRequest, testData.getProject());
-        User userWithRole = testData.getUser();
-        User updatedUser = UserHelper.updateUserRole(superUserCheckRequests, userWithRole, role, createdProject.getId());
+        User updatedUser = UserHelper.updateUserRole(superUserCheckRequests, testData.getUser(), role, createdProject.getId());
         softy.assertNotNull(updatedUser);
         softy.assertEquals(updatedUser.getRoles().getRole().get(0).getRoleId(), role.getRoleName());
         Project nestedProject = TestDataGenerator.generate(Project.class, RandomData.getUniqueId(), "Nested Project with " + role.getRoleName() + " " + RandomData.getString(8));
@@ -548,15 +547,6 @@ public class ProjectCrudTest extends BaseApiTest {
         EntityValidator.validateAllEntityFieldsIgnoring(nestedProject, createdNestedProject, List.of("parentProject"), softy);
         softy.assertAll();
     }
-
-
-
-
-
-
-
-
-
 
 
 // =================== ROLE-BASED ACCESS TESTS (ROLE_TAG) =================== //

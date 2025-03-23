@@ -11,6 +11,7 @@ import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 import org.apache.http.HttpStatus;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -72,14 +73,14 @@ public final class CheckedBase<T extends BaseModel> extends Request implements C
 //        validateResponse(response, locator);
 //        return Optional.of(response.as((Class<T>) apiEndpoint.getModelClass()));
 //    }
-    @Override
-    public Optional<T> findFirstEntityByLocatorQuery(String locator) {
-        Response response = uncheckedBase.findFirstEntityByLocatorQuery(locator);
-        validateResponse(response, locator);
-        List<T> projects = response.jsonPath().getList("project", (Class<T>) apiEndpoint.getModelClass());
-        if (projects.isEmpty()) return Optional.empty();
-        return Optional.of(projects.get(0));
-    }
+//    @Override
+//    public Optional<T> findFirstEntityByLocatorQuery(String locator) {
+//        Response response = uncheckedBase.findFirstEntityByLocatorQuery(locator);
+//        validateResponse(response, locator);
+//        List<T> projects = response.jsonPath().getList("project", (Class<T>) apiEndpoint.getModelClass());
+//        if (projects.isEmpty()) return Optional.empty();
+//        return Optional.of(projects.get(0));
+//    }
 
     @Override
     public List<T> findEntitiesByLocatorQueryWithPagination(String locator) {
@@ -89,12 +90,12 @@ public final class CheckedBase<T extends BaseModel> extends Request implements C
     }
 
 
-    @Override
-    public List<T> findEntitiesByLocatorQueryWithPagination(String locator, int limit, int offset) {
-        Response response = uncheckedBase.findEntitiesByLocatorQueryWithPagination(locator, limit, offset);
-        validateResponse(response, locator);
-        return extractEntityList(response);
-    }
+//    @Override
+//    public List<T> findEntitiesByLocatorQueryWithPagination(String locator, int limit, int offset) {
+//        Response response = uncheckedBase.findEntitiesByLocatorQueryWithPagination(locator, limit, offset);
+//        validateResponse(response, locator);
+//        return extractEntityList(response);
+//    }
 
     @Override
     public List<T> readEntitiesQueryWithPagination() {
@@ -116,6 +117,34 @@ public final class CheckedBase<T extends BaseModel> extends Request implements C
         return extractEntity(response);
     }
 
+    @Override
+    public List<T> findEntitiesByLocatorQueryWithPagination(String locator, int limit, int offset) {
+        Response response = uncheckedBase.findEntitiesByLocatorQueryWithPagination(locator, limit, offset);
+        validateResponse(response, locator);
+
+        // Проверяем, что count не равен 0, прежде чем извлекать данные
+        int count = response.jsonPath().getInt("count");
+        if (count == 0) {
+            return Collections.emptyList(); // Возвращаем пустой список, если данных нет
+        }
+
+        return extractEntityList(response);
+    }
+
+    @Override
+    public Optional<T> findFirstEntityByLocatorQuery(String locator) {
+        Response response = uncheckedBase.findFirstEntityByLocatorQuery(locator);
+        validateResponse(response, locator);
+
+        // Проверяем, что count не равен 0
+        int count = response.jsonPath().getInt("count");
+        if (count == 0) {
+            return Optional.empty(); // Возвращаем пустой Optional, если данных нет
+        }
+
+        List<T> projects = response.jsonPath().getList("project", (Class<T>) apiEndpoint.getModelClass());
+        return projects.isEmpty() ? Optional.empty() : Optional.of(projects.get(0));
+    }
 
 
 }

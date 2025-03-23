@@ -9,6 +9,7 @@ import com.example.teamcity.api.models.ParentProject;
 import com.example.teamcity.api.models.Project;
 import com.example.teamcity.api.requests.checked.CheckedBase;
 import com.example.teamcity.api.requests.helpers.ProjectHelper;
+import com.example.teamcity.api.responses.ResponseExtractor;
 import com.example.teamcity.api.spec.responce.IncorrectDataSpecs;
 import com.example.teamcity.api.validation.SearchValidator;
 import io.qameta.allure.Feature;
@@ -16,10 +17,13 @@ import io.qameta.allure.Story;
 import io.restassured.response.Response;
 import org.testng.annotations.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 @Feature("Project Search")
 @Test(groups = {"Regression", "Search"})
 public class ProjectSearchTest extends BaseApiTest {
+
+    // =================== TODO TESTS FOR PROJECT NAME SEARCH (should return 1 project) =================== //
 
     // =================== SEARCH BY NAME TESTS (PROJECT_SEARCH_NAME_TAG) =================== //
   // =================== LOCATOR-BASED SEARCH =================== //
@@ -168,30 +172,67 @@ public class ProjectSearchTest extends BaseApiTest {
         softy.assertAll();
     }
 
-//    @Story("Search by name for deeply nested project")
-//    @Test(description = "User should be able to find a project by name when it's deeply nested in hierarchy", groups = {"Positive", "PROJECT_SEARCH_NAME_TAG", "LOCATOR_BASED_SEARCH", "LOCATOR_DEEP_NESTED"})
-//    public void userShouldBeAbleToFindDeeplyNestedProjectByNameTest() {
-//        String nestedProjectName = "DeepNested_" + RandomData.getString();
-//        List<Project> nestedProjects = ProjectTestData.nestedProjects(20);
-//        Project deepestProject = nestedProjects.get(nestedProjects.size() - 1);
-//        deepestProject.setName(nestedProjectName);
-//
-//        nestedProjects.get(0).setParentProject(null); // <== вот это спасает от 400
-//
-//        Project createdParent = createProjectAndExtractModel(nestedProjects.get(0));
-//        for (int i = 1; i < nestedProjects.size(); i++) {
-//            Project current = nestedProjects.get(i);
-//            current.setParentProject(new ParentProject(createdParent.getId(), null));
-//            createdParent = createProjectAndExtractModel(current);
-//            if (current.getName().equals(nestedProjectName)) {
-//                deepestProject = createdParent;
-//            }
-//        }
-//
-//        Project foundProject = findSingleProjectByLocator("name", nestedProjectName);
-//        SearchValidator.validateSearchResult(deepestProject, foundProject, "Project", "name", List.of("parentProject"), softy);
-//        softy.assertAll();
-//    }
+    @Story("Search by name for deeply nested project")
+    @Test(description = "User should be able to find a project by name when it's deeply nested in hierarchy", groups = {"Positive", "PROJECT_SEARCH_NAME_TAG", "LOCATOR_BASED_SEARCH"})
+    public void userShouldBeAbleToFindDeeplyNestedProjectByNameTest() {
+        String nestedProjectName = "DeepNested_" + RandomData.getString();
+        List<Project> nestedProjects = ProjectTestData.nestedProjects(20);
+        Project deepestProject = nestedProjects.get(nestedProjects.size() - 1);
+        deepestProject.setName(nestedProjectName);
+        nestedProjects.get(0).setParentProject(null);
+        ProjectHelper.createNestedProjects(userCheckedRequest, nestedProjects);
+        Project foundProject = ProjectHelper.findProjectByLocator(userCheckedRequest, "name", nestedProjectName);
+        SearchValidator.validateSearchResult(deepestProject, foundProject, "Project", "name", List.of("parentProject"), softy);
+        softy.assertAll();
+    }
+
+    //  Bug in API, part search is not implemented as defined in API doc
+    @Story("Search with pagination using count and start parameters")
+    @Test(description = "User should be able to find exactly 2 projects when using count=2 and start=0", groups = {"Positive", "PROJECT_SEARCH_NAME_TAG", "LOCATOR_BASED_SEARCH"})
+    public void userShouldBeAbleToFindTwoProjectsWithCountAndStartTest() {
+        String namePrefix = "PaginationTest_";
+        List<Project> projectsToCreate = ProjectTestData.createProjectsWithPrefixAndNumericSuffix(3, namePrefix + RandomData.getString(5));
+        List<Project> savedProjects = ProjectHelper.createProjects(userCheckedRequest, projectsToCreate);
+        List<Project> foundProjects = ProjectHelper.findProjectsByLocatorWithPagination(userCheckedRequest, "name:" + namePrefix, 2, 0);
+        softy.assertEquals(foundProjects.size(), 2, "Expected exactly 2 projects");
+        SearchValidator.validateSearchResults(List.of(savedProjects.get(0), savedProjects.get(1)), foundProjects, "Project", "name", List.of("parentProject"), softy);
+        softy.assertAll();
+    }
+
+    //  Bug in API, part search is not implemented as defined in API doc
+    @Story("Search with pagination using count and start parameters")
+    @Test(description = "User should be able to find the second project when using count=1 and start=1", groups = {"Positive", "PROJECT_SEARCH_NAME_TAG", "LOCATOR_BASED_SEARCH"})
+    public void userShouldBeAbleToFindSecondProjectWithCountAndStartTest() {
+        String namePrefix = "PaginationTest_";
+        List<Project> projectsToCreate = ProjectTestData.createProjectsWithPrefixAndNumericSuffix(3, namePrefix + RandomData.getString(5));
+        List<Project> savedProjects = ProjectHelper.createProjects(userCheckedRequest, projectsToCreate);
+        List<Project> foundProjects = ProjectHelper.findProjectsByLocatorWithPagination(userCheckedRequest, "name:" + namePrefix, 1, 1);
+        softy.assertEquals(foundProjects.size(), 1, "Expected exactly 1 project");
+        softy.assertEquals(foundProjects.get(0).getId(), savedProjects.get(1).getId(), "Expected the second project to be returned");
+        SearchValidator.validateSearchResult(savedProjects.get(1), foundProjects.get(0), "Project", "name", List.of("parentProject"), softy);
+        softy.assertAll();
+    }
+    @Story("Search with pagination using count and start parameters")
+    @Test(description = "User should get an empty list when using count=0 and start=0", groups = {"Positive", "PROJECT_SEARCH_NAME_TAG", "LOCATOR_BASED_SEARCH"})
+    public void userShouldGetEmptyListWithCountAndStartTest() {
+        String namePrefix = "PaginationTest_";
+        List<Project> projectsToCreate = ProjectTestData.createProjectsWithPrefixAndNumericSuffix(3, namePrefix + RandomData.getString(5));
+        List<Project> savedProjects = ProjectHelper.createProjects(userCheckedRequest, projectsToCreate);
+        Response response = userUncheckedRequest.getRequest(ApiEndpoint.PROJECTS).findEntitiesByLocatorQueryWithPagination("name:" + namePrefix, 0, 0);
+        List<Project> foundProjects = response.jsonPath().getList("project", Project.class);
+        softy.assertEquals(foundProjects.size(), 0, "Expected an empty list but received non-empty list");
+        softy.assertAll();
+    }
+
+
+
+
+
+
+
+
+
+
 
 
     // =================== LOCATOR-BASED SEARCH =================== //
@@ -202,11 +243,6 @@ public class ProjectSearchTest extends BaseApiTest {
 
 // ✅ Positive cases:
 
-// TODO: Проверка, что findFirstEntityByLocatorQuery возвращает только один элемент из нескольких совпадений
-
-// TODO: Поиск с count=2 и start=0 → убедиться, что возвращается ровно 2 проекта
-
-// TODO: Поиск с count=1 и start=1 → убедиться, что вернулся второй проект из списка
 
 // TODO: Поиск с count, превышающим общее количество сущностей → убедиться, что возвращаются все без ошибки
 
@@ -234,29 +270,4 @@ public class ProjectSearchTest extends BaseApiTest {
 
 // =================== END OF MISSING LOCATOR-BASED SEARCH TESTS =================== //
 
-// =================== MISSING TESTS FOR PROJECT NAME SEARCH =================== //
 
-// ✅ Positive cases:
-// PATH_BASED_SEARCH
-
-// TODO: Проверка поиска по точному имени через /name:<имя> (возвращает один проект)
-
-// TODO: Проверка поиска всех проектов с одинаковым именем через ?locator=name:<имя> (возвращает список)
-
-// TODO: Проверка поиска по имени с ограничением count (например, count:1)
-
-// TODO: Проверка пагинации: count + start (например, count:2, start:1)
-
-// 🚫 Negative cases:
-
-// TODO: Поиск без имени: /projects/name: (ожидается ошибка или пустой результат)
-
-// TODO: Поиск по name: с пустым значением → ?locator=name: (ожидается пустой результат)
-
-// TODO: Поиск с пробелами в начале/в конце параметра name → name:" project" / name:"project "
-
-// TODO: Поиск имени с учётом регистра в ?locator=name: (убедиться, что чувствительность к регистру сохраняется)
-
-// TODO: Проверка, что name:contains(...) / name:like(...) / name:substring(...) не поддерживаются (ожидается ошибка)
-
-// =================== END OF MISSING TESTS =================== //

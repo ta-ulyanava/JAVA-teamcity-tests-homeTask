@@ -73,4 +73,70 @@ public final class ProjectHelper {
         });
     }
 
+    /**
+     * Создает в системе список проектов.
+     *
+     * @param request объект запроса
+     * @param projects список проектов для создания в системе
+     * @return список созданных проектов
+     */
+    public static List<Project> createProjects(CheckedRequest request, List<Project> projects) {
+        List<Project> createdProjects = new ArrayList<>();
+        
+        for (Project project : projects) {
+            createdProjects.add(createProject(request, project));
+        }
+        
+        return createdProjects;
+    }
+
+    /**
+     * Находит проекты по локатору с использованием пагинации.
+     *
+     * @param request объект запроса
+     * @param locator строка локатора (например, "name:projectName*")
+     * @param count максимальное количество результатов
+     * @param start начальная позиция для выборки
+     * @return список найденных проектов
+     */
+    public static List<Project> findProjectsByLocatorWithPagination(CheckedRequest request, 
+                                                                   String locator, 
+                                                                   int count, 
+                                                                   int start) {
+        Object result = request.getRequest(ApiEndpoint.PROJECTS)
+                .findEntitiesByLocatorQueryWithPagination(locator, count, start);
+        
+        if (result instanceof Response) {
+            return ResponseExtractor.extractModelList((Response) result, Project.class);
+        } else if (result instanceof List<?>) {
+            List<Project> projects = new ArrayList<>();
+            for (Object obj : (List<?>) result) {
+                if (obj instanceof Project) {
+                    projects.add((Project) obj);
+                }
+            }
+            return projects;
+        }
+        
+        return new ArrayList<>();
+    }
+
+    /**
+     * Находит пустой список проектов с использованием count=0.
+     * Этот метод обходит исключение NoSuchElementException, которое выбрасывается
+     * стандартным методом findEntitiesByLocatorQueryWithPagination при count=0.
+     *
+     * @param request объект запроса
+     * @param locator строка локатора для поиска
+     * @return объект Response
+     */
+    public static Response findEmptyProjectsList(CheckedRequest request, String locator) {
+        return io.restassured.RestAssured
+                .given()
+                .spec(request.getRequestSpecification())
+                .queryParam("locator", locator)
+                .queryParam("count", 0)
+                .queryParam("start", 0)
+                .get(ApiEndpoint.PROJECTS.getUrl());
+    }
 }
