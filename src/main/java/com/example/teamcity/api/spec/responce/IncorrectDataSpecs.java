@@ -91,6 +91,13 @@ public class IncorrectDataSpecs {
                 .build();
     }
 
+    public static ResponseSpecification badRequestNegativePaginationParameters() {
+        return new ResponseSpecBuilder()
+                .expectStatusCode(HttpStatus.SC_BAD_REQUEST)
+                .expectBody(containsString("Invalid pagination parameters"))
+                .build();
+    }
+
 
 
 

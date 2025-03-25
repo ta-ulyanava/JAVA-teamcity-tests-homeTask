@@ -222,51 +222,33 @@ public class ProjectSearchTest extends BaseApiTest {
         softy.assertEquals(foundProjects.size(), 0, "Expected an empty list but received non-empty list");
         softy.assertAll();
     }
-
-
-
-
-
-
-
-
-
-
+    // Bug in API: incorrect error message
+    @Feature("Search Projects")
+    @Story("Search with pagination using negative count and start parameters")
+    @Test(description = "User should get validation error for negative pagination parameters", groups = {"Negative", "PROJECT_SEARCH_NAME_TAG", "LOCATOR_BASED_SEARCH", "KnownBugs"})
+    public void userShouldGetValidationErrorForNegativePaginationTest() {
+        Response response = userUncheckedRequest.getRequest(ApiEndpoint.PROJECTS)
+                .findEntitiesByLocatorQueryWithPagination("", -1, -1);
+        response.then().spec(IncorrectDataSpecs.badRequestNegativePaginationParameters());
+        softy.assertAll();
+    }
+    //  Bug in API, part search is not implemented as defined in API doc
+    @Feature("Search Projects")
+    @Story("Search with pagination when count exceeds the number of matching projects")
+    @Test(description = "User should get all projects when count exceeds total", groups = {"Positive", "PROJECT_SEARCH_NAME_TAG", "LOCATOR_BASED_SEARCH", "KnownBugs"})
+    public void userShouldGetAllProjectsWhenCountExceedsTotalTest() {
+        String namePrefix = "CountExceedTest_";
+        List<Project> projectsToCreate = ProjectTestData.createProjectsWithPrefixAndNumericSuffix(3, namePrefix + RandomData.getString(5));
+        ProjectHelper.createProjects(userCheckedRequest, projectsToCreate);
+        List<Project> foundProjects = ProjectHelper.findProjectsByLocatorWithPagination(userCheckedRequest, "name:" + namePrefix, 10, 0);
+        softy.assertEquals(foundProjects.size(), projectsToCreate.size(), "Expected to get all created projects when count exceeds total");
+        softy.assertAll();
+    }
 
 
     // =================== LOCATOR-BASED SEARCH =================== //
     // =================== SEARCH BY NAME TESTS (PROJECT_SEARCH_TAG) =================== //
 }
 
-// =================== MISSING LOCATOR-BASED SEARCH TESTS =================== //
-
-// ✅ Positive cases:
-
-
-// TODO: Поиск с count, превышающим общее количество сущностей → убедиться, что возвращаются все без ошибки
-
-// TODO: Поиск с count=0 → убедиться, что возвращается пустой список, но без ошибки
-
-// TODO: Проверка метода readEntitiesQueryWithPagination — возвращает все сущности в пределах лимита
-
-// TODO: Проверка метода readEntitiesQueryWithPagination(limit, offset) — корректная работа пагинации
-
-// 🚫 Negative cases:
-
-// TODO: Поиск по name:nonExistingValue через findEntitiesByLocatorQueryWithPagination → убедиться, что возвращается пустой список
-
-// TODO: Поиск по name: (пустое значение) через findEntitiesByLocatorQueryWithPagination → убедиться, что возвращается пустой список
-
-// TODO: Поиск с count=-1 и start=-1 → убедиться, что возвращается ошибка валидации (400 Bad Request)
-
-// TODO: Поиск с name: " " (один пробел) через findEntitiesByLocatorQueryWithPagination → убедиться, что результат пустой
-
-// TODO: Поиск без параметра locator вовсе (т.е., ?locator=) → убедиться, что API возвращает ошибку или пустой результат
-
-// ⚠️ Tech gap:
-
-// TODO: Задействовать findEntitiesByLocatorQueryWithPagination и readEntitiesQueryWithPagination в тестах (сейчас везде используется только findFirstEntityByLocatorQuery)
-
-// =================== END OF MISSING LOCATOR-BASED SEARCH TESTS =================== //
 
 
