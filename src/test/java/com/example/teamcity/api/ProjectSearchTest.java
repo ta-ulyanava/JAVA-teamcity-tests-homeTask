@@ -217,9 +217,8 @@ public class ProjectSearchTest extends BaseApiTest {
     public void userShouldGetEmptyListWithCountAndStartTest() {
         String namePrefix = "PaginationTest_";
         List<Project> projectsToCreate = ProjectTestData.createProjectsWithPrefixAndNumericSuffix(3, namePrefix + RandomData.getString(5));
-        List<Project> savedProjects = ProjectHelper.createProjects(userCheckedRequest, projectsToCreate);
-        Response response = userUncheckedRequest.getRequest(ApiEndpoint.PROJECTS).findEntitiesByLocatorQueryWithPagination("name:" + namePrefix, 0, 0);
-        List<Project> foundProjects = response.jsonPath().getList("project", Project.class);
+        ProjectHelper.createProjects(userCheckedRequest, projectsToCreate);
+        List<Project> foundProjects = ProjectHelper.findProjectsByLocatorWithPagination(userCheckedRequest, "name:" + namePrefix, 0, 0);
         softy.assertEquals(foundProjects.size(), 0, "Expected an empty list but received non-empty list");
         softy.assertAll();
     }

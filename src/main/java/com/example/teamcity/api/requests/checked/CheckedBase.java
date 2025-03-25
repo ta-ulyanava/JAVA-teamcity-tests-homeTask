@@ -11,6 +11,7 @@ import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 import org.apache.http.HttpStatus;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -119,15 +120,12 @@ public final class CheckedBase<T extends BaseModel> extends Request implements C
 
     @Override
     public List<T> findEntitiesByLocatorQueryWithPagination(String locator, int limit, int offset) {
+        if (limit == 0) {
+            return Collections.emptyList();
+        }
+        
         Response response = uncheckedBase.findEntitiesByLocatorQueryWithPagination(locator, limit, offset);
         validateResponse(response, locator);
-
-        // Проверяем, что count не равен 0, прежде чем извлекать данные
-        int count = response.jsonPath().getInt("count");
-        if (count == 0) {
-            return Collections.emptyList(); // Возвращаем пустой список, если данных нет
-        }
-
         return extractEntityList(response);
     }
 

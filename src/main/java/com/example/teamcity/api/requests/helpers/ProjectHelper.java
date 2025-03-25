@@ -7,6 +7,7 @@ import com.example.teamcity.api.requests.CheckedRequest;
 import com.example.teamcity.api.responses.ResponseExtractor;
 import io.restassured.response.Response;
 import org.testng.asserts.SoftAssert;
+import org.apache.http.HttpStatus;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -119,24 +120,5 @@ public final class ProjectHelper {
         }
         
         return new ArrayList<>();
-    }
-
-    /**
-     * Находит пустой список проектов с использованием count=0.
-     * Этот метод обходит исключение NoSuchElementException, которое выбрасывается
-     * стандартным методом findEntitiesByLocatorQueryWithPagination при count=0.
-     *
-     * @param request объект запроса
-     * @param locator строка локатора для поиска
-     * @return объект Response
-     */
-    public static Response findEmptyProjectsList(CheckedRequest request, String locator) {
-        return io.restassured.RestAssured
-                .given()
-                .spec(request.getRequestSpecification())
-                .queryParam("locator", locator)
-                .queryParam("count", 0)
-                .queryParam("start", 0)
-                .get(ApiEndpoint.PROJECTS.getUrl());
     }
 }
