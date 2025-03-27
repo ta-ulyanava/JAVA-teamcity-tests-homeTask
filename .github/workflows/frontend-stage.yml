@@ -15,3 +15,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Deploy frontend to stage/review app
+        run: echo Просиходит деплой фронтенда
