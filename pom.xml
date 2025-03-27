@@ -22,6 +22,7 @@
         <jackson-annotations.version>2.18.2</jackson-annotations.version>
         <selenide.version>7.7.3</selenide.version>
         <selenium-java.version>4.29.0</selenium-java.version>
+        <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
     </properties>
     <dependencies>
         <dependency>
@@ -74,12 +75,11 @@
             <artifactId>selenium-java</artifactId>
             <version>${selenium-java.version}</version>
         </dependency>
-
-
-
-
-
-
+        <dependency>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-checkstyle-plugin</artifactId>
+            <version>${maven-checkstyle-plugin.version}</version>
+        </dependency>
 
 
     </dependencies>
