@@ -67,7 +67,7 @@ runs:
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: setup-server-artifacts-${{ github.job }}-${{ github.run_attempt }}
+        name: setup-server-artifacts-teamcity-${{ github.job }}-${{ github.run_id }}-${{ github.run_attempt }}
         path: |
           build/reports/tests/
           target/surefire-reports/
