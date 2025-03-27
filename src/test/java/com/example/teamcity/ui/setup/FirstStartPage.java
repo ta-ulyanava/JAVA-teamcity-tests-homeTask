@@ -22,6 +22,7 @@ public class FirstStartPage extends BasePage {
     public static FirstStartPage open() {
         return Selenide.open("/", FirstStartPage.class);
     }
+
     @Step("TeamCity first setup (licence confirmation and database selection)")
     public FirstStartPage setupFirstStart() {
         proceedButton.click();

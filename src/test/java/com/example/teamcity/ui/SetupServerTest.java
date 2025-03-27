@@ -6,7 +6,7 @@ import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import org.testng.annotations.Test;
 
-@Feature("Teamcity Setup")
+//@Feature("Teamcity Setup")
 public class SetupServerTest extends BaseUiTest {
     @Description("Verifies that user can complete initial TeamCity setup: license acceptance and DB config.")
     @Test(groups = {"Setup"})

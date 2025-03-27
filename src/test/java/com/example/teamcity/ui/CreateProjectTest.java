@@ -7,13 +7,11 @@ import com.example.teamcity.api.models.Project;
 import com.example.teamcity.ui.pages.ProjectPage;
 import com.example.teamcity.ui.pages.ProjectsPage;
 import com.example.teamcity.ui.pages.admin.CreateProjectPage;
+import io.qameta.allure.Step;
 import org.testng.annotations.Test;
 
-import static com.codeborne.selenide.Selenide.$;
-import static com.codeborne.selenide.Selenide.open;
-import static io.qameta.allure.Allure.step;
 
-@Test(groups = "Regression")
+//@Test(groups = "Regression")
 public class CreateProjectTest extends BaseUiTest {
 
     @Test(description = "User should be able to create project", groups = {"Positive"})

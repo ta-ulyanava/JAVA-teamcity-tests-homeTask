@@ -30,7 +30,7 @@ import java.util.List;
 import static com.example.teamcity.api.constants.TestConstants.SQL_INJECTION_PAYLOAD;
 import static com.example.teamcity.api.constants.TestConstants.XSS_PAYLOAD;
 
-@Test(groups = {"Regression"})
+//@Test(groups = {"Regression"})
 public class ProjectCrudTest extends BaseApiTest {
 
 

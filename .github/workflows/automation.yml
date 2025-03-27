@@ -40,7 +40,7 @@ jobs:
 
       - name: Run tests
         continue-on-error: true
-        run: ./mvnw test -Dtest='com.example.teamcity.${{ inputs.package }}.**' -Dgroups=Regression
+        run: ./mvnw test -Dtest='com.example.teamcity.${{ inputs.package }}.**'
 
       - name: Upload UI test artifacts (screenshots, HTML)
         if: always()
