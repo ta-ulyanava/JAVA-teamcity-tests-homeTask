@@ -2,13 +2,19 @@ package com.example.teamcity.api.requests.unchecked;
 
 import com.example.teamcity.api.enums.ApiEndpoint;
 import com.example.teamcity.api.models.BaseModel;
-import com.example.teamcity.api.requests.CrudInterface;
+import com.example.teamcity.api.requests.interfaces.CrudInterface;
 import com.example.teamcity.api.requests.Request;
+import com.example.teamcity.api.requests.interfaces.SearchInterface;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 
-public class UncheckedBase extends Request implements CrudInterface {
+import java.util.ArrayList;
+import java.util.List;
+import java.util.NoSuchElementException;
+
+public class UncheckedBase extends Request implements CrudInterface, SearchInterface {
+
     public UncheckedBase(RequestSpecification spec, ApiEndpoint apiEndpoint) {
         super(spec, apiEndpoint);
     }
@@ -31,28 +37,23 @@ public class UncheckedBase extends Request implements CrudInterface {
     }
 
     @Override
-    public Response read(String locator) {
-        if (locator.contains(":")) {
-            // Если это локатор (содержит :), используем параметр запроса
-            return RestAssured
-                    .given()
-                    .spec(spec)
-                    .get(apiEndpoint.getUrl() + "?locator=" + locator);
-        } else {
-            // Если это ID, добавляем как часть пути
-            return RestAssured
-                    .given()
-                    .spec(spec)
-                    .get(apiEndpoint.getUrl() + "/" + locator);
+    public Response read(String idOrLocator) {
+        if (idOrLocator.contains(":")) {
+            return findFirstEntityByLocatorQuery(idOrLocator); // Если передан локатор, используем поиск
         }
+        return RestAssured
+                .given()
+                .spec(spec)
+                .get(apiEndpoint.getUrl() + "/" + idOrLocator); // Если передан ID, используем как путь
     }
+
 
     @Override
     public Response update(String locator, BaseModel model) {
         return RestAssured
                 .given()
-                .body(model)
                 .spec(spec)
+                .body(model)
                 .put(apiEndpoint.getUrl() + "/" + locator);
     }
 
@@ -63,4 +64,65 @@ public class UncheckedBase extends Request implements CrudInterface {
                 .spec(spec)
                 .delete(apiEndpoint.getUrl() + "/" + locator);
     }
+    // --- Методы поиска --- //
+
+    @Override
+    public Response findFirstEntityByLocatorQuery(String locator) {
+        return RestAssured
+                .given()
+                .spec(spec)
+                .queryParam("locator", locator)
+                .get(apiEndpoint.getUrl());
+    }
+
+    @Override
+    public Response findEntitiesByLocatorQueryWithPagination(String locator) {
+        return findEntitiesByLocatorQueryWithPagination(locator, 100, 0);
+    }
+
+    @Override
+    public Response findEntitiesByLocatorQueryWithPagination(String locator, int limit, int offset) {
+        return RestAssured
+                .given()
+                .spec(spec)
+                .queryParam("locator", locator)
+                .queryParam("count", limit)
+                .queryParam("start", offset)
+                .get(apiEndpoint.getUrl());
+    }
+
+
+
+
+    @Override
+    public Response readEntitiesQueryWithPagination() {
+        return readEntitiesQueryWithPagination(100, 0);
+    }
+
+    @Override
+    public Response readEntitiesQueryWithPagination(int limit, int offset) {
+        return RestAssured
+                .given()
+                .spec(spec)
+                .queryParam("count", limit)
+                .queryParam("start", offset)
+                .get(apiEndpoint.getUrl());
+    }
+    @Override
+    public Response findEntityByPathParam(String pathParam) {
+        return RestAssured
+                .given()
+                .spec(spec)
+                .get(apiEndpoint.getUrl() + "/" + pathParam);
+    }
+
+
+    public <T extends BaseModel> List<T> findAllEntitiesByLocator(String locator, int limit, int offset) {
+        Response response = findEntitiesByLocatorQueryWithPagination(locator, limit, offset);
+        List<T> entities = response.jsonPath().getList("project", (Class<T>) apiEndpoint.getModelClass());
+        return entities != null ? entities : new ArrayList<>();
+    }
+
+
+
 }

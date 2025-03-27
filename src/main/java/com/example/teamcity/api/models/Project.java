@@ -17,7 +17,15 @@ import java.util.Map;
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class Project extends BaseModel implements Identifiable {
+public class Project extends BaseModel{
+    public Project(String id, String name, ParentProject parentProject, Boolean copyAllAssociatedSettings, Project sourceProject) {
+        this.id = id;
+        this.name = name;
+        this.parentProject = parentProject;
+        this.copyAllAssociatedSettings = copyAllAssociatedSettings;
+        this.sourceProject = sourceProject;
+    }
+
     @Random
     @Parameterizable
     private String id;

@@ -1,4 +1,4 @@
-package com.example.teamcity.api.requests;
+package com.example.teamcity.api.requests.interfaces;
 
 import com.example.teamcity.api.models.BaseModel;
 
@@ -7,5 +7,4 @@ public interface CrudInterface {
     Object read(String id);
     Object update(String id, BaseModel model);
     Object delete(String id);
-
 }

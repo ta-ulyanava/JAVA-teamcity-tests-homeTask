@@ -1,4 +1,4 @@
-package com.example.teamcity.api.spec;
+package com.example.teamcity.api.spec.request;
 
 import com.example.teamcity.api.config.Config;
 import com.example.teamcity.api.models.User;
@@ -17,8 +17,8 @@ import java.util.List;
 // то есть это явное прописание username, пароля в запросе, хоста и явно как-то endpoint.
 
 
-public class RequestSpecifications {
-    private static RequestSpecifications spec;
+public class RequestSpecs {
+    private static RequestSpecs spec;
 
 /* Какие спецификации и реквесты нужны?
     // Как минимум базовая спека кот содержит фильтры, контент тайпы

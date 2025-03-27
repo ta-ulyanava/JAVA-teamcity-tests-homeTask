@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class BuildType extends BaseModel implements Identifiable {
+public class BuildType extends BaseModel {
     @Random
     @Parameterizable
     private String id;

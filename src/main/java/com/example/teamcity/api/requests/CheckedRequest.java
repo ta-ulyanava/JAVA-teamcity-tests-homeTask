@@ -20,4 +20,12 @@ public class CheckedRequest {
     public <T extends BaseModel> CheckedBase<T> getRequest(ApiEndpoint apiEndpoint) {
         return (CheckedBase<T>) requests.get(apiEndpoint);
     }
+    public <T extends BaseModel> CheckedBase<T> getRequest(ApiEndpoint apiEndpoint, Class<T> modelClass) {
+        CheckedBase<?> base = requests.get(apiEndpoint);
+        if (!modelClass.isAssignableFrom(apiEndpoint.getModelClass())) {
+            throw new IllegalArgumentException("Requested class " + modelClass + " does not match endpoint's model class " + apiEndpoint.getModelClass());
+        }
+        return (CheckedBase<T>) base;
+    }
+
 }
