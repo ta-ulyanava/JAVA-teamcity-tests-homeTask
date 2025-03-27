@@ -41,3 +41,13 @@ jobs:
       - name: Run tests
         continue-on-error: true
         run: ./mvnw test -Dtest='com.example.teamcity.${{ inputs.package }}.**' -Dgroups=Regression
+
+      - name: Upload UI test artifacts (screenshots, HTML)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: setup-server-artifacts
+          path: |
+            build/reports/tests/
+            target/surefire-reports/
+  
