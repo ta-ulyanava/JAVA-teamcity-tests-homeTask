@@ -20,6 +20,9 @@ jobs:
           java-version: '17'
           distribution: 'zulu'
 
+      - name: Make mvnw executable
+        run: chmod +x ./mvnw
+
       - name: Validate Checkstyle
         run: ./mvnw validate
 
@@ -32,7 +35,9 @@ jobs:
       - name: TeamCity Setup
         uses: ./.github/actions/teamcity-setup
 
+      - name: Make mvnw executable
+        run: chmod +x ./mvnw
+
       - name: Run tests
         continue-on-error: true
-        # Указываем группу, чтобы не запустить тесты, связанные с сетапом TeamCity
         run: ./mvnw test -Dtest='com.example.teamcity.${{ inputs.package }}.**' -Dgroups=Regression
