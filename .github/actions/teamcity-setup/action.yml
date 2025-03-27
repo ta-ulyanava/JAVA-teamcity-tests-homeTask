@@ -63,6 +63,16 @@ runs:
       shell: bash
       run: ./mvnw clean test -Dtest=SetupServerTest#setupTeamCityServerTest
 
+    - name: Upload TeamCity setup artifacts (screenshots, HTML)
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: setup-server-artifacts-${{ github.job }}
+        path: |
+          build/reports/tests/
+          target/surefire-reports/
+
+
     - name: Setup superUserToken environment variable
       shell: bash
       run: echo "SUPER_USER_TOKEN=$(docker logs teamcity-server | grep 'Super user authentication token' | tail -n 1 | awk '{print $6}')" >> $GITHUB_ENV
