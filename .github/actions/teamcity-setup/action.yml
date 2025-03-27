@@ -61,6 +61,10 @@ runs:
         -p 8111:8111 \
         jetbrains/teamcity-server:2023.11.1
 
+    - name: Make mvnw executable
+      shell: bash
+      run: chmod +x ./mvnw
+
     - name: Setup TeamCity server
       shell: bash
       # Настройка сервера при первом запуске (принятие лицензии, выбор базы данных и тд), реализованная в виде теста
