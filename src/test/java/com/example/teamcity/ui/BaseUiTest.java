@@ -9,12 +9,13 @@ import com.example.teamcity.api.models.User;
 import com.example.teamcity.ui.pages.LoginPage;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeSuite;
+import org.testng.annotations.Listeners;
 
 import java.util.Map;
 
 import static io.qameta.allure.Allure.step;
 
-
+@Listeners({io.qameta.allure.testng.AllureTestNg.class})
 public class BaseUiTest extends BaseTest {
     @BeforeSuite(alwaysRun = true)
     public void setupUiTest() {
