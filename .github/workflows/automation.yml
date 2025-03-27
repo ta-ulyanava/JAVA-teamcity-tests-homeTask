@@ -46,8 +46,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: setup-server-artifacts
+          name: test-artifacts-${{ inputs.package }}-${{ github.job }}
           path: |
             build/reports/tests/
             target/surefire-reports/
-  
