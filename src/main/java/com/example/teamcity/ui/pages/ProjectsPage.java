@@ -2,6 +2,7 @@ package com.example.teamcity.ui.pages;
 
 import com.codeborne.selenide.*;
 import com.example.teamcity.ui.elements.ProjectElement;
+import io.qameta.allure.Step;
 
 import java.util.List;
 
@@ -15,6 +16,7 @@ public class ProjectsPage extends BasePage {
     private SelenideElement spanFavoriteProjects = $("span[class='ProjectPageHeader__title--ih']");
     private SelenideElement header = $(".MainPanel__router--gF > div");
 
+    @Step("Open projects page")
     public static ProjectsPage open() {
         return Selenide.open(PROJECTS_URL, ProjectsPage.class);
     }
