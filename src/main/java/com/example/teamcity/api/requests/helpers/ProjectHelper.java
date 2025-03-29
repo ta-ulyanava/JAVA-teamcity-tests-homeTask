@@ -176,4 +176,26 @@ public final class ProjectHelper {
 
         return new ArrayList<>();
     }
+    /**
+     * Waits for a project with the given name to appear in the API within the specified timeout.
+     *
+     * @param projectName     name of the project to wait for
+     * @param timeoutSeconds  maximum wait time in seconds
+     * @return found {@link Project}
+     * @throws RuntimeException if the project is not found within the timeout
+     */
+    @Step("Wait for project to appear in API: {projectName}")
+    public static Project waitForProjectInApi(CheckedRequest request, String projectName, int timeoutSeconds) {
+        for (int i = 0; i < timeoutSeconds; i++) {
+            var maybeProject = request.<Project>getRequest(ApiEndpoint.PROJECTS)
+                    .findFirstEntityByLocatorQuery("name:" + projectName);
+            if (maybeProject.isPresent()) return maybeProject.get();
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException ignored) {}
+        }
+        throw new RuntimeException("Project with name '" + projectName + "' was not found in API within " + timeoutSeconds + " seconds");
+    }
+
+
 }
