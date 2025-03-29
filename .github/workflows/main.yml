@@ -11,12 +11,12 @@ jobs:
   frontend:
     uses: ./.github/workflows/frontend-stage.yml
 
-  # API tests are temporarily disabled
-  # automation-api:
-  #   needs: [ backend, frontend ]
-  #   uses: ./.github/workflows/automation.yml
-  #   with:
-  #     package: api
+  # Прогоняются API тесты
+  automation-api:
+    needs: [ backend, frontend ]
+    uses: ./.github/workflows/automation.yml
+    with:
+      package: api
 
   # Прогоняются UI тесты
   automation-ui:

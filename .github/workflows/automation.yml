@@ -40,10 +40,7 @@ jobs:
 
       - name: Run tests
         continue-on-error: true
-        # Temporarily disabled dynamic package input to run only UI tests
-        # run: ./mvnw test -Dtest='com.example.teamcity.${{ inputs.package }}.**'
-        run: ./mvnw test -Dtest='com.example.teamcity.ui.**'
-
+        run: ./mvnw test -Dtest='com.example.teamcity.${{ inputs.package }}.**'
 
       - name: Upload UI test artifacts (screenshots, HTML)
         if: always()
