@@ -19,8 +19,8 @@ import org.testng.annotations.Test;
 
 import java.util.ArrayList;
 import java.util.List;
-//@Feature("Project Search")
-//@Test(groups = {"Regression", "Search"})
+@Feature("Project Search")
+@Test(groups = {"Regression", "Search"})
 public class ProjectSearchTest extends BaseApiTest {
 
     // =================== TODO TESTS FOR PROJECT NAME SEARCH (should return 1 project) =================== //

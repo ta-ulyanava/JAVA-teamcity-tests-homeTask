@@ -30,10 +30,11 @@ import java.util.List;
 import static com.example.teamcity.api.constants.TestConstants.SQL_INJECTION_PAYLOAD;
 import static com.example.teamcity.api.constants.TestConstants.XSS_PAYLOAD;
 
-//@Test(groups = {"Regression"})
+@Test(groups = {"Regression"})
 public class ProjectCrudTest extends BaseApiTest {
 
-
+    @Feature("Projects")
+    @Story("Create project with required fields only")
     @Test(description = "User should be able to create a project with the minimum required fields under Root project", groups = {"Positive", "CRUD"})
     public void userCreatesProjectWithMandatoryFieldsOnlyTest() {
         Project project = testData.getProject();

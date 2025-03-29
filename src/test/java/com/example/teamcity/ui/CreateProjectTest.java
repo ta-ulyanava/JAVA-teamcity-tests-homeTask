@@ -1,19 +1,21 @@
 package com.example.teamcity.ui;
 
 import com.codeborne.selenide.Condition;
-import com.codeborne.selenide.Selenide;
 import com.example.teamcity.api.enums.ApiEndpoint;
 import com.example.teamcity.api.enums.WebRoute;
 import com.example.teamcity.api.models.Project;
 import com.example.teamcity.ui.pages.ProjectPage;
 import com.example.teamcity.ui.pages.ProjectsPage;
 import com.example.teamcity.ui.pages.admin.CreateProjectPage;
-import io.qameta.allure.Step;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
 import org.testng.annotations.Test;
 
 
-//@Test(groups = "Regression")
+@Test(groups = "Regression")
 public class CreateProjectTest extends BaseUiTest {
+    @Feature("UI: Project Management")
+    @Story("Create project via GitHub URL")
 
     @Test(description = "User should be able to create project", groups = {"Positive"})
     public void userCreatesProject() {

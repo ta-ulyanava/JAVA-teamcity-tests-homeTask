@@ -15,7 +15,7 @@ import java.util.Arrays;
 import static com.example.teamcity.api.generators.TestDataGenerator.generate;
 import static io.qameta.allure.Allure.step;
 
-//@Test(groups = {"Regression"})
+@Test(groups = {"Regression"})
 public class BuildTypeTest extends BaseApiTest {
 
     @Test(description = "User should be able to create Build Type", groups = {"Positive", "CRUD"})
