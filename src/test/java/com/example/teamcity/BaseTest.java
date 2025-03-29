@@ -34,12 +34,10 @@ public class BaseTest {
     @BeforeMethod(alwaysRun = true)
     public void beforeTest() {
         try {
-            System.out.println("🎯 beforeTest: Running test setup");
-            step("🔧 Инициализация тестовых данных");
             softy = new SoftAssert();
             testData = generate();
         } catch (Exception e) {
-            System.err.println("❌ Ошибка в генерации данных beforeTest: " + e.getMessage());
+            System.err.println("Ошибка в генерации данных beforeTest: " + e.getMessage());
         }
     }
 

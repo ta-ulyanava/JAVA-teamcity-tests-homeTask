@@ -9,12 +9,7 @@ import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
 
 import java.util.List;
-// Спека нужна для параметризации параметров, которые задаются в зависимости от конкретного запроса
-// Какие нам нужны спецификации? Пользователь долджен быть аутенцифицированным неаутнетифицированным и тп
-// Хранит ли спецификация какието занчения? Совет -да, хранить токены
-// И это тоже синглтон
-//Нам необходимо использовать спецификацию для входа,
-// то есть это явное прописание username, пароля в запросе, хоста и явно как-то endpoint.
+
 
 
 public class RequestSpecs {
@@ -38,7 +33,7 @@ public class RequestSpecs {
         // создаем сам билдер
         RequestSpecBuilder reqBuilder = new RequestSpecBuilder();
         //Устанавливает базовый URL с помощью метода setBaseUri
-        reqBuilder.setBaseUri("https://" + Config.getProperty("host"));
+        reqBuilder.setBaseUri("http://" + Config.getProperty("host"));
         // складываем в билдер значения, задавая формат отправляемых и принимаемых данных
         reqBuilder.setContentType(ContentType.JSON);
         reqBuilder.setAccept(ContentType.JSON);
