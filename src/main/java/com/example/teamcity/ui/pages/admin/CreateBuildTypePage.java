@@ -6,6 +6,7 @@ import com.codeborne.selenide.SelenideElement;
 import com.example.teamcity.api.enums.ApiEndpoint;
 import com.example.teamcity.api.enums.WebRoute;
 import com.example.teamcity.api.generators.TestDataStorage;
+import io.qameta.allure.Step;
 
 import static com.codeborne.selenide.Selenide.$;
 import static com.codeborne.selenide.Selenide.page;
@@ -15,6 +16,7 @@ public class CreateBuildTypePage extends CreateBasePage {
     private final SelenideElement buildTypeNameInput = $("#buildTypeName");
     private final SelenideElement errorMessage = $(".error");
 
+    @Step("Open CreateBuildType page")
     public static CreateBuildTypePage open(String projectId) {
         return Selenide.open(WebRoute.CREATE_BUILD_TYPE_PAGE.getUrl().formatted(projectId), CreateBuildTypePage.class);
     }

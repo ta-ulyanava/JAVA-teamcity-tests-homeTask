@@ -133,13 +133,6 @@ public final class CheckedBase<T extends BaseModel> extends Request implements C
     public Optional<T> findFirstEntityByLocatorQuery(String locator) {
         Response response = uncheckedBase.findFirstEntityByLocatorQuery(locator);
         validateResponse(response, locator);
-
-        // Проверяем, что count не равен 0
-        int count = response.jsonPath().getInt("count");
-        if (count == 0) {
-            return Optional.empty(); // Возвращаем пустой Optional, если данных нет
-        }
-
         List<T> projects = response.jsonPath().getList("project", (Class<T>) apiEndpoint.getModelClass());
         return projects.isEmpty() ? Optional.empty() : Optional.of(projects.get(0));
     }

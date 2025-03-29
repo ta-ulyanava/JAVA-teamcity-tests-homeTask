@@ -7,60 +7,43 @@ import com.example.teamcity.api.models.Project;
 import com.example.teamcity.ui.pages.ProjectPage;
 import com.example.teamcity.ui.pages.ProjectsPage;
 import com.example.teamcity.ui.pages.admin.CreateProjectPage;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
 import org.testng.annotations.Test;
 
-import static com.codeborne.selenide.Selenide.$;
-import static com.codeborne.selenide.Selenide.open;
-import static io.qameta.allure.Allure.step;
 
 @Test(groups = "Regression")
 public class CreateProjectTest extends BaseUiTest {
+    @Feature("UI: Project Management")
+    @Story("Create project via GitHub URL")
 
     @Test(description = "User should be able to create project", groups = {"Positive"})
     public void userCreatesProject() {
-        // подготовка окружения
         loginAs(testData.getUser());
 
-        // взаимодействие с UI
+        String expectedProjectName = testData.getProject().getName();
+        String expectedBuildTypeName = testData.getBuildType().getName();
+
         CreateProjectPage.open("_Root")
                 .createForm(WebRoute.GITHUB_REPO.getUrl())
-                .setupProject(testData.getProject().getName(), testData.getBuildType().getName());
+                .setupProject(expectedProjectName, expectedBuildTypeName);
 
-        // проверка состояния API
-        // (корректность отправки данных с UI на API)
-        var createdProject = superUserCheckRequests.<Project>getRequest(ApiEndpoint.PROJECTS).read("name:" + testData.getProject().getName());
-        softy.assertNotNull(createdProject);
+        var createdProject = superUserCheckRequests.<Project>getRequest(ApiEndpoint.PROJECTS)
+                .findFirstEntityByLocatorQuery("name:" + expectedProjectName)
+                .orElseThrow();
 
-        // проверка состояния UI
-        // (корректность считывания данных и отображение данных на UI)
         ProjectPage.open(createdProject.getId())
-                .title.shouldHave(Condition.exactText(testData.getProject().getName()));
+                .title.shouldHave(Condition.exactText(expectedProjectName));
 
-        var foundProjects = ProjectsPage.open()
-                .getProjects().stream()
-                .anyMatch(project -> project.getName().text().equals(testData.getProject().getName()));
+        var projectsPage = ProjectsPage.open();
+        projectsPage.waitForProjectToAppear(expectedProjectName);
 
-        softy.assertTrue(foundProjects);
+        boolean found = projectsPage.getProjects().stream()
+                .anyMatch(project -> project.getName().text().equals(expectedProjectName));
+
+        softy.assertTrue(found, "Project should appear on the Projects page");
+        softy.assertAll();
     }
 
-//   @Test(description = "User should not be able to create a project without a name", groups = {"Negative"})
-//    public void userCreatesProjectWithoutName() {
-//        // подготовка окружения
-//        step("Login as user");
-//        loginAs(testData.getUser());
-//        // взаимодействие с UI
-//        step("Open `Create Project Page` (http://localhost:8111/admin/createObjectMenu.html)");
-//        step("Send all project parameters (repository URL)");
-//        step("Click `Proceed`");
-//        step("Set Project Name value is empty");
-//        step("Click `Proceed`");
-//
-//        // проверка состояния API
-//        // (корректность отправки данных с UI на API)
-//        step("Check that number of projects did not change");
-//        // проверка состояния UI
-//        // (корректность считывания данных и отображение данных на UI)
-//        step("Check that error appears `Project name must not be empty`");
-//
-//    }
+
 }
