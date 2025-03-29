@@ -1,14 +1,13 @@
 package com.example.teamcity.ui.pages;
 
-import com.codeborne.selenide.Condition;
-import com.codeborne.selenide.ElementsCollection;
-import com.codeborne.selenide.Selenide;
-import com.codeborne.selenide.SelenideElement;
+import com.codeborne.selenide.*;
 import com.example.teamcity.ui.elements.ProjectElement;
 import io.qameta.allure.Step;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.codeborne.selenide.Selenide.$;
 import static com.codeborne.selenide.Selenide.$$;
@@ -73,4 +72,19 @@ public class ProjectsPage extends BasePage {
         projectsElements.findBy(Condition.text(name))
                 .shouldBe(Condition.visible, Duration.ofSeconds(5));
     }
+    /**
+     * Returns a list of all visible project names on the Projects page.
+     *
+     * @return list of visible project names
+     */
+    @Step("Get visible project names from Projects page")
+    public List<String> getVisibleProjectNames() {
+        projectsElements.shouldBe(CollectionCondition.sizeGreaterThan(0), Duration.ofSeconds(5));
+        return projectsElements.stream()
+                .map(element -> element.shouldBe(Condition.visible).getText())
+                .collect(Collectors.toList());
+    }
+
+
+
 }

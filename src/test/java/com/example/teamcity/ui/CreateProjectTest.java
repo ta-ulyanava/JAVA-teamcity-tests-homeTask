@@ -1,6 +1,7 @@
 package com.example.teamcity.ui;
 
 import com.codeborne.selenide.Condition;
+import com.example.teamcity.api.constants.TestConstants;
 import com.example.teamcity.api.enums.WebRoute;
 import com.example.teamcity.api.models.Project;
 import com.example.teamcity.api.requests.helpers.ProjectHelper;
@@ -23,25 +24,27 @@ public class CreateProjectTest extends BaseUiTest {
         String expectedProjectName = testData.getProject().getName();
         String expectedBuildTypeName = testData.getBuildType().getName();
 
-        CreateProjectPage.open("_Root")
+        CreateProjectPage.open(TestConstants.ROOT_PROJECT_ID)
                 .createForm(WebRoute.GITHUB_REPO.getUrl())
                 .setupProject(expectedProjectName, expectedBuildTypeName);
 
         Project createdProject = ProjectHelper.waitForProjectInApi(superUserCheckRequests, expectedProjectName, 20);
 
-
         ProjectPage.open(createdProject.getId())
                 .title.shouldHave(Condition.exactText(expectedProjectName));
 
-        var projectsPage = ProjectsPage.open();
+        ProjectsPage projectsPage = ProjectsPage.open();
         projectsPage.waitForProjectToAppear(expectedProjectName);
 
-        boolean found = projectsPage.getProjects().stream()
-                .anyMatch(project -> project.getName().text().equals(expectedProjectName));
+        softy.assertTrue(
+                projectsPage.getVisibleProjectNames().contains(expectedProjectName),
+                "Project should appear on the Projects page"
+        );
 
-        softy.assertTrue(found, "Project should appear on the Projects page");
         softy.assertAll();
     }
 
+    }
 
-}
+
+
