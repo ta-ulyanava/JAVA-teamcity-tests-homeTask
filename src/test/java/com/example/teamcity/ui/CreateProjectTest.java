@@ -1,9 +1,9 @@
 package com.example.teamcity.ui;
 
 import com.codeborne.selenide.Condition;
-import com.example.teamcity.api.enums.ApiEndpoint;
 import com.example.teamcity.api.enums.WebRoute;
 import com.example.teamcity.api.models.Project;
+import com.example.teamcity.api.requests.helpers.ProjectHelper;
 import com.example.teamcity.ui.pages.ProjectPage;
 import com.example.teamcity.ui.pages.ProjectsPage;
 import com.example.teamcity.ui.pages.admin.CreateProjectPage;
@@ -27,9 +27,8 @@ public class CreateProjectTest extends BaseUiTest {
                 .createForm(WebRoute.GITHUB_REPO.getUrl())
                 .setupProject(expectedProjectName, expectedBuildTypeName);
 
-        var createdProject = superUserCheckRequests.<Project>getRequest(ApiEndpoint.PROJECTS)
-                .findFirstEntityByLocatorQuery("name:" + expectedProjectName)
-                .orElseThrow();
+        Project createdProject = ProjectHelper.waitForProjectInApi(superUserCheckRequests, expectedProjectName, 20);
+
 
         ProjectPage.open(createdProject.getId())
                 .title.shouldHave(Condition.exactText(expectedProjectName));

@@ -223,7 +223,7 @@ public class ProjectSearchTest extends BaseApiTest {
         softy.assertAll();
     }
     // Bug in API: incorrect error message
-    @Feature("Search Projects")
+    @Feature("Project Search")
     @Story("Search with pagination using negative count and start parameters")
     @Test(description = "User should get validation error for negative pagination parameters", groups = {"Negative", "PROJECT_SEARCH_NAME_TAG", "LOCATOR_BASED_SEARCH", "KnownBugs"})
     public void userShouldGetValidationErrorForNegativePaginationTest() {
@@ -233,7 +233,7 @@ public class ProjectSearchTest extends BaseApiTest {
         softy.assertAll();
     }
     //  Bug in API, part search is not implemented as defined in API doc
-    @Feature("Search Projects")
+    @Feature("Project Search")
     @Story("Search with pagination when count exceeds the number of matching projects")
     @Test(description = "User should get all projects when count exceeds total", groups = {"Positive", "PROJECT_SEARCH_NAME_TAG", "LOCATOR_BASED_SEARCH", "KnownBugs"})
     public void userShouldGetAllProjectsWhenCountExceedsTotalTest() {
