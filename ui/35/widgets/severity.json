@@ -1,0 +1,1 @@
+[{"uid":"24c2e7cd1911f3cf","name":"User should be able to create project","time":{"start":1743278611717,"stop":1743278660849,"duration":49132},"status":"broken","severity":"normal"},{"uid":"99c5bcff4cb244a1","name":"setupTeamCityServerTest","time":{"start":1743278661116,"stop":1743278844693,"duration":183577},"status":"broken","severity":"normal"}]
