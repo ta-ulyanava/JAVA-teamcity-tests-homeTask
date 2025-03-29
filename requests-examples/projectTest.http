@@ -16,7 +16,7 @@
 //GET http://{{user}}:{{password}}@{{host}}:{{port}}/app/rest/projects?locator=name:contains(test)
 //GET http://{{user}}:{{password}}@{{host}}:{{port}}/app/rest/projects?locator=name:startsWith(test)
 //GET http://{{user}}:{{password}}@{{host}}:{{port}}/app/rest/projects?locator=name:contains(roe)
-GET http://test_0fZfyFIczj:test_GZ2S4azfLG@192.168.1.34:8111/app/rest/project&count=2&start=1
+//GET http://test_0fZfyFIczj:test_GZ2S4azfLG@192.168.1.34:8111/app/rest/project&count=2&start=1
 Content-Type: application/json
 Accept: application/json
 //GET http://{{user}}:{{password}}@{{host}}:{{port}}/app/rest/projects?locator=name:_174&count=2&start=1

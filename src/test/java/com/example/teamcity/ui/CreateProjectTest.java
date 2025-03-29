@@ -16,7 +16,6 @@ import org.testng.annotations.Test;
 public class CreateProjectTest extends BaseUiTest {
     @Feature("UI: Project Management")
     @Story("Create project via GitHub URL")
-
     @Test(description = "User should be able to create project", groups = {"Positive"})
     public void userCreatesProject() {
         loginAs(testData.getUser());

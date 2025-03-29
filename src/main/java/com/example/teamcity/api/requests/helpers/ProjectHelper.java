@@ -5,23 +5,44 @@ import com.example.teamcity.api.models.ParentProject;
 import com.example.teamcity.api.models.Project;
 import com.example.teamcity.api.requests.CheckedRequest;
 import com.example.teamcity.api.responses.ResponseExtractor;
+import io.qameta.allure.Step;
 import io.restassured.response.Response;
 import org.testng.asserts.SoftAssert;
-import org.apache.http.HttpStatus;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Helper class for working with TeamCity Projects via API.
+ * <p>
+ * Includes methods for creating, finding, and asserting project hierarchies.
+ */
 public final class ProjectHelper {
+
     private ProjectHelper() {}
 
+    /**
+     * Creates a single project via API.
+     *
+     * @param request request handler
+     * @param project project model to create
+     * @return created project
+     */
+    @Step("Create single project: {project.name}")
     public static Project createProject(CheckedRequest request, Project project) {
         Response response = (Response) request.getRequest(ApiEndpoint.PROJECTS).create(project);
         return ResponseExtractor.extractModel(response, Project.class);
     }
 
-
+    /**
+     * Creates a list of nested projects, where each next project is a child of the previous.
+     *
+     * @param request        request handler
+     * @param nestedProjects list of projects to nest
+     * @return list of created projects with correct parent-child relationships
+     */
+    @Step("Create nested project hierarchy")
     public static List<Project> createNestedProjects(CheckedRequest request, List<Project> nestedProjects) {
         List<Project> created = new ArrayList<>();
         Project parent = createProject(request, nestedProjects.get(0));
@@ -36,19 +57,44 @@ public final class ProjectHelper {
 
         return created;
     }
+
+    /**
+     * Creates a list of sibling projects with the same parent.
+     *
+     * @param request  request handler
+     * @param siblings list of sibling projects
+     * @return list of created sibling projects
+     */
+    @Step("Create sibling projects")
     public static List<Project> createSiblingProjects(CheckedRequest request, List<Project> siblings) {
         return siblings.stream()
                 .map(project -> createProject(request, project))
                 .collect(Collectors.toList());
     }
 
-
+    /**
+     * Finds a single project using a given locator.
+     *
+     * @param request      request handler
+     * @param locatorType  locator key (e.g., "name", "id")
+     * @param value        locator value
+     * @return found project or null
+     */
+    @Step("Find project by locator: {locatorType}:{value}")
     public static Project findProjectByLocator(CheckedRequest request, String locatorType, String value) {
         String locator = locatorType + ":" + value;
         return (Project) request.getRequest(ApiEndpoint.PROJECTS)
                 .findFirstEntityByLocatorQuery(locator)
                 .orElse(null);
     }
+
+    /**
+     * Verifies that a list of projects forms a valid linear hierarchy.
+     *
+     * @param createdProjects list of projects to verify
+     * @param softy           SoftAssert instance for assertions
+     */
+    @Step("Assert linear hierarchy of created projects")
     public static void assertLinearHierarchy(List<Project> createdProjects, SoftAssert softy) {
         for (int i = 0; i < createdProjects.size(); i++) {
             Project current = createdProjects.get(i);
@@ -63,6 +109,15 @@ public final class ProjectHelper {
             }
         }
     }
+
+    /**
+     * Verifies that a list of sibling projects share the same parent ID.
+     *
+     * @param createdProjects  list of sibling projects
+     * @param expectedParentId parent ID to assert
+     * @param softy            SoftAssert instance for assertions
+     */
+    @Step("Assert sibling hierarchy of created projects")
     public static void assertSiblingHierarchy(List<Project> createdProjects, String expectedParentId, SoftAssert softy) {
         createdProjects.forEach(project -> {
             String actualParentId = project.getParentProject() != null ? project.getParentProject().getId() : null;
@@ -75,38 +130,38 @@ public final class ProjectHelper {
     }
 
     /**
-     * Создает в системе список проектов.
+     * Creates multiple independent projects.
      *
-     * @param request объект запроса
-     * @param projects список проектов для создания в системе
-     * @return список созданных проектов
+     * @param request  request handler
+     * @param projects list of projects to create
+     * @return list of created projects
      */
+    @Step("Create multiple independent projects")
     public static List<Project> createProjects(CheckedRequest request, List<Project> projects) {
         List<Project> createdProjects = new ArrayList<>();
-        
         for (Project project : projects) {
             createdProjects.add(createProject(request, project));
         }
-        
         return createdProjects;
     }
 
     /**
-     * Находит проекты по локатору с использованием пагинации.
+     * Finds projects by locator with pagination support.
      *
-     * @param request объект запроса
-     * @param locator строка локатора (например, "name:projectName*")
-     * @param count максимальное количество результатов
-     * @param start начальная позиция для выборки
-     * @return список найденных проектов
+     * @param request request handler
+     * @param locator TeamCity locator query (e.g., name:prefix*)
+     * @param count   max number of results
+     * @param start   starting index for pagination
+     * @return list of found projects
      */
-    public static List<Project> findProjectsByLocatorWithPagination(CheckedRequest request, 
-                                                                   String locator, 
-                                                                   int count, 
-                                                                   int start) {
+    @Step("Find projects by locator with pagination: {locator}, count={count}, start={start}")
+    public static List<Project> findProjectsByLocatorWithPagination(CheckedRequest request,
+                                                                    String locator,
+                                                                    int count,
+                                                                    int start) {
         Object result = request.getRequest(ApiEndpoint.PROJECTS)
                 .findEntitiesByLocatorQueryWithPagination(locator, count, start);
-        
+
         if (result instanceof Response) {
             return ResponseExtractor.extractModelList((Response) result, Project.class);
         } else if (result instanceof List<?>) {
@@ -118,7 +173,7 @@ public final class ProjectHelper {
             }
             return projects;
         }
-        
+
         return new ArrayList<>();
     }
 }

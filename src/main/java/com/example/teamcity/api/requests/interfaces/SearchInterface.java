@@ -1,44 +1,61 @@
 package com.example.teamcity.api.requests.interfaces;
 
 /**
- * Универсальный интерфейс для поиска и чтения сущностей через API TeamCity.
+ * Generic interface for searching and reading entities from the TeamCity API.
+ *
+ * @param <T> the type of entity returned by path parameter lookup
  */
 public interface SearchInterface<T> {
 
     /**
-     * Получить одну сущность по locator-параметру.
-     * Пример: ?locator=name:Project123
+     * Finds the first entity that matches the given locator query.
+     * Example: ?locator=name:Project123
+     *
+     * @param locator locator query string
+     * @return the first matched entity or empty result
      */
     Object findFirstEntityByLocatorQuery(String locator);
 
     /**
-     * Получить все сущности, соответствующие locator-параметру.
+     * Finds all entities matching the given locator query.
+     *
+     * @param locator locator query string
+     * @return list of matched entities
      */
     Object findEntitiesByLocatorQueryWithPagination(String locator);
 
     /**
-     * Получить все сущности, соответствующие locator-параметру, с пагинацией.
+     * Finds entities matching the locator with limit and offset (pagination).
+     *
+     * @param locator locator query string
+     * @param limit   maximum number of results to return
+     * @param offset  offset index for pagination
+     * @return paginated list of matched entities
      */
     Object findEntitiesByLocatorQueryWithPagination(String locator, int limit, int offset);
 
     /**
-     * Прочитать все сущности без фильтрации (в пределах лимита по умолчанию).
+     * Reads all entities without filtering (within default API limits).
+     *
+     * @return list of all entities
      */
     Object readEntitiesQueryWithPagination();
 
     /**
-     * Прочитать все сущности с пагинацией (count + start).
+     * Reads entities with pagination using limit and offset.
+     *
+     * @param limit  maximum number of results
+     * @param offset offset index for pagination
+     * @return paginated list of all entities
      */
     Object readEntitiesQueryWithPagination(int limit, int offset);
+
     /**
-     * Выполняет поиск сущности по path-параметру, например:
-     * GET /app/rest/projects/name:<имя>
+     * Finds a specific entity using a path parameter.
+     * Example: GET /app/rest/projects/name:<name>
      *
-     * Используется, когда API поддерживает доступ по конкретному параметру пути.
-     *
-     * @param pathParam параметр пути (например, "name:Build")
-     * @return найденная сущность
+     * @param pathParam path parameter (e.g., "name:Build")
+     * @return found entity
      */
     T findEntityByPathParam(String pathParam);
-
 }

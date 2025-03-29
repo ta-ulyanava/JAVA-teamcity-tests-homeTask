@@ -5,6 +5,8 @@ import com.example.teamcity.api.annotations.Parameterizable;
 import com.example.teamcity.api.annotations.Random;
 import com.example.teamcity.api.models.BaseModel;
 import com.example.teamcity.api.models.TestData;
+import io.qameta.allure.Step;
+import lombok.Builder;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -12,13 +14,25 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import lombok.Builder;
-
+/**
+ * Utility class for generating test data models based on custom annotations.
+ * <p>
+ * Handles field population for models using reflection and annotations like @Random, @Optional, and @Parameterizable.
+ */
 public final class TestDataGenerator {
 
-    private TestDataGenerator() {
-    }
+    private TestDataGenerator() {}
 
+    /**
+     * Generates a model of the given class and fills its fields using provided parameters or annotations.
+     *
+     * @param generatedModels list of previously generated models (to maintain references or dependencies)
+     * @param generatorClass  model class to instantiate
+     * @param parameters      optional parameters for parameterizable fields
+     * @param <T>             type extending BaseModel
+     * @return generated and populated instance of the given class
+     */
+    @Step("Generate instance of class {generatorClass}")
     public static <T extends BaseModel> T generate(List<BaseModel> generatedModels, Class<T> generatorClass, Object... parameters) {
         try {
             var instance = generatorClass.getDeclaredConstructor().newInstance();
@@ -86,6 +100,7 @@ public final class TestDataGenerator {
                         } else {
                             field.set(instance, null);
                         }
+
                         if (isParamAvailable) paramIndex++;
                     } else {
                         field.set(instance, isParamAvailable ? parameters[paramIndex] : (hasDefault ? field.get(instance) : (isOptional ? null : List.of())));
@@ -106,18 +121,21 @@ public final class TestDataGenerator {
                     } else {
                         field.set(instance, null);
                     }
-                    continue;
                 }
             }
 
-
             return instance;
-        } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
-                 NoSuchMethodException e) {
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
             throw new IllegalStateException("Cannot generate test data", e);
         }
     }
 
+    /**
+     * Generates a fully populated instance of {@link TestData}, initializing all its BaseModel fields.
+     *
+     * @return generated TestData instance
+     */
+    @Step("Generate TestData with all nested BaseModel fields")
     public static TestData generate() {
         try {
             var instance = TestData.class.getDeclaredConstructor().newInstance();
@@ -132,12 +150,20 @@ public final class TestDataGenerator {
                 field.setAccessible(false);
             }
             return instance;
-        } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
-                 NoSuchMethodException e) {
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
             throw new IllegalStateException("Cannot generate test data", e);
         }
     }
 
+    /**
+     * Shortcut for generating models without a predefined list of generated models.
+     *
+     * @param generatorClass model class to instantiate
+     * @param parameters     optional field values
+     * @param <T>            type extending BaseModel
+     * @return generated model instance
+     */
+    @Step("Generate model {generatorClass} with parameters")
     public static <T extends BaseModel> T generate(Class<T> generatorClass, Object... parameters) {
         return generate(Collections.emptyList(), generatorClass, parameters);
     }
