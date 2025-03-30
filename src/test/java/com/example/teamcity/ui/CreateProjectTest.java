@@ -16,10 +16,11 @@ public class CreateProjectTest extends BaseUiTest {
         loginAs(testData.getUser());
         String expectedProjectName = testData.getProject().getName();
         String expectedBuildTypeName = testData.getBuildType().getName();
-        UiProjectHelper.createProjectFromGitHub(expectedProjectName, expectedBuildTypeName);
-        Project createdProject = UiProjectHelper.waitForProjectViaApi(superUserCheckRequests, expectedProjectName);
-        UiProjectHelper.verifyProjectPageTitle(createdProject.getId(), expectedProjectName);
-        UiProjectHelper.verifyProjectIsVisible(expectedProjectName, softy);
+        uiProjectHelper.createProjectFromGitHub(expectedProjectName, expectedBuildTypeName);
+        Project createdProject = uiProjectHelper.waitForProjectViaApi(superUserCheckRequests, expectedProjectName);
+        uiProjectHelper.verifyProjectPageTitle(createdProject.getId(), expectedProjectName);
+        uiProjectHelper.verifyProjectIsVisible(expectedProjectName, softy);
         softy.assertAll();
     }
+
 }

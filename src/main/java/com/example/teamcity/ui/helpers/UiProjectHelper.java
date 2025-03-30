@@ -13,26 +13,27 @@ import io.qameta.allure.Step;
 import org.testng.asserts.SoftAssert;
 
 public class UiProjectHelper {
+    private final ApiProjectHelper projectHelper = new ApiProjectHelper();
 
     @Step("Create project from GitHub with name '{projectName}' and build type '{buildTypeName}'")
-    public static void createProjectFromGitHub(String projectName, String buildTypeName) {
+    public void createProjectFromGitHub(String projectName, String buildTypeName) {
         CreateProjectPage.open(TestConstants.ROOT_PROJECT_ID)
                 .createForm(WebRoute.GITHUB_REPO.getUrl())
                 .setupProject(projectName, buildTypeName);
     }
 
     @Step("Wait for project '{projectName}' to appear in API")
-    public static Project waitForProjectViaApi(CheckedRequest requests, String projectName) {
-        return ApiProjectHelper.waitForProjectInApi(requests, projectName, 20);
+    public Project waitForProjectViaApi(CheckedRequest requests, String projectName) {
+        return projectHelper.waitForProjectInApi(requests, projectName, 20);
     }
 
     @Step("Verify project page title is '{expectedProjectName}' for project ID '{projectId}'")
-    public static void verifyProjectPageTitle(String projectId, String expectedProjectName) {
+    public void verifyProjectPageTitle(String projectId, String expectedProjectName) {
         ProjectPage.open(projectId).title.shouldHave(Condition.exactText(expectedProjectName));
     }
 
     @Step("Verify project '{projectName}' is visible on the Projects page")
-    public static void verifyProjectIsVisible(String projectName, SoftAssert softy) {
+    public void verifyProjectIsVisible(String projectName, SoftAssert softy) {
         ProjectsPage projectsPage = ProjectsPage.open();
         projectsPage.waitForProjectToAppear(projectName);
         softy.assertTrue(projectsPage.getVisibleProjectNames().contains(projectName),

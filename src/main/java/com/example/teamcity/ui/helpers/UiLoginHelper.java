@@ -8,9 +8,15 @@ import io.qameta.allure.Step;
 
 public class UiLoginHelper {
 
+    private final CheckedRequest checkedRequest;
+
+    public UiLoginHelper(CheckedRequest checkedRequest) {
+        this.checkedRequest = checkedRequest;
+    }
+
     @Step("Login as user '{user.username}'")
-    public static void loginAs(User user, CheckedRequest requests) {
-        requests.getRequest(ApiEndpoint.USERS).create(user);
+    public void loginAs(User user) {
+        checkedRequest.getRequest(ApiEndpoint.USERS).create(user);
         LoginPage.open().login(user);
     }
 }

@@ -18,9 +18,9 @@ import java.util.stream.Collectors;
  * <p>
  * Includes methods for creating, finding, and asserting project hierarchies.
  */
-public final class ApiProjectHelper {
+public class ApiProjectHelper {
 
-    private ApiProjectHelper() {}
+    public ApiProjectHelper() {}
 
     /**
      * Creates a single project via API.
@@ -30,7 +30,7 @@ public final class ApiProjectHelper {
      * @return created project
      */
     @Step("Create single project: {project.name}")
-    public static Project createProject(CheckedRequest request, Project project) {
+    public Project createProject(CheckedRequest request, Project project) {
         Response response = (Response) request.getRequest(ApiEndpoint.PROJECTS).create(project);
         return ResponseExtractor.extractModel(response, Project.class);
     }
@@ -43,7 +43,7 @@ public final class ApiProjectHelper {
      * @return list of created projects with correct parent-child relationships
      */
     @Step("Create nested project hierarchy")
-    public static List<Project> createNestedProjects(CheckedRequest request, List<Project> nestedProjects) {
+    public List<Project> createNestedProjects(CheckedRequest request, List<Project> nestedProjects) {
         List<Project> created = new ArrayList<>();
         Project parent = createProject(request, nestedProjects.get(0));
         created.add(parent);
@@ -66,7 +66,7 @@ public final class ApiProjectHelper {
      * @return list of created sibling projects
      */
     @Step("Create sibling projects")
-    public static List<Project> createSiblingProjects(CheckedRequest request, List<Project> siblings) {
+    public List<Project> createSiblingProjects(CheckedRequest request, List<Project> siblings) {
         return siblings.stream()
                 .map(project -> createProject(request, project))
                 .collect(Collectors.toList());
@@ -81,7 +81,7 @@ public final class ApiProjectHelper {
      * @return found project or null
      */
     @Step("Find project by locator: {locatorType}:{value}")
-    public static Project findProjectByLocator(CheckedRequest request, String locatorType, String value) {
+    public Project findProjectByLocator(CheckedRequest request, String locatorType, String value) {
         String locator = locatorType + ":" + value;
         return (Project) request.getRequest(ApiEndpoint.PROJECTS)
                 .findFirstEntityByLocatorQuery(locator)
@@ -95,7 +95,7 @@ public final class ApiProjectHelper {
      * @param softy           SoftAssert instance for assertions
      */
     @Step("Assert linear hierarchy of created projects")
-    public static void assertLinearHierarchy(List<Project> createdProjects, SoftAssert softy) {
+    public void assertLinearHierarchy(List<Project> createdProjects, SoftAssert softy) {
         for (int i = 0; i < createdProjects.size(); i++) {
             Project current = createdProjects.get(i);
             String expectedParentId = (i == 0) ? "_Root" : createdProjects.get(i - 1).getId();
@@ -118,7 +118,7 @@ public final class ApiProjectHelper {
      * @param softy            SoftAssert instance for assertions
      */
     @Step("Assert sibling hierarchy of created projects")
-    public static void assertSiblingHierarchy(List<Project> createdProjects, String expectedParentId, SoftAssert softy) {
+    public void assertSiblingHierarchy(List<Project> createdProjects, String expectedParentId, SoftAssert softy) {
         createdProjects.forEach(project -> {
             String actualParentId = project.getParentProject() != null ? project.getParentProject().getId() : null;
             softy.assertEquals(
@@ -137,7 +137,7 @@ public final class ApiProjectHelper {
      * @return list of created projects
      */
     @Step("Create multiple independent projects")
-    public static List<Project> createProjects(CheckedRequest request, List<Project> projects) {
+    public List<Project> createProjects(CheckedRequest request, List<Project> projects) {
         List<Project> createdProjects = new ArrayList<>();
         for (Project project : projects) {
             createdProjects.add(createProject(request, project));
@@ -155,10 +155,7 @@ public final class ApiProjectHelper {
      * @return list of found projects
      */
     @Step("Find projects by locator with pagination: {locator}, count={count}, start={start}")
-    public static List<Project> findProjectsByLocatorWithPagination(CheckedRequest request,
-                                                                    String locator,
-                                                                    int count,
-                                                                    int start) {
+    public List<Project> findProjectsByLocatorWithPagination(CheckedRequest request, String locator, int count, int start) {
         Object result = request.getRequest(ApiEndpoint.PROJECTS)
                 .findEntitiesByLocatorQueryWithPagination(locator, count, start);
 
@@ -185,7 +182,7 @@ public final class ApiProjectHelper {
      * @throws RuntimeException if the project is not found within the timeout
      */
     @Step("Wait for project to appear in API: {projectName}")
-    public static Project waitForProjectInApi(CheckedRequest request, String projectName, int timeoutSeconds) {
+    public Project waitForProjectInApi(CheckedRequest request, String projectName, int timeoutSeconds) {
         for (int i = 0; i < timeoutSeconds; i++) {
             var maybeProject = request.<Project>getRequest(ApiEndpoint.PROJECTS)
                     .findFirstEntityByLocatorQuery("name:" + projectName);
