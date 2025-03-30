@@ -1,4 +1,4 @@
-package com.example.teamcity.api.requests.helpers;
+package com.example.teamcity.api.helpers;
 
 import io.qameta.allure.Step;
 

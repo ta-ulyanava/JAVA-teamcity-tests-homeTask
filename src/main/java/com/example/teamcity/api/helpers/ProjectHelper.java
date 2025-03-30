@@ -1,4 +1,4 @@
-package com.example.teamcity.api.requests.helpers;
+package com.example.teamcity.api.helpers;
 
 import com.example.teamcity.api.enums.ApiEndpoint;
 import com.example.teamcity.api.models.ParentProject;

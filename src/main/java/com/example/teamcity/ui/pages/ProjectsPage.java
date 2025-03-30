@@ -5,55 +5,46 @@ import com.example.teamcity.ui.elements.ProjectElement;
 import io.qameta.allure.Step;
 
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.codeborne.selenide.Selenide.$;
-import static com.codeborne.selenide.Selenide.$$;
+import static com.codeborne.selenide.Selenide.*;
 
-/**
- * Page object for the "Favorite Projects" page in TeamCity UI.
- * <p>
- * Provides access to project tiles and utility actions.
- */
 public class ProjectsPage extends BasePage {
 
     private static final String PROJECTS_URL = "/favorite/projects";
+    private static final String PROJECTS_LOCATOR = "span[class*='MiddleEllipsis']";
 
-    private final ElementsCollection projectsElements = $$("span[class*='MiddleEllipsis']");
-    private final SelenideElement spanFavoriteProjects = $("span[class='ProjectPageHeader__title--ih']");
     private final SelenideElement header = $(".MainPanel__router--gF > div");
+    private final SelenideElement spanFavoriteProjects = $("span[class='ProjectPageHeader__title--ih']");
 
-    /**
-     * Opens the TeamCity favorite projects page.
-     *
-     * @return initialized ProjectsPage
-     */
+    public ProjectsPage() {
+        header.shouldBe(Condition.visible, BASE_WAITING);
+    }
+
     @Step("Open projects page")
     public static ProjectsPage open() {
         return Selenide.open(PROJECTS_URL, ProjectsPage.class);
     }
 
-    /**
-     * Constructor that waits for the header to appear before proceeding.
-     */
-    public ProjectsPage() {
-        header.shouldBe(Condition.visible, BASE_WAITING);
+    private ElementsCollection getProjectsElements() {
+        return $$(PROJECTS_LOCATOR);
     }
 
-    /**
-     * Returns the list of project elements displayed on the page.
-     *
-     * @return list of {@link ProjectElement}
-     */
-    public List<ProjectElement> getProjects() {
-        return generatePageElements(projectsElements, ProjectElement::new);
+    @Step("Get visible project names from Projects page")
+    public List<String> getVisibleProjectNames() {
+        return getProjectsElements().shouldBe(CollectionCondition.sizeGreaterThan(0), Duration.ofSeconds(5)).stream()
+                .map(element -> element.shouldBe(Condition.visible).getText())
+                .collect(Collectors.toList());
     }
 
-    /**
-     * Logs names of all visible projects to the console (useful for debugging).
-     */
+    @Step("Wait for project to appear: {name}")
+    public void waitForProjectToAppear(String name) {
+        getProjectsElements()
+                .findBy(Condition.text(name))
+                .shouldBe(Condition.visible, Duration.ofSeconds(5));
+    }
+
     @Step("Log all visible project blocks")
     public void logVisibleProjects() {
         getProjects().forEach(project -> {
@@ -62,29 +53,8 @@ public class ProjectsPage extends BasePage {
         });
     }
 
-    /**
-     * Waits for a project with the given name to appear on the page.
-     *
-     * @param name expected project name
-     */
-    @Step("Wait for project to appear: {name}")
-    public void waitForProjectToAppear(String name) {
-        projectsElements.findBy(Condition.text(name))
-                .shouldBe(Condition.visible, Duration.ofSeconds(5));
+    @Step("Get project tiles from Projects page")
+    public List<ProjectElement> getProjects() {
+        return generatePageElements(getProjectsElements(), ProjectElement::new);
     }
-    /**
-     * Returns a list of all visible project names on the Projects page.
-     *
-     * @return list of visible project names
-     */
-    @Step("Get visible project names from Projects page")
-    public List<String> getVisibleProjectNames() {
-        projectsElements.shouldBe(CollectionCondition.sizeGreaterThan(0), Duration.ofSeconds(5));
-        return projectsElements.stream()
-                .map(element -> element.shouldBe(Condition.visible).getText())
-                .collect(Collectors.toList());
-    }
-
-
-
 }

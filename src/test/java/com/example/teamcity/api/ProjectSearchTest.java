@@ -5,11 +5,8 @@ import com.example.teamcity.api.enums.ApiEndpoint;
 import com.example.teamcity.api.generators.RandomData;
 import com.example.teamcity.api.generators.TestDataGenerator;
 import com.example.teamcity.api.generators.domain.ProjectTestData;
-import com.example.teamcity.api.models.ParentProject;
 import com.example.teamcity.api.models.Project;
-import com.example.teamcity.api.requests.checked.CheckedBase;
-import com.example.teamcity.api.requests.helpers.ProjectHelper;
-import com.example.teamcity.api.responses.ResponseExtractor;
+import com.example.teamcity.api.helpers.ProjectHelper;
 import com.example.teamcity.api.spec.responce.IncorrectDataSpecs;
 import com.example.teamcity.api.validation.SearchValidator;
 import io.qameta.allure.Feature;
@@ -17,7 +14,6 @@ import io.qameta.allure.Story;
 import io.restassured.response.Response;
 import org.testng.annotations.Test;
 
-import java.util.ArrayList;
 import java.util.List;
 @Feature("Project Search")
 @Test(groups = {"Regression", "Search"})

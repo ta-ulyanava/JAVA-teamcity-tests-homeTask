@@ -12,7 +12,7 @@ import com.example.teamcity.api.requests.CheckedRequest;
 import com.example.teamcity.api.requests.ServerAuthRequest;
 import com.example.teamcity.api.requests.UncheckedRequest;
 import com.example.teamcity.api.requests.checked.CheckedBase;
-import com.example.teamcity.api.requests.helpers.UserHelper;
+import com.example.teamcity.api.helpers.UserHelper;
 import com.example.teamcity.api.responses.ResponseExtractor;
 import com.example.teamcity.api.spec.request.RequestSpecs;
 import io.qameta.allure.Step;
