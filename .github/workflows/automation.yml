@@ -38,9 +38,9 @@ jobs:
       - name: Make mvnw executable
         run: chmod +x ./mvnw
 
-      - name: Run tests
+      - name: Run tests with AspectJ weaving
         continue-on-error: true
-        run: ./mvnw test -Dtest='com.example.teamcity.${{ inputs.package }}.**'
+        run: ./mvnw test -Dtest='com.example.teamcity.${{ inputs.package }}.**' -javaagent:/path/to/aspectjweaver.jar
 
       - name: Upload UI test artifacts (screenshots, HTML)
         if: always()
