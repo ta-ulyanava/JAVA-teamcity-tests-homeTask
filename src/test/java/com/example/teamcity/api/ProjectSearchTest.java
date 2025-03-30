@@ -6,7 +6,7 @@ import com.example.teamcity.api.generators.RandomData;
 import com.example.teamcity.api.generators.TestDataGenerator;
 import com.example.teamcity.api.generators.domain.ProjectTestData;
 import com.example.teamcity.api.models.Project;
-import com.example.teamcity.api.helpers.ProjectHelper;
+import com.example.teamcity.api.helpers.ApiProjectHelper;
 import com.example.teamcity.api.spec.responce.IncorrectDataSpecs;
 import com.example.teamcity.api.validation.SearchValidator;
 import io.qameta.allure.Feature;
@@ -27,8 +27,8 @@ public class ProjectSearchTest extends BaseApiTest {
     @Test(description = "User should be able to find a project by its exact name", groups = {"Positive", "PROJECT_SEARCH_NAME_TAG", "LOCATOR_BASED_SEARCH"})
     public void userShouldBeAbleToFindProjectByNameTest() {
         String projectName = RandomData.getUniqueName();
-        Project createdProject = ProjectHelper.createProject(userCheckedRequest, TestDataGenerator.generate(Project.class, RandomData.getUniqueId(), projectName));
-        Project foundProject = ProjectHelper.findProjectByLocator(userCheckedRequest, "name", createdProject.getName());
+        Project createdProject = ApiProjectHelper.createProject(userCheckedRequest, TestDataGenerator.generate(Project.class, RandomData.getUniqueId(), projectName));
+        Project foundProject = ApiProjectHelper.findProjectByLocator(userCheckedRequest, "name", createdProject.getName());
         SearchValidator.validateSearchResult(createdProject, foundProject, "Project", "name", List.of("parentProject"), softy);
     }
 
@@ -44,8 +44,8 @@ public class ProjectSearchTest extends BaseApiTest {
     @Test(description = "User should be able to find a project by its name containing multiple words", groups = {"Positive", "PROJECT_SEARCH_NAME_TAG", "LOCATOR_BASED_SEARCH"})
     public void userShouldBeAbleToFindProjectByMultiWordNameTest() {
         String multiWordName = "Test Project " + RandomData.getString();
-        Project createdProject = ProjectHelper.createProject(userCheckedRequest, TestDataGenerator.generate(Project.class, RandomData.getUniqueId(), multiWordName));
-        Project foundProject = ProjectHelper.findProjectByLocator(userCheckedRequest, "name", createdProject.getName());
+        Project createdProject = ApiProjectHelper.createProject(userCheckedRequest, TestDataGenerator.generate(Project.class, RandomData.getUniqueId(), multiWordName));
+        Project foundProject = ApiProjectHelper.findProjectByLocator(userCheckedRequest, "name", createdProject.getName());
         SearchValidator.validateSearchResult(createdProject, foundProject, "Project", "name", List.of("parentProject"), softy);
     }
 
@@ -53,8 +53,8 @@ public class ProjectSearchTest extends BaseApiTest {
     @Test(description = "User should be able to find a project by name containing special characters", groups = {"Positive", "PROJECT_SEARCH_NAME_TAG", "LOCATOR_BASED_SEARCH"})
     public void userShouldBeAbleToFindProjectByNameWithSpecialCharactersTest() {
         String specialCharName = TestConstants.SPECIAL_CHARACTERS + RandomData.getString();
-        Project createdProject = ProjectHelper.createProject(userCheckedRequest, TestDataGenerator.generate(Project.class, RandomData.getUniqueId(), specialCharName));
-        Project foundProject = ProjectHelper.findProjectByLocator(userCheckedRequest, "name", createdProject.getName());
+        Project createdProject = ApiProjectHelper.createProject(userCheckedRequest, TestDataGenerator.generate(Project.class, RandomData.getUniqueId(), specialCharName));
+        Project foundProject = ApiProjectHelper.findProjectByLocator(userCheckedRequest, "name", createdProject.getName());
         SearchValidator.validateSearchResult(createdProject, foundProject, "Project", "name", List.of("parentProject"), softy);
     }
 
@@ -62,8 +62,8 @@ public class ProjectSearchTest extends BaseApiTest {
     @Test(description = "User should be able to search for a project with the maximum allowed name length", groups = {"Positive", "PROJECT_SEARCH_NAME_TAG", "LOCATOR_BASED_SEARCH"})
     public void userShouldBeAbleToSearchProjectByMaxLengthNameTest() {
         String longName = RandomData.getString(500);
-        Project createdProject = ProjectHelper.createProject(userCheckedRequest, TestDataGenerator.generate(Project.class, RandomData.getUniqueId(), longName));
-        Project foundProject = ProjectHelper.findProjectByLocator(userCheckedRequest, "name", createdProject.getName());
+        Project createdProject = ApiProjectHelper.createProject(userCheckedRequest, TestDataGenerator.generate(Project.class, RandomData.getUniqueId(), longName));
+        Project foundProject = ApiProjectHelper.findProjectByLocator(userCheckedRequest, "name", createdProject.getName());
         SearchValidator.validateSearchResult(createdProject, foundProject, "Project", "name", List.of("parentProject"), softy);
     }
 
@@ -71,8 +71,8 @@ public class ProjectSearchTest extends BaseApiTest {
     @Test(description = "User should be able to find a project by a name consisting of a single character", groups = {"Positive", "PROJECT_SEARCH_NAME_TAG", "LOCATOR_BASED_SEARCH"})
     public void userShouldBeAbleToFindProjectBySingleCharacterNameTest() {
         String oneCharName = RandomData.getString(1);
-        Project createdProject = ProjectHelper.createProject(userCheckedRequest, TestDataGenerator.generate(Project.class, RandomData.getUniqueId(), oneCharName));
-        Project foundProject = ProjectHelper.findProjectByLocator(userCheckedRequest, "name", createdProject.getName());
+        Project createdProject = ApiProjectHelper.createProject(userCheckedRequest, TestDataGenerator.generate(Project.class, RandomData.getUniqueId(), oneCharName));
+        Project foundProject = ApiProjectHelper.findProjectByLocator(userCheckedRequest, "name", createdProject.getName());
         SearchValidator.validateSearchResult(createdProject, foundProject, "Project", "name", List.of("parentProject"), softy);
     }
 
@@ -99,7 +99,7 @@ public class ProjectSearchTest extends BaseApiTest {
     public void userShouldNotBeAbleToFindProjectByNameWithDifferentLetterCaseTest() {
         String originalName = "testproject" + RandomData.getString();
         String upperCasedName = originalName.toUpperCase();
-        ProjectHelper.createProject(userCheckedRequest, TestDataGenerator.generate(Project.class, RandomData.getUniqueId(), originalName));
+        ApiProjectHelper.createProject(userCheckedRequest, TestDataGenerator.generate(Project.class, RandomData.getUniqueId(), originalName));
         Response response = userUncheckedRequest.getRequest(ApiEndpoint.PROJECTS).findFirstEntityByLocatorQuery("name:" + upperCasedName);
         response.then().spec(IncorrectDataSpecs.emptyEntityListReturned("Project", "name", upperCasedName));
         softy.assertAll();
@@ -109,8 +109,8 @@ public class ProjectSearchTest extends BaseApiTest {
     @Test(description = "User should be able to find a project by its localized name", groups = {"Positive", "PROJECT_SEARCH_NAME_TAG", "LOCATOR_BASED_SEARCH"})
     public void userShouldBeAbleToFindProjectByLocalizedNameTest() {
         String localizedName = TestConstants.LOCALIZATION_CHARACTERS;
-        Project createdProject = ProjectHelper.createProject(userCheckedRequest, TestDataGenerator.generate(Project.class, RandomData.getString(), localizedName));
-        Project foundProject = ProjectHelper.findProjectByLocator(userCheckedRequest, "name", createdProject.getName());
+        Project createdProject = ApiProjectHelper.createProject(userCheckedRequest, TestDataGenerator.generate(Project.class, RandomData.getString(), localizedName));
+        Project foundProject = ApiProjectHelper.findProjectByLocator(userCheckedRequest, "name", createdProject.getName());
         SearchValidator.validateSearchResult(createdProject, foundProject, "Project", "name", List.of("parentProject"), softy);
     }
 
@@ -118,8 +118,8 @@ public class ProjectSearchTest extends BaseApiTest {
     @Test(description = "User should be able to find a project by a name consisting only of digits", groups = {"Positive", "PROJECT_SEARCH_NAME_TAG", "LOCATOR_BASED_SEARCH"})
     public void userShouldBeAbleToFindProjectByDigitsOnlyNameTest() {
         String digitsOnlyName = RandomData.getDigits(6);
-        Project createdProject = ProjectHelper.createProject(userCheckedRequest, TestDataGenerator.generate(Project.class, RandomData.getUniqueId(), digitsOnlyName));
-        Project foundProject = ProjectHelper.findProjectByLocator(userCheckedRequest, "name", createdProject.getName());
+        Project createdProject = ApiProjectHelper.createProject(userCheckedRequest, TestDataGenerator.generate(Project.class, RandomData.getUniqueId(), digitsOnlyName));
+        Project foundProject = ApiProjectHelper.findProjectByLocator(userCheckedRequest, "name", createdProject.getName());
         SearchValidator.validateSearchResult(createdProject, foundProject, "Project", "name", List.of("parentProject"), softy);
     }
 
@@ -144,8 +144,8 @@ public class ProjectSearchTest extends BaseApiTest {
     @Test(description = "User should be able to find a project by name that includes a trailing space", groups = {"Positive", "PROJECT_SEARCH_NAME_TAG", "LOCATOR_BASED_SEARCH"})
     public void userShouldBeAbleToFindProjectByNameWithTrailingSpaceTest() {
         String nameWithTrailingSpace = "Project_" + RandomData.getString() + " ";
-        Project createdProject = ProjectHelper.createProject(userCheckedRequest, TestDataGenerator.generate(Project.class, ProjectTestData.projectId(), nameWithTrailingSpace));
-        Project foundProject = ProjectHelper.findProjectByLocator(userCheckedRequest, "name", createdProject.getName());
+        Project createdProject = ApiProjectHelper.createProject(userCheckedRequest, TestDataGenerator.generate(Project.class, ProjectTestData.projectId(), nameWithTrailingSpace));
+        Project foundProject = ApiProjectHelper.findProjectByLocator(userCheckedRequest, "name", createdProject.getName());
         SearchValidator.validateSearchResult(createdProject, foundProject, "Project", "name", List.of("parentProject"), softy);
     }
 
@@ -153,8 +153,8 @@ public class ProjectSearchTest extends BaseApiTest {
     @Test(description = "User should be able to find a project by name that starts with a space", groups = {"Positive", "PROJECT_SEARCH_NAME_TAG", "LOCATOR_BASED_SEARCH"})
     public void userShouldBeAbleToFindProjectByNameWithLeadingSpaceTest() {
         String nameWithLeadingSpace = " " + RandomData.getUniqueName();
-        Project createdProject = ProjectHelper.createProject(userCheckedRequest, TestDataGenerator.generate(Project.class, ProjectTestData.projectId(), nameWithLeadingSpace));
-        Project foundProject = ProjectHelper.findProjectByLocator(userCheckedRequest, "name", createdProject.getName());
+        Project createdProject = ApiProjectHelper.createProject(userCheckedRequest, TestDataGenerator.generate(Project.class, ProjectTestData.projectId(), nameWithLeadingSpace));
+        Project foundProject = ApiProjectHelper.findProjectByLocator(userCheckedRequest, "name", createdProject.getName());
         SearchValidator.validateSearchResult(createdProject, foundProject, "Project", "name", List.of("parentProject"), softy);
     }
 
@@ -176,8 +176,8 @@ public class ProjectSearchTest extends BaseApiTest {
         Project deepestProject = nestedProjects.get(nestedProjects.size() - 1);
         deepestProject.setName(nestedProjectName);
         nestedProjects.get(0).setParentProject(null);
-        ProjectHelper.createNestedProjects(userCheckedRequest, nestedProjects);
-        Project foundProject = ProjectHelper.findProjectByLocator(userCheckedRequest, "name", nestedProjectName);
+        ApiProjectHelper.createNestedProjects(userCheckedRequest, nestedProjects);
+        Project foundProject = ApiProjectHelper.findProjectByLocator(userCheckedRequest, "name", nestedProjectName);
         SearchValidator.validateSearchResult(deepestProject, foundProject, "Project", "name", List.of("parentProject"), softy);
         softy.assertAll();
     }
@@ -188,8 +188,8 @@ public class ProjectSearchTest extends BaseApiTest {
     public void userShouldBeAbleToFindTwoProjectsWithCountAndStartTest() {
         String namePrefix = "PaginationTest_";
         List<Project> projectsToCreate = ProjectTestData.createProjectsWithPrefixAndNumericSuffix(3, namePrefix + RandomData.getString(5));
-        List<Project> savedProjects = ProjectHelper.createProjects(userCheckedRequest, projectsToCreate);
-        List<Project> foundProjects = ProjectHelper.findProjectsByLocatorWithPagination(userCheckedRequest, "name:" + namePrefix, 2, 0);
+        List<Project> savedProjects = ApiProjectHelper.createProjects(userCheckedRequest, projectsToCreate);
+        List<Project> foundProjects = ApiProjectHelper.findProjectsByLocatorWithPagination(userCheckedRequest, "name:" + namePrefix, 2, 0);
         softy.assertEquals(foundProjects.size(), 2, "Expected exactly 2 projects");
         SearchValidator.validateSearchResults(List.of(savedProjects.get(0), savedProjects.get(1)), foundProjects, "Project", "name", List.of("parentProject"), softy);
         softy.assertAll();
@@ -201,8 +201,8 @@ public class ProjectSearchTest extends BaseApiTest {
     public void userShouldBeAbleToFindSecondProjectWithCountAndStartTest() {
         String namePrefix = "PaginationTest_";
         List<Project> projectsToCreate = ProjectTestData.createProjectsWithPrefixAndNumericSuffix(3, namePrefix + RandomData.getString(5));
-        List<Project> savedProjects = ProjectHelper.createProjects(userCheckedRequest, projectsToCreate);
-        List<Project> foundProjects = ProjectHelper.findProjectsByLocatorWithPagination(userCheckedRequest, "name:" + namePrefix, 1, 1);
+        List<Project> savedProjects = ApiProjectHelper.createProjects(userCheckedRequest, projectsToCreate);
+        List<Project> foundProjects = ApiProjectHelper.findProjectsByLocatorWithPagination(userCheckedRequest, "name:" + namePrefix, 1, 1);
         softy.assertEquals(foundProjects.size(), 1, "Expected exactly 1 project");
         softy.assertEquals(foundProjects.get(0).getId(), savedProjects.get(1).getId(), "Expected the second project to be returned");
         SearchValidator.validateSearchResult(savedProjects.get(1), foundProjects.get(0), "Project", "name", List.of("parentProject"), softy);
@@ -213,8 +213,8 @@ public class ProjectSearchTest extends BaseApiTest {
     public void userShouldGetEmptyListWithCountAndStartTest() {
         String namePrefix = "PaginationTest_";
         List<Project> projectsToCreate = ProjectTestData.createProjectsWithPrefixAndNumericSuffix(3, namePrefix + RandomData.getString(5));
-        ProjectHelper.createProjects(userCheckedRequest, projectsToCreate);
-        List<Project> foundProjects = ProjectHelper.findProjectsByLocatorWithPagination(userCheckedRequest, "name:" + namePrefix, 0, 0);
+        ApiProjectHelper.createProjects(userCheckedRequest, projectsToCreate);
+        List<Project> foundProjects = ApiProjectHelper.findProjectsByLocatorWithPagination(userCheckedRequest, "name:" + namePrefix, 0, 0);
         softy.assertEquals(foundProjects.size(), 0, "Expected an empty list but received non-empty list");
         softy.assertAll();
     }
@@ -235,8 +235,8 @@ public class ProjectSearchTest extends BaseApiTest {
     public void userShouldGetAllProjectsWhenCountExceedsTotalTest() {
         String namePrefix = "CountExceedTest_";
         List<Project> projectsToCreate = ProjectTestData.createProjectsWithPrefixAndNumericSuffix(3, namePrefix + RandomData.getString(5));
-        ProjectHelper.createProjects(userCheckedRequest, projectsToCreate);
-        List<Project> foundProjects = ProjectHelper.findProjectsByLocatorWithPagination(userCheckedRequest, "name:" + namePrefix, 10, 0);
+        ApiProjectHelper.createProjects(userCheckedRequest, projectsToCreate);
+        List<Project> foundProjects = ApiProjectHelper.findProjectsByLocatorWithPagination(userCheckedRequest, "name:" + namePrefix, 10, 0);
         softy.assertEquals(foundProjects.size(), projectsToCreate.size(), "Expected to get all created projects when count exceeds total");
         softy.assertAll();
     }

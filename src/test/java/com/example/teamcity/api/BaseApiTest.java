@@ -12,7 +12,7 @@ import com.example.teamcity.api.requests.CheckedRequest;
 import com.example.teamcity.api.requests.ServerAuthRequest;
 import com.example.teamcity.api.requests.UncheckedRequest;
 import com.example.teamcity.api.requests.checked.CheckedBase;
-import com.example.teamcity.api.helpers.UserHelper;
+import com.example.teamcity.api.helpers.ApiUserHelper;
 import com.example.teamcity.api.responses.ResponseExtractor;
 import com.example.teamcity.api.spec.request.RequestSpecs;
 import io.qameta.allure.Step;
@@ -74,7 +74,7 @@ public abstract class BaseApiTest extends BaseTest {
      */
     @Step("Create user with role '{role}' in project '{projectId}'")
     protected User createUserWithRole(Role role, String projectId) {
-        return UserHelper.createUserWithRole(userCheckedRequest, testData.getUser(), role, projectId);
+        return ApiUserHelper.createUserWithRole(userCheckedRequest, testData.getUser(), role, projectId);
     }
 
     /**

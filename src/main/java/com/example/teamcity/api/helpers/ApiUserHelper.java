@@ -12,9 +12,9 @@ import io.restassured.response.Response;
 
 import java.util.List;
 
-public final class UserHelper {
+public final class ApiUserHelper {
 
-    private UserHelper() {}
+    private ApiUserHelper() {}
 
     @Step("Create user with role {role} in project {projectId}")
     public static User createUserWithRole(CheckedRequest checkedRequest, User templateUser, Role role, String projectId) {

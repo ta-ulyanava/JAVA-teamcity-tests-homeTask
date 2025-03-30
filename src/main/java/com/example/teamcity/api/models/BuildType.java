@@ -22,9 +22,14 @@ public class BuildType extends BaseModel {
     @Random
     private String name;
 
+    @Optional
+    private String projectId;
+
+    @Optional
     @Parameterizable
     private Project project;
 
     @Optional
     private Steps steps;
 }
+

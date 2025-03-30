@@ -18,9 +18,9 @@ import java.util.stream.Collectors;
  * <p>
  * Includes methods for creating, finding, and asserting project hierarchies.
  */
-public final class ProjectHelper {
+public final class ApiProjectHelper {
 
-    private ProjectHelper() {}
+    private ApiProjectHelper() {}
 
     /**
      * Creates a single project via API.

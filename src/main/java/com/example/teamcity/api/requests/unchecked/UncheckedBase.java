@@ -126,7 +126,8 @@ public class UncheckedBase extends Request implements CrudInterface, SearchInter
     @Step("Find all entities by locator: {locator}, limit: {limit}, offset: {offset}")
     public <T extends BaseModel> List<T> findAllEntitiesByLocator(String locator, int limit, int offset) {
         Response response = findEntitiesByLocatorQueryWithPagination(locator, limit, offset);
-        List<T> entities = response.jsonPath().getList("project", (Class<T>) apiEndpoint.getModelClass());
+        List<T> entities = response.jsonPath().getList(apiEndpoint.getJsonListKey(), (Class<T>) apiEndpoint.getModelClass());
         return entities != null ? entities : new ArrayList<>();
     }
+
 }

@@ -47,8 +47,9 @@ public final class CheckedBase<T extends BaseModel> extends Request implements C
 
     @Step("Extract entity list from response")
     private List<T> extractEntityList(Response response) {
-        return response.jsonPath().getList("project", (Class<T>) apiEndpoint.getModelClass());
+        return response.jsonPath().getList(apiEndpoint.getJsonListKey(), (Class<T>) apiEndpoint.getModelClass());
     }
+
 
     /**
      * Sends a POST request to create the entity and validates the response.
@@ -190,12 +191,12 @@ public final class CheckedBase<T extends BaseModel> extends Request implements C
      * @param locator locator query
      * @return optional entity if found
      */
-    @Override
     @Step("Find first entity by locator: {locator}")
     public Optional<T> findFirstEntityByLocatorQuery(String locator) {
         Response response = uncheckedBase.findFirstEntityByLocatorQuery(locator);
         validateResponse(response, locator);
-        List<T> entities = response.jsonPath().getList("project", (Class<T>) apiEndpoint.getModelClass());
+        List<T> entities = response.jsonPath().getList(apiEndpoint.getJsonListKey(), (Class<T>) apiEndpoint.getModelClass());
         return entities.isEmpty() ? Optional.empty() : Optional.of(entities.get(0));
     }
+
 }

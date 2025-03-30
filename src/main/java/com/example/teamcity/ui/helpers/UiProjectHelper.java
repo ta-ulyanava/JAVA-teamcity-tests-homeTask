@@ -3,7 +3,7 @@ package com.example.teamcity.ui.helpers;
 import com.codeborne.selenide.Condition;
 import com.example.teamcity.api.constants.TestConstants;
 import com.example.teamcity.api.enums.WebRoute;
-import com.example.teamcity.api.helpers.ProjectHelper;
+import com.example.teamcity.api.helpers.ApiProjectHelper;
 import com.example.teamcity.api.models.Project;
 import com.example.teamcity.api.requests.CheckedRequest;
 import com.example.teamcity.ui.pages.ProjectPage;
@@ -23,21 +23,19 @@ public class UiProjectHelper {
 
     @Step("Wait for project '{projectName}' to appear in API")
     public static Project waitForProjectViaApi(CheckedRequest requests, String projectName) {
-        return ProjectHelper.waitForProjectInApi(requests, projectName, 20);
+        return ApiProjectHelper.waitForProjectInApi(requests, projectName, 20);
     }
 
     @Step("Verify project page title is '{expectedProjectName}' for project ID '{projectId}'")
     public static void verifyProjectPageTitle(String projectId, String expectedProjectName) {
-        ProjectPage.open(projectId)
-                .title.shouldHave(Condition.exactText(expectedProjectName));
+        ProjectPage.open(projectId).title.shouldHave(Condition.exactText(expectedProjectName));
     }
 
     @Step("Verify project '{projectName}' is visible on the Projects page")
     public static void verifyProjectIsVisible(String projectName, SoftAssert softy) {
         ProjectsPage projectsPage = ProjectsPage.open();
         projectsPage.waitForProjectToAppear(projectName);
-        softy.assertTrue(
-                projectsPage.getVisibleProjectNames().contains(projectName),
+        softy.assertTrue(projectsPage.getVisibleProjectNames().contains(projectName),
                 "Project should appear on the Projects page"
         );
     }

@@ -22,33 +22,25 @@ public class CreateBuildTypePage extends CreateBasePage {
     private final SelenideElement buildTypeNameInput = $("#buildTypeName");
     private final SelenideElement errorMessage = $(".error");
 
-//    /**
-//     * Opens the build configuration creation page for the given project ID.
-//     *
-//     * @param projectId ID of the parent project
-//     * @return initialized CreateBuildTypePage
-//     */
-//    @Step("Open CreateBuildType page for project '{projectId}'")
-//    public static CreateBuildTypePage open(String projectId) {
-//        return Selenide.open(WebRoute.CREATE_BUILD_TYPE_PAGE.getUrl().formatted(projectId), CreateBuildTypePage.class);
-//    }
+    @Step("Open CreateBuildType page for project '{projectId}'")
+    public static CreateBuildTypePage open(String projectId) {
+        return Selenide.open(
+                "/admin/createObjectMenu.html?projectId=%s&showMode=%s".formatted(projectId, BUILD_TYPE_SHOW_MODE),
+                CreateBuildTypePage.class
+        );
+    }
 
-    /**
-     * Fills the first step of the create form with a VCS root URL.
-     *
-     * @param url repository URL
-     * @return current page object
-     */
     @Step("Submit VCS URL in create form: {url}")
     public CreateBuildTypePage createForm(String url) {
         String actualUrl = Selenide.webdriver().driver().url();
-        if (!actualUrl.contains("admin/createBuildType.html")) {
+        if (!actualUrl.contains("createObjectMenu.html")) {
             throw new IllegalStateException("Create Build Type page not loaded. Current URL: " + actualUrl);
         }
         $("#url").shouldBe(Condition.visible);
         baseCreateForm(url);
         return this;
     }
+
 
 
     /**

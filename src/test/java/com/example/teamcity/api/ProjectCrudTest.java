@@ -11,8 +11,8 @@ import com.example.teamcity.api.models.Project;
 import com.example.teamcity.api.models.User;
 import com.example.teamcity.api.requests.CheckedRequest;
 import com.example.teamcity.api.requests.UncheckedRequest;
-import com.example.teamcity.api.helpers.ProjectHelper;
-import com.example.teamcity.api.helpers.UserHelper;
+import com.example.teamcity.api.helpers.ApiProjectHelper;
+import com.example.teamcity.api.helpers.ApiUserHelper;
 import com.example.teamcity.api.spec.request.RequestSpecs;
 import com.example.teamcity.api.spec.responce.AccessErrorSpecs;
 import com.example.teamcity.api.spec.responce.IncorrectDataSpecs;
@@ -37,7 +37,7 @@ public class ProjectCrudTest extends BaseApiTest {
     @Test(description = "User should be able to create a project with the minimum required fields under Root project", groups = {"Positive", "CRUD"})
     public void userCreatesProjectWithMandatoryFieldsOnlyTest() {
         Project project = testData.getProject();
-        Project createdProject = ProjectHelper.createProject(userCheckedRequest, project);
+        Project createdProject = ApiProjectHelper.createProject(userCheckedRequest, project);
         EntityValidator.validateAllEntityFieldsIgnoring(project, createdProject, List.of("parentProject"), softy);
         softy.assertEquals(createdProject.getParentProject().getId(), TestConstants.ROOT_PROJECT_ID, "Parent project should be '_Root' when not specified");
         softy.assertAll();
@@ -49,9 +49,9 @@ public class ProjectCrudTest extends BaseApiTest {
     @Story("Copy Project Parameters")
     @Test(description = "User should be able to create a Project with copyAllAssociatedSettings set to true and verify copied settings", groups = {"Positive", "CRUD", "KnownBugs", "COPY_SETTINGS_TAG"})
     public void userCreatesProjectWithCopyAllAssociatedSettingsTrueTest() {
-        var sourceProject = ProjectHelper.createProject(userCheckedRequest, testData.getProject());
+        var sourceProject = ApiProjectHelper.createProject(userCheckedRequest, testData.getProject());
         var newProject = TestDataGenerator.generate(Project.class, RandomData.getString(), RandomData.getString(), sourceProject.getParentProject(), true, sourceProject);
-        var createdProject = ProjectHelper.createProject(userCheckedRequest, newProject);
+        var createdProject = ApiProjectHelper.createProject(userCheckedRequest, newProject);
         // Баг в API: settings не копируются
         EntityValidator.validateAllEntityFieldsIgnoring(sourceProject, createdProject, List.of("id", "name"), softy);
         softy.assertEquals(createdProject.getProjectsIdsMap(), sourceProject.getProjectsIdsMap(), "projectsIdsMap не был скопирован");
@@ -65,9 +65,9 @@ public class ProjectCrudTest extends BaseApiTest {
     @Story("Copy Settings Disabled")
     @Test(description = "User should be able to create a Project with copyAllAssociatedSettings set to false and verify fields are NOT copied", groups = {"Positive", "CRUD", "COPY_SETTINGS_TAG"})
     public void userCreatesProjectWithCopyAllAssociatedSettingsFalseTest() {
-        var sourceProject = ProjectHelper.createProject(userCheckedRequest, testData.getProject());
+        var sourceProject = ApiProjectHelper.createProject(userCheckedRequest, testData.getProject());
         var newProject = TestDataGenerator.generate(Project.class, RandomData.getString(), RandomData.getString(), new ParentProject(TestConstants.ROOT_PROJECT_ID, null), false, sourceProject);
-        var createdProject = ProjectHelper.createProject(userCheckedRequest, newProject);
+        var createdProject = ApiProjectHelper.createProject(userCheckedRequest, newProject);
         EntityValidator.validateAllEntityFieldsIgnoring(sourceProject, createdProject, List.of("id", "name", "parentProject", "copyAllAssociatedSettings", "sourceProject", "projectsIdsMap", "buildTypesIdsMap", "vcsRootsIdsMap"), softy);
         softy.assertNull(createdProject.getCopyAllAssociatedSettings(), "copyAllAssociatedSettings должен быть null");
         softy.assertNull(createdProject.getSourceProject(), "sourceProject должен быть null");
@@ -85,11 +85,11 @@ public class ProjectCrudTest extends BaseApiTest {
     public void userCreatesNestedProjectsTest() {
         int projectCount = 20;
         List<Project> projects = ProjectTestData.nestedProjects(projectCount);
-        List<Project> createdProjects = ProjectHelper.createNestedProjects(userCheckedRequest, projects);
+        List<Project> createdProjects = ApiProjectHelper.createNestedProjects(userCheckedRequest, projects);
         softy.assertEquals(createdProjects.size(), projectCount, "The number of created projects is incorrect");
         softy.assertEquals(createdProjects.get(0).getName(), projects.get(0).getName(), "First project name should match");
         softy.assertEquals(createdProjects.get(projectCount-1).getName(), projects.get(projectCount-1).getName(), "Last project name should match");
-        ProjectHelper.assertLinearHierarchy(createdProjects, softy);
+        ApiProjectHelper.assertLinearHierarchy(createdProjects, softy);
         softy.assertAll();
     }
 
@@ -97,12 +97,12 @@ public class ProjectCrudTest extends BaseApiTest {
     @Story("Creating sibling projects")
     @Test(description = "User should be able to create 20 sibling projects", groups = {"Positive", "CRUD", "CornerCase"})
     public void userCreatesSiblingProjectsTest() {
-        var rootProject = ProjectHelper.createProject(userCheckedRequest, testData.getProject());
+        var rootProject = ApiProjectHelper.createProject(userCheckedRequest, testData.getProject());
         int projectCount = 20;
         List<Project> projects = ProjectTestData.siblingProjects(rootProject.getId(), projectCount);
-        List<Project> createdProjects = ProjectHelper.createSiblingProjects(userCheckedRequest, projects);
+        List<Project> createdProjects = ApiProjectHelper.createSiblingProjects(userCheckedRequest, projects);
         softy.assertEquals(createdProjects.size(), projectCount, "The number of created projects is incorrect");
-        ProjectHelper.assertSiblingHierarchy(createdProjects, rootProject.getId(), softy);
+        ApiProjectHelper.assertSiblingHierarchy(createdProjects, rootProject.getId(), softy);
         softy.assertAll();
     }
 
@@ -112,7 +112,7 @@ public class ProjectCrudTest extends BaseApiTest {
     @Test(description = "User should be able to create a Project with an ID of maximum allowed length", groups = {"Positive", "CRUD", "PROJECT_ID_VALIDATION_TAG"})
     public void userCreatesProjectWithMaxLengthIdTest() {
         Project validProject = TestDataGenerator.generate(Project.class, RandomData.getString(225), RandomData.getString());
-        Project createdProject = ProjectHelper.createProject(superUserCheckRequests, validProject);
+        Project createdProject = ApiProjectHelper.createProject(superUserCheckRequests, validProject);
         EntityValidator.validateAllEntityFieldsIgnoring(validProject, createdProject, List.of("parentProject"), softy);
         softy.assertAll();
     }
@@ -123,7 +123,7 @@ public class ProjectCrudTest extends BaseApiTest {
     public void userCreatesProjectWithOneCharacterIdTest() {
         String minLengthId = RandomData.getString(1);
         Project validProject = TestDataGenerator.generate(Project.class, minLengthId, RandomData.getString());
-        Project createdProject = ProjectHelper.createProject(superUserCheckRequests, validProject);
+        Project createdProject = ApiProjectHelper.createProject(superUserCheckRequests, validProject);
         EntityValidator.validateAllEntityFieldsIgnoring(validProject, createdProject, List.of("parentProject"), softy);
         softy.assertAll();
     }
@@ -134,7 +134,7 @@ public class ProjectCrudTest extends BaseApiTest {
     public void userCreatesProjectWithUnderscoreInIdTest() {
         String idWithUnderscore = RandomData.getString() + "_test";
         Project projectWithUnderscore = TestDataGenerator.generate(Project.class, idWithUnderscore, RandomData.getString());
-        Project createdProject = ProjectHelper.createProject(superUserCheckRequests, projectWithUnderscore);
+        Project createdProject = ApiProjectHelper.createProject(superUserCheckRequests, projectWithUnderscore);
         EntityValidator.validateAllEntityFieldsIgnoring(projectWithUnderscore, createdProject, List.of("parentProject"), softy);
         softy.assertAll();
     }
@@ -212,7 +212,7 @@ public class ProjectCrudTest extends BaseApiTest {
     @Story("Duplicate Project ID")
     @Test(description = "User should not be able to create a Project with an existing ID", groups = {"Negative", "CRUD", "PROJECT_ID_VALIDATION_TAG"})
     public void userCannotCreateProjectWithExistingIdTest() {
-        Project existingProject = ProjectHelper.createProject(userCheckedRequest, testData.getProject());
+        Project existingProject = ApiProjectHelper.createProject(userCheckedRequest, testData.getProject());
         Project duplicateProject = TestDataGenerator.generate(List.of(existingProject), Project.class, existingProject.getId(), RandomData.getString());
         Response response = userUncheckedRequest.getRequest(ApiEndpoint.PROJECTS).create(duplicateProject);
         response.then().spec(IncorrectDataSpecs.badRequestDuplicatedField("Project", "ID", existingProject.getId()));
@@ -223,7 +223,7 @@ public class ProjectCrudTest extends BaseApiTest {
     @Story("Duplicate Project ID with Different Case")
     @Test(description = "User should not be able to create a Project with an existing ID in a different case", groups = {"Negative", "CRUD", "PROJECT_ID_VALIDATION_TAG"})
     public void userCannotCreateProjectWithExistingIdDifferentCaseTest() {
-        Project existingProject = ProjectHelper.createProject(userCheckedRequest, testData.getProject());
+        Project existingProject = ApiProjectHelper.createProject(userCheckedRequest, testData.getProject());
         String duplicateId = existingProject.getId().toUpperCase();
         Project duplicateProject = TestDataGenerator.generate(List.of(), Project.class, duplicateId, RandomData.getString());
         Response response = userUncheckedRequest.getRequest(ApiEndpoint.PROJECTS).create(duplicateProject);
@@ -284,7 +284,7 @@ public class ProjectCrudTest extends BaseApiTest {
     @Test(description = "User should be able to create a Project with an ID containing Latin letters, digits, and underscores", groups = {"Positive", "CRUD", "PROJECT_ID_VALIDATION_TAG"})
     public void userCreatesProjectWithValidIdCharactersTest() {
         Project validProject = TestDataGenerator.generate(List.of(), Project.class, "valid_123_ID", RandomData.getString());
-        Project createdProject = ProjectHelper.createProject(superUserCheckRequests, validProject);
+        Project createdProject = ApiProjectHelper.createProject(superUserCheckRequests, validProject);
         EntityValidator.validateAllEntityFieldsIgnoring(validProject, createdProject, List.of("parentProject"), softy);
         softy.assertAll();
     }
@@ -329,7 +329,7 @@ public class ProjectCrudTest extends BaseApiTest {
     @Test(description = "User should be able to create a Project with special characters in name", groups = {"Positive", "CRUD", "PROJECT_NAME_VALIDATION_TAG"})
     public void userCreatesProjectWithSpecialCharactersInNameTest() {
         Project project = TestDataGenerator.generate(Project.class, RandomData.getString(), TestConstants.SPECIAL_CHARACTERS);
-        Project createdProject = ProjectHelper.createProject(superUserCheckRequests, project);
+        Project createdProject = ApiProjectHelper.createProject(superUserCheckRequests, project);
         EntityValidator.validateAllEntityFieldsIgnoring(project, createdProject, List.of("parentProject"), softy);
         softy.assertAll();
     }
@@ -339,7 +339,7 @@ public class ProjectCrudTest extends BaseApiTest {
     @Test(description = "User should be able to create a Project with a localized name", groups = {"Positive", "CRUD", "PROJECT_NAME_VALIDATION_TAG"})
     public void userCreatesProjectWithLocalizedNameTest() {
         Project localizedProject = TestDataGenerator.generate(Project.class, RandomData.getString(), TestConstants.LOCALIZATION_CHARACTERS);
-        Project createdProject = ProjectHelper.createProject(superUserCheckRequests, localizedProject);
+        Project createdProject = ApiProjectHelper.createProject(superUserCheckRequests, localizedProject);
         EntityValidator.validateAllEntityFieldsIgnoring(localizedProject, createdProject, List.of("parentProject"), softy);
         softy.assertAll();
     }
@@ -349,7 +349,7 @@ public class ProjectCrudTest extends BaseApiTest {
     @Test(description = "User should be able to create a Project with a name of length 1", groups = {"Positive", "CRUD", "PROJECT_NAME_VALIDATION_TAG"})
     public void userCreatesProjectWithOneCharacterNameTest() {
         Project validProject = TestDataGenerator.generate(Project.class, RandomData.getString(), "A");
-        Project createdProject = ProjectHelper.createProject(superUserCheckRequests, validProject);
+        Project createdProject = ApiProjectHelper.createProject(superUserCheckRequests, validProject);
         EntityValidator.validateAllEntityFieldsIgnoring(validProject, createdProject, List.of("parentProject"), softy);
         softy.assertAll();
     }
@@ -360,7 +360,7 @@ public class ProjectCrudTest extends BaseApiTest {
     public void userCreatesProjectWith500LengthNameTest() {
         String maxLengthName = "A".repeat(500);
         Project validProject = TestDataGenerator.generate(Project.class, RandomData.getString(), maxLengthName);
-        Project createdProject = ProjectHelper.createProject(superUserCheckRequests, validProject);
+        Project createdProject = ApiProjectHelper.createProject(superUserCheckRequests, validProject);
         EntityValidator.validateAllEntityFieldsIgnoring(validProject, createdProject, List.of("parentProject"), softy);
         softy.assertAll();
     }
@@ -369,7 +369,7 @@ public class ProjectCrudTest extends BaseApiTest {
     @Story("Duplicate Name with Different Case")
     @Test(description = "User should not be able to create a Project with an existing name in a different case", groups = {"Negative", "CRUD", "PROJECT_NAME_VALIDATION_TAG"})
     public void userCannotCreateProjectWithExistingNameDifferentCaseTest() {
-        Project existingProject = ProjectHelper.createProject(userCheckedRequest, testData.getProject());
+        Project existingProject = ApiProjectHelper.createProject(userCheckedRequest, testData.getProject());
         String duplicateName = existingProject.getName().toUpperCase();
         Project duplicateProject = TestDataGenerator.generate(Project.class, RandomData.getString(), duplicateName);
         Response response = userUncheckedRequest.getRequest(ApiEndpoint.PROJECTS).create(duplicateProject);
@@ -381,7 +381,7 @@ public class ProjectCrudTest extends BaseApiTest {
     @Story("Duplicate Name")
     @Test(description = "User should not be able to create a Project with an existing name", groups = {"Negative", "CRUD", "PROJECT_NAME_VALIDATION_TAG"})
     public void userCannotCreateProjectWithExistingNameTest() {
-        Project existingProject = ProjectHelper.createProject(userCheckedRequest, testData.getProject());
+        Project existingProject = ApiProjectHelper.createProject(userCheckedRequest, testData.getProject());
         Project duplicateProject = TestDataGenerator.generate(Project.class, RandomData.getString(), existingProject.getName());
         Response response = userUncheckedRequest.getRequest(ApiEndpoint.PROJECTS).create(duplicateProject);
         response.then().spec(IncorrectDataSpecs.badRequestDuplicatedField("Project", "name", existingProject.getName()));
@@ -393,7 +393,7 @@ public class ProjectCrudTest extends BaseApiTest {
     @Test(description = "User should be able to create a Project with a name consisting only of digits", groups = {"Positive", "CRUD", "PROJECT_NAME_VALIDATION_TAG"})
     public void userCreatesProjectWithDigitsOnlyNameTest() {
         Project validProject = TestDataGenerator.generate(Project.class, RandomData.getUniqueId(), RandomData.getDigits(6));
-        Project createdProject = ProjectHelper.createProject(superUserCheckRequests, validProject);
+        Project createdProject = ApiProjectHelper.createProject(superUserCheckRequests, validProject);
         EntityValidator.validateAllEntityFieldsIgnoring(validProject, createdProject, List.of("parentProject"), softy);
         softy.assertAll();
     }
@@ -404,7 +404,7 @@ public class ProjectCrudTest extends BaseApiTest {
     public void userCreatesProjectWithSpacesInNameTest() {
         String uniqueProjectName = RandomData.getUniqueName().substring(0, 5) + " " + RandomData.getUniqueName().substring(5);
         Project validProject = TestDataGenerator.generate(Project.class, RandomData.getUniqueId(), uniqueProjectName);
-        Project createdProject = ProjectHelper.createProject(superUserCheckRequests, validProject);
+        Project createdProject = ApiProjectHelper.createProject(superUserCheckRequests, validProject);
         EntityValidator.validateAllEntityFieldsIgnoring(validProject, createdProject, List.of("parentProject"), softy);
         softy.assertAll();
     }
@@ -473,7 +473,7 @@ public class ProjectCrudTest extends BaseApiTest {
     @Test(description = "User should be able to create a Project with an XSS payload in name (payload stored as text)", groups = {"Positive", "Security", "CRUD", "SEC_TAG"})
     public void userCreatesProjectWithXSSInNameTest() {
         Project projectWithXSS = TestDataGenerator.generate(Project.class, RandomData.getUniqueId(), XSS_PAYLOAD);
-        Project createdProject = ProjectHelper.createProject(superUserCheckRequests, projectWithXSS);
+        Project createdProject = ApiProjectHelper.createProject(superUserCheckRequests, projectWithXSS);
         EntityValidator.validateAllEntityFieldsIgnoring(projectWithXSS, createdProject, List.of("parentProject"), softy);
         softy.assertAll();
     }
@@ -484,7 +484,7 @@ public class ProjectCrudTest extends BaseApiTest {
     @Test(description = "User should be able to create a Project with an SQL injection payload in name (payload stored as text)", groups = {"Positive", "Security", "CRUD", "SEC_TAG"})
     public void userCreatesProjectWithSQLInjectionTest() {
         Project projectWithSQL = TestDataGenerator.generate(Project.class, RandomData.getUniqueId(), SQL_INJECTION_PAYLOAD);
-        Project createdProject = ProjectHelper.createProject(superUserCheckRequests, projectWithSQL);
+        Project createdProject = ApiProjectHelper.createProject(superUserCheckRequests, projectWithSQL);
         EntityValidator.validateAllEntityFieldsIgnoring(projectWithSQL, createdProject, List.of("parentProject"), softy);
         softy.assertAll();
     }
@@ -507,9 +507,9 @@ public class ProjectCrudTest extends BaseApiTest {
 
     @Test(description = "User with restricted role should not be able to create a project", dataProvider = "restrictedRoles", groups = {"Negative", "CRUD", "ROLE_TAG"})
     public void userWithRestrictedRoleCannotCreateProjectTest(Role role) {
-        Project createdProject = ProjectHelper.createProject(userCheckedRequest, testData.getProject());
+        Project createdProject = ApiProjectHelper.createProject(userCheckedRequest, testData.getProject());
         User userWithRole = testData.getUser();
-        User updatedUser = UserHelper.updateUserRole(superUserCheckRequests, userWithRole, role, createdProject.getId());
+        User updatedUser = ApiUserHelper.updateUserRole(superUserCheckRequests, userWithRole, role, createdProject.getId());
         softy.assertNotNull(updatedUser);
         softy.assertEquals(updatedUser.getRoles().getRole().get(0).getRoleId(), role.getRoleName());
         Project nestedProject = TestDataGenerator.generate(Project.class, RandomData.getUniqueId(), "Nested Project with " + role.getRoleName() + " " + RandomData.getString(8));
@@ -532,15 +532,15 @@ public class ProjectCrudTest extends BaseApiTest {
 
     @Test(dataProvider = "allowedRoles")
     public void userWithAllowedRoleCanCreateProjectTest(Role role) {
-        Project createdProject = ProjectHelper.createProject(userCheckedRequest, testData.getProject());
-        User updatedUser = UserHelper.updateUserRole(superUserCheckRequests, testData.getUser(), role, createdProject.getId());
+        Project createdProject = ApiProjectHelper.createProject(userCheckedRequest, testData.getProject());
+        User updatedUser = ApiUserHelper.updateUserRole(superUserCheckRequests, testData.getUser(), role, createdProject.getId());
         softy.assertNotNull(updatedUser);
         softy.assertEquals(updatedUser.getRoles().getRole().get(0).getRoleId(), role.getRoleName());
         Project nestedProject = TestDataGenerator.generate(Project.class, RandomData.getUniqueId(), "Nested Project with " + role.getRoleName() + " " + RandomData.getString(8));
         List<Project> nestedProjects = new ArrayList<>();
         nestedProjects.add(nestedProject);
         CheckedRequest requestForNestedProject = new CheckedRequest(RequestSpecs.authSpec(updatedUser));
-        List<Project> createdNestedProjects = ProjectHelper.createNestedProjects(requestForNestedProject, nestedProjects);
+        List<Project> createdNestedProjects = ApiProjectHelper.createNestedProjects(requestForNestedProject, nestedProjects);
         Project createdNestedProject = createdNestedProjects.get(0);
         softy.assertNotNull(createdNestedProject);
         softy.assertEquals(createdNestedProject.getName(), nestedProject.getName());
