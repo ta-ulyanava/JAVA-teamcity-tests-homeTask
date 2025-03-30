@@ -16,7 +16,8 @@ import java.util.Map;
 public class BaseUiTest extends BaseTest {
     @BeforeSuite(alwaysRun = true)
     public void setupUiTest() {
-        SelenideLogger.addListener("allure", new AllureSelenide().screenshots(true).savePageSource(true));
+//        SelenideLogger.addListener("allure", new AllureSelenide().screenshots(true).savePageSource(true));
+        SelenideLogger.addListener("AllureSelenide", new AllureSelenide().screenshots(true).savePageSource(true));
         Configuration.browser = Config.getProperty("browser");
         Configuration.baseUrl = "http://" + Config.getProperty("host");
         Configuration.remote = Config.getProperty("remote");

@@ -12,7 +12,7 @@ import org.testng.asserts.SoftAssert;
 import static com.example.teamcity.api.generators.TestDataGenerator.generate;
 import static io.qameta.allure.Allure.step;
 
-//@Listeners({io.qameta.allure.testng.AllureTestNg.class})
+@Listeners({io.qameta.allure.testng.AllureTestNg.class})
 public class BaseTest {
     protected SoftAssert softy;
     protected TestData testData;
