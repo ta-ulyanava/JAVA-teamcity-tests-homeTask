@@ -45,7 +45,7 @@ jobs:
         continue-on-error: true
         run: |
           ./mvnw clean install -DskipTests
-          ./mvnw test -Dtest='com.example.teamcity.${{ inputs.package }}.**'
+          ./mvnw test -Dtest='com.example.teamcity.${{ inputs.package }}.**' -Dgroups=Regression
 
       - name: Upload UI test artifacts (screenshots, HTML)
         if: always()
