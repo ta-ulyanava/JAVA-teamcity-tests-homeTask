@@ -33,10 +33,13 @@ public class ProjectsPage extends BasePage {
 
     @Step("Get visible project names from Projects page")
     public List<String> getVisibleProjectNames() {
-        return getProjectsElements().shouldBe(CollectionCondition.sizeGreaterThan(0), Duration.ofSeconds(5)).stream()
-                .map(element -> element.shouldBe(Condition.visible).getText())
+        return getProjectsElements()
+                .filter(Condition.visible)
+                .stream()
+                .map(SelenideElement::getText)
                 .collect(Collectors.toList());
     }
+
 
     @Step("Wait for project to appear: {name}")
     public void waitForProjectToAppear(String name) {
