@@ -20,6 +20,9 @@ jobs:
           java-version: '17'
           distribution: 'zulu'
 
+      - name: Check Java version
+        run: java -version  # Проверка версии JDK
+
       - name: Make mvnw executable
         run: chmod +x ./mvnw
 
@@ -38,9 +41,14 @@ jobs:
       - name: Make mvnw executable
         run: chmod +x ./mvnw
 
+      - name: Check directory contents
+        run: ls -l target/dependency  # Проверка наличия aspectjweaver.jar
+
       - name: Run tests with AspectJ weaving
         continue-on-error: true
-        run: ./mvnw test -Dtest='com.example.teamcity.${{ inputs.package }}.**' -javaagent:target/dependency/aspectjweaver-1.9.23.jar
+        run: |
+          ./mvnw clean install -U  # Очистка кеша Maven и установка зависимостей
+          ./mvnw test -Dtest='com.example.teamcity.${{ inputs.package }}.**' -javaagent:target/dependency/aspectjweaver-1.9.23.jar
 
       - name: Upload UI test artifacts (screenshots, HTML)
         if: always()
