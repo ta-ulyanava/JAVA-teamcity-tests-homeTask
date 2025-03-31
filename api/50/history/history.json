@@ -1,1 +1,0 @@
-{"2e6df2301e4e82e0f0a5e36536b6aca1":{"statistic":{"failed":0,"broken":0,"skipped":0,"passed":1,"unknown":0,"total":1},"items":[{"uid":"2f43739c99776af0","reportUrl":"https://ta-ulyanava.github.io/JAVA-teamcity-tests-homeTask/api/50//#testresult/2f43739c99776af0","status":"passed","time":{"start":1743400467933,"stop":1743400521574,"duration":53641}}]}}
