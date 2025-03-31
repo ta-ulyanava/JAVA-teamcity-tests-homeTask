@@ -1,3 +1,0 @@
-"Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"failed","Thu Mar 27 18:56:18 GMT 2025","Thu Mar 27 18:57:11 GMT 2025","53467","Surefire suite","Surefire test","com.example.teamcity.ui.CreateProjectTest","com.example.teamcity.ui.CreateProjectTest","userCreatesProject","User should be able to create project",""
-"broken","Thu Mar 27 18:57:11 GMT 2025","Thu Mar 27 19:00:14 GMT 2025","182765","Surefire suite","Surefire test","com.example.teamcity.ui.SetupServerTest","com.example.teamcity.ui.SetupServerTest","setupTeamCityServerTest","setupTeamCityServerTest","Verifies that user can complete initial TeamCity setup: license acceptance and DB config."
