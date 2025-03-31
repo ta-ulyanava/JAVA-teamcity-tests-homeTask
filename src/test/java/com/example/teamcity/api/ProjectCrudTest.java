@@ -15,6 +15,7 @@ import com.example.teamcity.api.spec.responce.AccessErrorSpecs;
 import com.example.teamcity.api.spec.responce.IncorrectDataSpecs;
 import com.example.teamcity.api.validation.EntityValidator;
 import io.qameta.allure.Feature;
+import io.qameta.allure.Issue;
 import io.qameta.allure.Story;
 import io.restassured.response.Response;
 import org.testng.annotations.DataProvider;
@@ -40,9 +41,9 @@ public class ProjectCrudTest extends BaseApiTest {
     }
 
     // =================== PROJECT COPY SETTINGS TESTS (COPY_SETTINGS_TAG) =================== //
-    //Bug in API: projectsIdsMap, buildTypesIdsMap, vcsRootsIdsMap, sourceProject should be copied but are not
     @Feature("Project Copy Settings")
     @Story("Copy Project Parameters")
+    @Issue("Bug in API: projectsIdsMap, buildTypesIdsMap, vcsRootsIdsMap, sourceProject should be copied but are not")
     @Test(description = "User should be able to create a Project with copyAllAssociatedSettings set to true and verify copied settings", groups = {"Positive", "CRUD", "KnownBugs", "COPY_SETTINGS_TAG"})
     public void userCreatesProjectWithCopyAllAssociatedSettingsTrueTest() {
         var sourceProject = projectHelper.createProject(userCheckedRequest, testData.getProject());
@@ -137,6 +138,7 @@ public class ProjectCrudTest extends BaseApiTest {
 
     @Feature("Project ID Validation")
     @Story("Project ID Length Exceeded")
+    @Issue("Bug in API: 500 error is returned")
     @Test(description = "User should not be able to create a Project with an ID longer than 225 characters", groups = {"Negative", "CRUD", "KnownBugs", "CornerCase", "PROJECT_ID_VALIDATION_TAG"})
     public void userCannotCreateProjectWithTooLongIdTest() {
         var tooLongId = RandomData.getString(226);
@@ -146,8 +148,7 @@ public class ProjectCrudTest extends BaseApiTest {
         softy.assertAll();
     }
 
-    @Feature("Project ID Validation")
-    @Story("Special Characters in Project ID")
+
     @DataProvider(name = "invalidSpecialCharactersForId")
     public static Object[][] invalidSpecialCharactersForId() {
         return "!@#$%^&*()+-={}[]:\\".chars()
@@ -155,7 +156,9 @@ public class ProjectCrudTest extends BaseApiTest {
                 .toArray(Object[][]::new);
     }
 
-    // Need to fix 500 error (Known Bugs)
+    @Feature("Project ID Validation")
+    @Story("Special Characters in Project ID")
+    @Issue("Bug in API: 500 error is returned")
     @Test(description = "User should not be able to create a Project with special characters in ID", groups = {"Negative", "CRUD", "KnownBugs", "PROJECT_ID_VALIDATION_TAG"}, dataProvider = "invalidSpecialCharactersForId")
     public void userCannotCreateProjectWithEachSpecialCharacterInIdTest(String specialChar) {
         var invalidId = "test_" + specialChar;
@@ -165,16 +168,16 @@ public class ProjectCrudTest extends BaseApiTest {
         softy.assertAll();
     }
 
-    @Feature("Project ID Validation")
-    @Story("Non-Latin Characters in Project ID")
+
     @DataProvider
     public static Object[][] nonLatinIdProviderForId() {
         return new Object[][]{{"проект"}, {"项目"}, {"プロジェクト"}, {"مشروع"}, {"παράδειγμα"}, {"नमूना"}, {"בדיקה"}};
     }
 
-    // Need to fix 500 error (Known Bugs)
-    @Test(description = "User should not be able to create a Project with a non-Latin ID",
-            groups = {"Negative", "CRUD", "KnownBugs", "PROJECT_ID_VALIDATION_TAG"}, dataProvider = "nonLatinIdProviderForId")
+    @Feature("Project ID Validation")
+    @Story("Non-Latin Characters in Project ID")
+    @Issue("Bug in API: 500 error is returned")
+    @Test(description = "User should not be able to create a Project with a non-Latin ID", groups = {"Negative", "CRUD", "KnownBugs", "PROJECT_ID_VALIDATION_TAG"}, dataProvider = "nonLatinIdProviderForId")
     public void userCannotCreateProjectWithNonLatinIdTest(String invalidId) {
         var invalidProject = TestDataGenerator.generate(List.of(), Project.class, invalidId, RandomData.getString());
         var response = userUncheckedRequest.getRequest(ApiEndpoint.PROJECTS).create(invalidProject);
@@ -184,7 +187,7 @@ public class ProjectCrudTest extends BaseApiTest {
 
     @Feature("Project ID Validation")
     @Story("Empty ID")
-// Need to fix 500 error (Known Bugs)
+    @Issue("Bug in API: 500 error is returned")
     @Test(description = "User should not be able to create Project with empty id", groups = {"Negative", "CRUD", "KnownBugs", "PROJECT_ID_VALIDATION_TAG"})
     public void userCannotCreateProjectWithEmptyIdTest() {
         Project invalidProject = TestDataGenerator.generate(Project.class, "", RandomData.getString());
@@ -195,7 +198,7 @@ public class ProjectCrudTest extends BaseApiTest {
 
     @Feature("Project ID Validation")
     @Story("ID with Space")
-// Need to fix 500 error (Known Bugs)
+    @Issue("Bug in API: 500 error is returned")
     @Test(description = "User should not be able to create a Project with a space as ID", groups = {"Negative", "CRUD", "KnownBugs", "PROJECT_ID_VALIDATION_TAG"})
     public void userCannotCreateProjectWithSpaceAsIdTest() {
         Project invalidProject = TestDataGenerator.generate(Project.class, " ", RandomData.getString());
@@ -227,9 +230,10 @@ public class ProjectCrudTest extends BaseApiTest {
         softy.assertAll();
     }
 
-    // Need to fix 500 error (Known Bugs)
+
     @Feature("Project ID Validation")
     @Story("Invalid Project ID")
+    @Issue("Bug in API: 500 error is returned")
     @Test(description = "User should not be able to create a Project with an ID consisting only of digits",
             groups = {"Negative", "CRUD", "KnownBugs", "PROJECT_ID_VALIDATION_TAG"})
     public void userCannotCreateProjectWithDigitsOnlyIdTest() {
@@ -240,8 +244,7 @@ public class ProjectCrudTest extends BaseApiTest {
         softy.assertAll();
     }
 
-    @Feature("Project ID Validation")
-    @Story("Invalid Starting Character in Project ID")
+
     @DataProvider
     public static Object[][] invalidIdStartId() {
         String randomString = RandomData.getString(9);
@@ -251,7 +254,9 @@ public class ProjectCrudTest extends BaseApiTest {
         };
     }
 
-    // Need to fix 500 error (Known Bugs)
+    @Feature("Project ID Validation")
+    @Story("Invalid Starting Character in Project ID")
+    @Issue("Bug in API: 500 error is returned")
     @Test(description = "User should not be able to create a Project with an ID starting with an underscore or a digit",
             groups = {"Negative", "CRUD", "KnownBugs", "PROJECT_ID_VALIDATION_TAG"},
             dataProvider = "invalidIdStartId")
@@ -262,10 +267,9 @@ public class ProjectCrudTest extends BaseApiTest {
         softy.assertAll();
     }
 
-
-    // Need to fix 500 error (Known Bugs)
     @Feature("Project ID Validation")
     @Story("Spaces in Project ID")
+    @Issue("Bug in API: 500 error is returned")
     @Test(description = "User should not be able to create a Project with spaces in the middle of the ID", groups = {"Negative", "CRUD", "KnownBugs", "PROJECT_ID_VALIDATION_TAG"})
     public void userCannotCreateProjectWithSpacesInIdTest() {
         String invalidId = RandomData.getString(5) + " " + RandomData.getString(5);
@@ -285,9 +289,10 @@ public class ProjectCrudTest extends BaseApiTest {
         softy.assertAll();
     }
 
-    // Need to fix 500 error (Known Bugs)
+
     @Feature("Project ID Validation")
     @Story("Empty Project ID")
+    @Issue("Bug in API: 500 error is returned")
     @Test(description = "User should not be able to create a Project with an empty ID String", groups = {"Negative", "CRUD", "PROJECT_ID_VALIDATION_TAG", "KnownBugs"})
     public void userCannotCreateProjectWithEmptyIdStringTest() {
         Project projectWithEmptyId = TestDataGenerator.generate(List.of(), Project.class, "", RandomData.getString());
@@ -311,7 +316,7 @@ public class ProjectCrudTest extends BaseApiTest {
 
     @Feature("Project Name Validation")
     @Story("Space in Project Name")
-// Need to fix incorrect response from server (Known bugs)
+    @Issue("Bug in API: 500 error is returned")
     @Test(description = "User should not be able to create a Project with a space as name", groups = {"Negative", "CRUD", "KnownBugs", "PROJECT_NAME_VALIDATION_TAG"})
     public void userCannotCreateProjectWithSpaceAsNameTest() {
         Project invalidProject = TestDataGenerator.generate(Project.class, RandomData.getString(), " ");

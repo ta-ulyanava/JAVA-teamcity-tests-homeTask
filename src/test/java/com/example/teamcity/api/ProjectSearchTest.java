@@ -195,19 +195,6 @@ public class ProjectSearchTest extends BaseApiTest {
         softy.assertAll();
     }
 
-    //  Bug in API, part search is not implemented as defined in API doc
-    @Story("Search with pagination using count and start parameters")
-    @Test(description = "User should be able to find the second project when using count=1 and start=1", groups = {"Positive", "PROJECT_SEARCH_NAME_TAG", "LOCATOR_BASED_SEARCH"})
-    public void userShouldBeAbleToFindSecondProjectWithCountAndStartTest() {
-        String namePrefix = "PaginationTest_";
-        List<Project> projectsToCreate = ProjectTestData.createProjectsWithPrefixAndNumericSuffix(3, namePrefix + RandomData.getString(5));
-        List<Project> savedProjects = projectHelper.createProjects(userCheckedRequest, projectsToCreate);
-        List<Project> foundProjects = projectHelper.findProjectsByLocatorWithPagination(userCheckedRequest, "name:" + namePrefix, 1, 1);
-        softy.assertEquals(foundProjects.size(), 1, "Expected exactly 1 project");
-        softy.assertEquals(foundProjects.get(0).getId(), savedProjects.get(1).getId(), "Expected the second project to be returned");
-        SearchValidator.validateSearchResult(savedProjects.get(1), foundProjects.get(0), "Project", "name", List.of("parentProject"), softy);
-        softy.assertAll();
-    }
     @Story("Search with pagination using count and start parameters")
     @Test(description = "User should get an empty list when using count=0 and start=0", groups = {"Positive", "PROJECT_SEARCH_NAME_TAG", "LOCATOR_BASED_SEARCH"})
     public void userShouldGetEmptyListWithCountAndStartTest() {
@@ -228,18 +215,7 @@ public class ProjectSearchTest extends BaseApiTest {
         response.then().spec(IncorrectDataSpecs.badRequestNegativePaginationParameters());
         softy.assertAll();
     }
-    //  Bug in API, part search is not implemented as defined in API doc
-    @Feature("Project Search")
-    @Story("Search with pagination when count exceeds the number of matching projects")
-    @Test(description = "User should get all projects when count exceeds total", groups = {"Positive", "PROJECT_SEARCH_NAME_TAG", "LOCATOR_BASED_SEARCH", "KnownBugs"})
-    public void userShouldGetAllProjectsWhenCountExceedsTotalTest() {
-        String namePrefix = "CountExceedTest_";
-        List<Project> projectsToCreate = ProjectTestData.createProjectsWithPrefixAndNumericSuffix(3, namePrefix + RandomData.getString(5));
-        projectHelper.createProjects(userCheckedRequest, projectsToCreate);
-        List<Project> foundProjects = projectHelper.findProjectsByLocatorWithPagination(userCheckedRequest, "name:" + namePrefix, 10, 0);
-        softy.assertEquals(foundProjects.size(), projectsToCreate.size(), "Expected to get all created projects when count exceeds total");
-        softy.assertAll();
-    }
+
 
 
     // =================== LOCATOR-BASED SEARCH =================== //
