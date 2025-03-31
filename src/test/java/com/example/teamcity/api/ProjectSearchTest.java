@@ -198,8 +198,7 @@ public class ProjectSearchTest extends BaseApiTest {
     @Story("Search with pagination using negative count and start parameters")
     @Test(description = "User should get validation error for negative pagination parameters", groups = {"Negative", "PROJECT_SEARCH_NAME_TAG", "LOCATOR_BASED_SEARCH", "KnownBugs"})
     public void userShouldGetValidationErrorForNegativePaginationTest() {
-        Response response = userUncheckedRequest.getRequest(ApiEndpoint.PROJECTS)
-                .findEntitiesByLocatorQueryWithPagination("", -1, -1);
+        Response response = userUncheckedRequest.getRequest(ApiEndpoint.PROJECTS).findEntitiesByLocatorQueryWithPagination("", -1, -1);
         response.then().spec(IncorrectDataSpecs.badRequestNegativePaginationParameters());
         softy.assertAll();
     }
