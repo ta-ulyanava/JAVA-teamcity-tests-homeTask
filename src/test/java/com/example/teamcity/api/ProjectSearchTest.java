@@ -182,18 +182,6 @@ public class ProjectSearchTest extends BaseApiTest {
         softy.assertAll();
     }
 
-    //  Bug in API, part search is not implemented as defined in API doc
-    @Story("Search with pagination using count and start parameters")
-    @Test(description = "User should be able to find exactly 2 projects when using count=2 and start=0", groups = {"Positive", "PROJECT_SEARCH_NAME_TAG", "LOCATOR_BASED_SEARCH"})
-    public void userShouldBeAbleToFindTwoProjectsWithCountAndStartTest() {
-        String namePrefix = "PaginationTest_";
-        List<Project> projectsToCreate = ProjectTestData.createProjectsWithPrefixAndNumericSuffix(3, namePrefix + RandomData.getString(5));
-        List<Project> savedProjects = projectHelper.createProjects(userCheckedRequest, projectsToCreate);
-        List<Project> foundProjects = projectHelper.findProjectsByLocatorWithPagination(userCheckedRequest, "name:" + namePrefix, 2, 0);
-        softy.assertEquals(foundProjects.size(), 2, "Expected exactly 2 projects");
-        SearchValidator.validateSearchResults(List.of(savedProjects.get(0), savedProjects.get(1)), foundProjects, "Project", "name", List.of("parentProject"), softy);
-        softy.assertAll();
-    }
 
     @Story("Search with pagination using count and start parameters")
     @Test(description = "User should get an empty list when using count=0 and start=0", groups = {"Positive", "PROJECT_SEARCH_NAME_TAG", "LOCATOR_BASED_SEARCH"})

@@ -29,7 +29,7 @@ import static com.example.teamcity.api.constants.TestConstants.XSS_PAYLOAD;
 @Test(groups = {"Regression"})
 public class ProjectCrudTest extends BaseApiTest {
 
-    @Feature("Projects")
+    @Feature("Projects creation")
     @Story("Create project with required fields only")
     @Test(description = "User should be able to create a project with the minimum required fields under Root project", groups = {"Positive", "CRUD"})
     public void userCreatesProjectWithMandatoryFieldsOnlyTest() {

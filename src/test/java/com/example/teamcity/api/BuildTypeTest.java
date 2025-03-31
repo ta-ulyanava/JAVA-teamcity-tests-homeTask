@@ -6,6 +6,8 @@ import com.example.teamcity.api.models.Project;
 import com.example.teamcity.api.requests.CheckedRequest;
 import com.example.teamcity.api.requests.unchecked.UncheckedBase;
 import com.example.teamcity.api.spec.request.RequestSpecs;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
 import org.apache.http.HttpStatus;
 import org.hamcrest.Matchers;
 import org.testng.annotations.Test;
@@ -17,7 +19,8 @@ import static io.qameta.allure.Allure.step;
 
 @Test(groups = {"Regression"})
 public class BuildTypeTest extends BaseApiTest {
-
+    @Feature("BuildType creation")
+    @Story("Create BuildType with required fields only")
     @Test(description = "User should be able to create Build Type", groups = {"Positive", "CRUD"})
     public void userCreatesBuildTypeTest() {
         superUserCheckRequests.getRequest(ApiEndpoint.USERS).create(testData.getUser());
@@ -29,7 +32,8 @@ public class BuildTypeTest extends BaseApiTest {
 
 
     }
-
+    @Feature("BuildType id validation")
+    @Story("Duplicate BuildType iD")
     @Test(description = "User cannot create two build types with same id", groups = {"Negative", "CRUD"})
     public void userCreatesTwoBuildTypesWithTheSameIdTest() {
         superUserCheckRequests.getRequest(ApiEndpoint.USERS).create(testData.getUser());
