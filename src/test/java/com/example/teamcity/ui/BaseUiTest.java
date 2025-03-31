@@ -14,6 +14,7 @@ import com.example.teamcity.ui.helpers.UiLoginHelper;
 import com.example.teamcity.ui.helpers.UiProjectHelper;
 import io.qameta.allure.selenide.AllureSelenide;
 import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
 
 import java.util.Map;
@@ -29,27 +30,26 @@ public class BaseUiTest extends BaseTest {
     protected ApiUserHelper userHelper;
 
     @BeforeSuite(alwaysRun = true)
-    public void setupUiTest() {
+    public void setupUiSuite() {
         SelenideLogger.addListener("AllureSelenide", new AllureSelenide().screenshots(true).savePageSource(true));
-
         Configuration.browser = Config.getProperty("browser");
         Configuration.baseUrl = "http://" + Config.getProperty("host");
         Configuration.remote = Config.getProperty("remote");
         Configuration.browserSize = Config.getProperty("browserSize");
         Configuration.browserCapabilities.setCapability("selenoid:options", Map.of("enableVNC", true, "enableLog", true));
+    }
 
-        // API helpers
+    @BeforeMethod(alwaysRun = true)
+    public void setupUiTest() {
         projectHelper = new ApiProjectHelper();
         buildTypeHelper = new ApiBuildTypeHelper(superUserCheckRequests);
         userHelper = new ApiUserHelper(superUserCheckRequests);
-
-        // UI helpers
         uiProjectHelper = new UiProjectHelper();
         uiBuildTypeHelper = new UiBuildTypeHelper(superUserCheckRequests);
         uiLoginHelper = new UiLoginHelper(superUserCheckRequests);
     }
 
-    @AfterMethod
+    @AfterMethod(alwaysRun = true)
     public void closeWebDriver() {
         Selenide.closeWebDriver();
     }

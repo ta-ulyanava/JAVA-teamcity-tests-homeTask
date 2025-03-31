@@ -4,7 +4,6 @@ import com.codeborne.selenide.Condition;
 import com.codeborne.selenide.Selenide;
 import com.codeborne.selenide.SelenideElement;
 import com.example.teamcity.api.enums.ApiEndpoint;
-import com.example.teamcity.api.enums.WebRoute;
 import com.example.teamcity.api.generators.TestDataStorage;
 import io.qameta.allure.Step;
 
@@ -20,7 +19,7 @@ public class CreateBuildTypePage extends CreateBasePage {
     private static final String BUILD_TYPE_SHOW_MODE = "createBuildTypeMenu";
 
     private final SelenideElement buildTypeNameInput = $("#buildTypeName");
-    private final SelenideElement errorMessage = $(".error");
+    private final SelenideElement errorEmptyBuildTypeName = $("#error_buildTypeName");
 
     @Step("Open CreateBuildType page for project '{projectId}'")
     public static CreateBuildTypePage open(String projectId) {
@@ -41,8 +40,6 @@ public class CreateBuildTypePage extends CreateBasePage {
         return this;
     }
 
-
-
     /**
      * Fills the build type name and proceeds to creation.
      * Also registers the build type for cleanup if it has a non-empty name.
@@ -61,12 +58,21 @@ public class CreateBuildTypePage extends CreateBasePage {
     }
 
     /**
+     * Waits for the specific validation error to be visible.
+     *
+     * @return the visible error element
+     */
+    public SelenideElement waitForErrorVisible() {
+        return errorEmptyBuildTypeName.shouldBe(Condition.visible);
+    }
+
+    /**
      * Returns the UI element containing the validation error message.
      *
      * @return SelenideElement representing the error
      */
-    public SelenideElement getErrorMessage() {
-        return errorMessage;
+    public SelenideElement getErrorEmptyBuildTypeName() {
+        return errorEmptyBuildTypeName;
     }
 
     /**
@@ -77,8 +83,7 @@ public class CreateBuildTypePage extends CreateBasePage {
      */
     @Step("Assert error message is: {expectedMessage}")
     public CreateBuildTypePage assertErrorMessage(String expectedMessage) {
-        errorMessage.shouldHave(Condition.text(expectedMessage));
+        errorEmptyBuildTypeName.shouldHave(Condition.text(expectedMessage));
         return this;
     }
-
 }

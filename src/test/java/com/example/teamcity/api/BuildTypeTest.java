@@ -41,8 +41,6 @@ public class BuildTypeTest extends BaseApiTest {
                 .create(buildTypeWithSameId)
                 .then().assertThat().statusCode(HttpStatus.SC_BAD_REQUEST)
                 .body(Matchers.containsString("The build configuration / template ID \"%s\" is already used by another configuration or template".formatted(testData.getBuildType().getId())));
-
-        step("Check BuildType2 was not created with bad request code");
     }
 
 //    @Test(description = "Project Admin can create Build Type for their project", groups = {"Positive", "Roles"})
