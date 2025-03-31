@@ -101,12 +101,25 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.0.0-M7</version>
                 <configuration>
-                    <suiteXmlFiles>
-                    </suiteXmlFiles>
                     <argLine>
                         -javaagent:"${settings.localRepository}/org/aspectj/aspectjweaver/${aspectj.version}/aspectjweaver-${aspectj.version}.jar"
                     </argLine>
+
+                    <!-- оставляем suiteXmlFiles, но без пустого тела -->
+                    <!-- если файл появится позже — просто добавь путь -->
+                    <!-- <suiteXmlFiles>
+                        <suiteXmlFile>src/test/resources/my-suite.xml</suiteXmlFile>
+                    </suiteXmlFiles> -->
+
+                    <properties>
+                        <!-- важно! Явно указываем Allure-слушатель для CI -->
+                        <property>
+                            <name>listener</name>
+                            <value>io.qameta.allure.testng.AllureTestNg</value>
+                        </property>
+                    </properties>
                 </configuration>
+
                 <dependencies>
                     <dependency>
                         <groupId>org.aspectj</groupId>
@@ -115,6 +128,7 @@
                     </dependency>
                 </dependencies>
             </plugin>
+
 
             <!-- Компиляция с настройками Java 17 -->
             <plugin>
