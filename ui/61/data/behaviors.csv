@@ -1,0 +1,5 @@
+"Epic","Feature","Story","FAILED","BROKEN","PASSED","SKIPPED","UNKNOWN"
+"","","","0","0","1","0","0"
+"","UI: Project Management","Create project via GitHub URL","0","0","1","0","0"
+"","UI: Build Configuration Management","Create build configuration via GitHub URL","0","0","1","0","0"
+"","Teamcity Setup","","0","0","1","0","0"
