@@ -9,7 +9,6 @@ import com.example.teamcity.api.generators.domain.ProjectTestData;
 import com.example.teamcity.api.models.ParentProject;
 import com.example.teamcity.api.models.Project;
 import com.example.teamcity.api.models.User;
-import com.example.teamcity.api.requests.CheckedRequest;
 import com.example.teamcity.api.requests.UncheckedRequest;
 import com.example.teamcity.api.spec.request.RequestSpecs;
 import com.example.teamcity.api.spec.responce.AccessErrorSpecs;
@@ -21,7 +20,6 @@ import io.restassured.response.Response;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static com.example.teamcity.api.constants.TestConstants.SQL_INJECTION_PAYLOAD;
@@ -490,65 +488,94 @@ public class ProjectCrudTest extends BaseApiTest {
 // =================== SECURITY TESTS (SEC_TAG) =================== //
 
     //     =================== ROLE-BASED ACCESS TESTS (ROLE_TAG) =================== //
-    @Feature("Access Control")
-    @Story("Restricted Roles - No Project Creation")
-    @DataProvider(name = "restrictedRoles")
-    public static Object[][] restrictedRoles() {
+
+    @DataProvider(name = "rolesWithRegularProjectAccess")
+    public static Object[][] rolesWithRegularProjectAccess() {
         return new Object[][]{
-                {Role.PROJECT_VIEWER},
-                {Role.GUEST_ROLE},
-                {Role.USER_ROLE},
-                {Role.PROJECT_DEVELOPER},
-                {Role.TOOLS_INTEGRATION}
+                {Role.PROJECT_ADMIN},
+
         };
     }
 
-    @Test(description = "User with restricted role should not be able to create a project", dataProvider = "restrictedRoles", groups = {"Negative", "CRUD", "ROLE_TAG"})
-    public void userWithRestrictedRoleCannotCreateProjectTest(Role role) {
-        Project createdProject = projectHelper.createProject(userCheckedRequest, testData.getProject());
-        User userWithRole = testData.getUser();
-        User updatedUser = userHelper.updateUserRole(userWithRole, role, createdProject.getId());  // Исправлено
-        softy.assertNotNull(updatedUser);
-        softy.assertEquals(updatedUser.getRoles().getRole().get(0).getRoleId(), role.getRoleName());
-        Project nestedProject = TestDataGenerator.generate(Project.class, RandomData.getUniqueId(), "Nested Project with " + role.getRoleName() + " " + RandomData.getString(8));
+    @Feature("Access Control")
+    @Story("Project Creation Permissions")
+    @Test(description = "User with allowed role should be able to create a regular project", dataProvider = "rolesWithRegularProjectAccess", groups = {"Positive", "CRUD", "ROLE_TAG"})
+    public void userWithAllowedRoleCanCreateRegularProjectTest(Role role) {
+        User updatedUser = userHelper.createUserWithRole(testData.getUser(), role, TestConstants.ROOT_PROJECT_ID);
+        softy.assertNotNull(updatedUser, "User with role " + role.getRoleName() + " was not created");
+        Project projectToCreate = TestDataGenerator.generate(Project.class, RandomData.getUniqueId(), "Regular-" + role.getRoleName() + "-" + RandomData.getString(8));
+        Project actual = new UncheckedRequest(RequestSpecs.authSpec(updatedUser)).getRequest(ApiEndpoint.PROJECTS).create(projectToCreate).as(Project.class);
+        EntityValidator.validateAllEntityFieldsIgnoring(projectToCreate, actual, List.of("parentProject"), softy);
+        softy.assertEquals(actual.getParentProject().getId(), TestConstants.ROOT_PROJECT_ID, "Parent project should be '_Root'");
+        softy.assertAll();
+    }
+
+
+    @DataProvider(name = "rolesWithoutRegularProjectAccess")
+    public static Object[][] rolesWithoutRegularProjectAccess() {
+        return new Object[][]{
+                {Role.PROJECT_VIEWER},
+                {Role.PROJECT_DEVELOPER},
+                {Role.TOOLS_INTEGRATION},
+                {Role.AGENT_MANAGER}
+        };
+    }
+
+    @Feature("Access Control")
+    @Story("Project Creation Permissions")
+    @Test(description = "User with restricted role should not be able to create a regular project", dataProvider = "rolesWithoutRegularProjectAccess", groups = {"Negative", "CRUD", "ROLE_TAG"})
+    public void userWithRestrictedRoleCannotCreateRegularProjectTest(Role role) {
+        Project parentProject = projectHelper.createProject(userCheckedRequest, testData.getProject());
+        User updatedUser = userHelper.createUserWithRole(testData.getUser(), role, parentProject.getId());
+        softy.assertNotNull(updatedUser, "User with role " + role.getRoleName() + " was not created");
+        Project nestedProject = TestDataGenerator.generate(Project.class, RandomData.getUniqueId(), "Nested-" + role.getRoleName() + "-" + RandomData.getString(8));
         UncheckedRequest restrictedUserRequest = new UncheckedRequest(RequestSpecs.authSpec(updatedUser));
         Response response = restrictedUserRequest.getRequest(ApiEndpoint.PROJECTS).create(nestedProject);
         response.then().spec(AccessErrorSpecs.accessDenied());
         softy.assertAll();
     }
 
-
-
-
-    @Feature("Access Control")
-    @Story("Allowed Roles - Project Creation")
-    @Test(description = "User with allowed roles should be able to create a project", groups = {"Positive", "AccessControl", "CRUD", "ROLE_TAG"})
-    @DataProvider(name = "allowedRoles")
-    public static Object[][] allowedRoles() {
+    @DataProvider(name = "rolesWithNestedProjectAccess")
+    public static Object[][] rolesWithNestedProjectAccess() {
         return new Object[][]{
-                {Role.PROJECT_ADMIN},
-                {Role.AGENT_MANAGER}
+                {Role.PROJECT_ADMIN}
         };
     }
 
-    @Test(dataProvider = "allowedRoles")
-    public void userWithAllowedRoleCanCreateProjectTest(Role role) {
-        Project createdProject = projectHelper.createProject(userCheckedRequest, testData.getProject());
-        User updatedUser = userHelper.updateUserRole(testData.getUser(), role, createdProject.getId());  // Исправлено
-        softy.assertNotNull(updatedUser);
-        softy.assertEquals(updatedUser.getRoles().getRole().get(0).getRoleId(), role.getRoleName());
-        Project nestedProject = TestDataGenerator.generate(Project.class, RandomData.getUniqueId(), "Nested Project with " + role.getRoleName() + " " + RandomData.getString(8));
-        List<Project> nestedProjects = new ArrayList<>();
-        nestedProjects.add(nestedProject);
-        CheckedRequest requestForNestedProject = new CheckedRequest(RequestSpecs.authSpec(updatedUser));
-        List<Project> createdNestedProjects = projectHelper.createNestedProjects(requestForNestedProject, nestedProjects);
-        Project createdNestedProject = createdNestedProjects.get(0);
-        softy.assertNotNull(createdNestedProject);
-        softy.assertEquals(createdNestedProject.getName(), nestedProject.getName());
-        EntityValidator.validateAllEntityFieldsIgnoring(nestedProject, createdNestedProject, List.of("parentProject"), softy);
+    @Feature("Access Control")
+    @Story("Project Creation Permissions")
+    @Test(description = "User with allowed role should be able to create a nested project", dataProvider = "rolesWithNestedProjectAccess", groups = {"Positive", "CRUD", "ROLE_TAG"})
+    public void userWithAllowedRoleCanCreateNestedProjectTest(Role role) {
+        Project parent = projectHelper.createProject(userCheckedRequest, testData.getProject());
+        User updatedUser = userHelper.createUserWithRole(testData.getUser(), role, parent.getId());
+        Project nested = TestDataGenerator.generate(Project.class, RandomData.getUniqueId(), "Nested-" + role.getRoleName() + "-" + RandomData.getString(8));
+        nested.setParentProject(new ParentProject(parent.getId(), null));
+        Project created = new UncheckedRequest(RequestSpecs.authSpec(updatedUser)).getRequest(ApiEndpoint.PROJECTS).create(nested).as(Project.class);
+        EntityValidator.validateAllEntityFieldsIgnoring(nested, created, List.of("parentProject"), softy);
+        softy.assertEquals(created.getParentProject().getId(), parent.getId(), "Parent project ID should match");
         softy.assertAll();
     }
 
+    @DataProvider(name = "rolesWithoutNestedProjectAccess")
+    public static Object[][] rolesWithoutNestedProjectAccess() {
+        return new Object[][]{
+                {Role.AGENT_MANAGER},
+                {Role.PROJECT_VIEWER},
+        };
+    }
+
+    @Feature("Access Control")
+    @Story("Project Creation Permissions")
+    @Test(description = "User with restricted role should not be able to create a nested project", dataProvider = "rolesWithoutNestedProjectAccess", groups = {"Negative", "CRUD", "ROLE_TAG"})
+    public void userWithRestrictedRoleCannotCreateNestedProjectTest(Role role) {
+        Project parent = projectHelper.createProject(userCheckedRequest, testData.getProject());
+        User updatedUser = userHelper.createUserWithRole(testData.getUser(), role, parent.getId());
+        Project nested = TestDataGenerator.generate(Project.class, RandomData.getUniqueId(), "Nested-" + role.getRoleName() + "-" + RandomData.getString(8));
+        nested.setParentProject(new ParentProject(parent.getId(), null));
+        Response response = new UncheckedRequest(RequestSpecs.authSpec(updatedUser)).getRequest(ApiEndpoint.PROJECTS).create(nested);
+        response.then().spec(AccessErrorSpecs.accessDenied());
+        softy.assertAll();
+    }
 
 
 // =================== ROLE-BASED ACCESS TESTS (ROLE_TAG) =================== //

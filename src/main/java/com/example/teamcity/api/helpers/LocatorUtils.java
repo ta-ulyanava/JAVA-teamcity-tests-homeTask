@@ -21,7 +21,7 @@ public final class LocatorUtils {
      * @return encoded string suitable for use in URLs
      */
     @Step("Encode locator string: {locator}")
-    public static String encode(String locator) {
+    public String encode(String locator) {
         return URLEncoder.encode(locator, StandardCharsets.UTF_8);
     }
 }

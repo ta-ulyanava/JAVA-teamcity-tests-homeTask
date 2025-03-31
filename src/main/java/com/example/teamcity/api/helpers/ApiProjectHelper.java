@@ -1,6 +1,7 @@
 package com.example.teamcity.api.helpers;
 
 import com.example.teamcity.api.enums.ApiEndpoint;
+import com.example.teamcity.api.enums.Role;
 import com.example.teamcity.api.models.ParentProject;
 import com.example.teamcity.api.models.Project;
 import com.example.teamcity.api.requests.CheckedRequest;
@@ -45,18 +46,24 @@ public class ApiProjectHelper {
     @Step("Create nested project hierarchy")
     public List<Project> createNestedProjects(CheckedRequest request, List<Project> nestedProjects) {
         List<Project> created = new ArrayList<>();
+
         Project parent = createProject(request, nestedProjects.get(0));
         created.add(parent);
 
         for (int i = 1; i < nestedProjects.size(); i++) {
             Project current = nestedProjects.get(i);
+
+            // Устанавливаем parent явно через объект
             current.setParentProject(new ParentProject(parent.getId(), null));
+
             parent = createProject(request, current);
             created.add(parent);
         }
 
         return created;
     }
+
+
 
     /**
      * Creates a list of sibling projects with the same parent.
@@ -194,5 +201,13 @@ public class ApiProjectHelper {
         throw new RuntimeException("Project with name '" + projectName + "' was not found in API within " + timeoutSeconds + " seconds");
     }
 
+    @Step("Get role scope for project")
+    public String getRoleScope(Role role, String projectId) {
+        return role == Role.AGENT_MANAGER ? "g" : projectId;
+    }
 
+    @Step("Get parent project ID based on role")
+    public String getParentProjectId(Role role, String projectId) {
+        return role == Role.AGENT_MANAGER ? "_Root" : projectId;
+    }
 }
