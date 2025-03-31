@@ -12,6 +12,10 @@ import com.example.teamcity.ui.pages.admin.CreateProjectPage;
 import io.qameta.allure.Step;
 import org.testng.asserts.SoftAssert;
 
+import java.util.List;
+
+import static com.codeborne.selenide.Selenide.$$;
+
 public class UiProjectHelper {
     private final ApiProjectHelper projectHelper = new ApiProjectHelper();
 
@@ -36,8 +40,9 @@ public class UiProjectHelper {
     public void verifyProjectIsVisible(String projectName, SoftAssert softy) {
         ProjectsPage projectsPage = ProjectsPage.open();
         projectsPage.waitForProjectToAppear(projectName);
-        softy.assertTrue(projectsPage.getVisibleProjectNames().contains(projectName),
-                "Project should appear on the Projects page"
-        );
+        List<String> visibleProjects = projectsPage.getVisibleProjectNames();
+        softy.assertTrue(visibleProjects.contains(projectName),
+                "Project '%s' should appear on the Projects page".formatted(projectName));
     }
+
 }

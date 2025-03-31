@@ -38,10 +38,9 @@ public class ProjectsPage extends BasePage {
     public List<String> getVisibleProjectNames() {
         return getProjectsElements()
                 .filter(Condition.visible)
-                .stream()
-                .map(SelenideElement::getText)
-                .collect(Collectors.toList());
+                .texts();
     }
+
 
 
     @Step("Wait for project to appear: {name}")
