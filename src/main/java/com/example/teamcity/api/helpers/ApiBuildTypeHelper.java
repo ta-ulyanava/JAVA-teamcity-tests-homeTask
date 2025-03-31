@@ -41,7 +41,8 @@ public class ApiBuildTypeHelper {
             if (maybeBuildType.isPresent()) return maybeBuildType.get();
             try {
                 Thread.sleep(1000);
-            } catch (InterruptedException ignored) {}
+            } catch (InterruptedException ignored) {
+            }
         }
         throw new RuntimeException("BuildType with name '" + buildTypeName + "' was not found in project '" + projectId + "' in API within " + timeoutSeconds + " seconds");
     }

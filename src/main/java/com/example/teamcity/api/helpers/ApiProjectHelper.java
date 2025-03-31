@@ -21,7 +21,8 @@ import java.util.stream.Collectors;
  */
 public class ApiProjectHelper {
 
-    public ApiProjectHelper() {}
+    public ApiProjectHelper() {
+    }
 
     /**
      * Creates a single project via API.
@@ -64,7 +65,6 @@ public class ApiProjectHelper {
     }
 
 
-
     /**
      * Creates a list of sibling projects with the same parent.
      *
@@ -82,9 +82,9 @@ public class ApiProjectHelper {
     /**
      * Finds a single project using a given locator.
      *
-     * @param request      request handler
-     * @param locatorType  locator key (e.g., "name", "id")
-     * @param value        locator value
+     * @param request     request handler
+     * @param locatorType locator key (e.g., "name", "id")
+     * @param value       locator value
      * @return found project or null
      */
     @Step("Find project by locator: {locatorType}:{value}")
@@ -180,11 +180,12 @@ public class ApiProjectHelper {
 
         return new ArrayList<>();
     }
+
     /**
      * Waits for a project with the given name to appear in the API within the specified timeout.
      *
-     * @param projectName     name of the project to wait for
-     * @param timeoutSeconds  maximum wait time in seconds
+     * @param projectName    name of the project to wait for
+     * @param timeoutSeconds maximum wait time in seconds
      * @return found {@link Project}
      * @throws RuntimeException if the project is not found within the timeout
      */
@@ -196,7 +197,8 @@ public class ApiProjectHelper {
             if (maybeProject.isPresent()) return maybeProject.get();
             try {
                 Thread.sleep(1000);
-            } catch (InterruptedException ignored) {}
+            } catch (InterruptedException ignored) {
+            }
         }
         throw new RuntimeException("Project with name '" + projectName + "' was not found in API within " + timeoutSeconds + " seconds");
     }

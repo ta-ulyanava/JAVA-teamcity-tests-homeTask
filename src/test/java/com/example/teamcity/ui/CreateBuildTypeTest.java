@@ -6,7 +6,6 @@ import com.example.teamcity.api.models.BuildType;
 import com.example.teamcity.api.models.Project;
 import com.example.teamcity.ui.assertions.ValidateElement;
 import com.example.teamcity.ui.errors.UiErrorMessages;
-import com.example.teamcity.ui.helpers.UiBuildTypeHelper;
 import com.example.teamcity.ui.pages.admin.CreateBuildTypePage;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
@@ -34,6 +33,7 @@ public class CreateBuildTypeTest extends BaseUiTest {
         uiBuildTypeHelper.verifyBuildTypeTitle(createdBuildType.getId(), expectedBuildTypeName);
         softy.assertAll();
     }
+
     @Test(description = "User should not be able to create build type without name", groups = {"Negative"})
     public void userCannotCreateBuildTypeWithoutName() {
         loginAs(testData.getUser());
@@ -45,7 +45,8 @@ public class CreateBuildTypeTest extends BaseUiTest {
         });
         step("Verify Build Type was not created", () -> {
             var buildTypes = superUserCheckRequests.<BuildType>getRequest(ApiEndpoint.BUILD_TYPES).read("project:" + projectId);
-            softy.assertTrue(buildTypes.getId() == null, "Build Type ID should be null");});
+            softy.assertTrue(buildTypes.getId() == null, "Build Type ID should be null");
+        });
         softy.assertAll();
     }
 

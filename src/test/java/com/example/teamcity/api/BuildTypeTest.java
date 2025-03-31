@@ -15,7 +15,6 @@ import org.testng.annotations.Test;
 import java.util.Arrays;
 
 import static com.example.teamcity.api.generators.TestDataGenerator.generate;
-import static io.qameta.allure.Allure.step;
 
 @Test(groups = {"Regression"})
 public class BuildTypeTest extends BaseApiTest {
@@ -32,6 +31,7 @@ public class BuildTypeTest extends BaseApiTest {
 
 
     }
+
     @Feature("BuildType id validation")
     @Story("Duplicate BuildType iD")
     @Test(description = "User cannot create two build types with same id", groups = {"Negative", "CRUD"})

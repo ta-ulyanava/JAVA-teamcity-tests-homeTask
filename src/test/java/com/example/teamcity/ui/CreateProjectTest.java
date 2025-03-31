@@ -1,7 +1,6 @@
 package com.example.teamcity.ui;
 
 import com.example.teamcity.api.models.Project;
-import com.example.teamcity.ui.helpers.UiProjectHelper;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
 import org.testng.annotations.Test;

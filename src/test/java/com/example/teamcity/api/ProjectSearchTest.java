@@ -6,7 +6,6 @@ import com.example.teamcity.api.generators.RandomData;
 import com.example.teamcity.api.generators.TestDataGenerator;
 import com.example.teamcity.api.generators.domain.ProjectTestData;
 import com.example.teamcity.api.models.Project;
-import com.example.teamcity.api.helpers.ApiProjectHelper;
 import com.example.teamcity.api.spec.responce.IncorrectDataSpecs;
 import com.example.teamcity.api.validation.SearchValidator;
 import io.qameta.allure.Feature;
@@ -15,6 +14,7 @@ import io.restassured.response.Response;
 import org.testng.annotations.Test;
 
 import java.util.List;
+
 @Feature("Project Search")
 @Test(groups = {"Regression", "Search"})
 public class ProjectSearchTest extends BaseApiTest {
@@ -22,7 +22,7 @@ public class ProjectSearchTest extends BaseApiTest {
     // =================== TODO TESTS FOR PROJECT NAME SEARCH (should return 1 project) =================== //
 
     // =================== SEARCH BY NAME TESTS (PROJECT_SEARCH_NAME_TAG) =================== //
-  // =================== LOCATOR-BASED SEARCH =================== //
+    // =================== LOCATOR-BASED SEARCH =================== //
     @Story("User should be able to find a project by its exact name")
     @Test(description = "User should be able to find a project by its exact name", groups = {"Positive", "PROJECT_SEARCH_NAME_TAG", "LOCATOR_BASED_SEARCH"})
     public void userShouldBeAbleToFindProjectByNameTest() {
@@ -40,6 +40,7 @@ public class ProjectSearchTest extends BaseApiTest {
         response.then().spec(IncorrectDataSpecs.emptyEntityListReturned("Project", "name", nonExistingProjectName));
         softy.assertAll();
     }
+
     @Story("User should be able to find a project by multiple words in its name")
     @Test(description = "User should be able to find a project by its name containing multiple words", groups = {"Positive", "PROJECT_SEARCH_NAME_TAG", "LOCATOR_BASED_SEARCH"})
     public void userShouldBeAbleToFindProjectByMultiWordNameTest() {
@@ -193,6 +194,7 @@ public class ProjectSearchTest extends BaseApiTest {
         softy.assertEquals(foundProjects.size(), 0, "Expected an empty list but received non-empty list");
         softy.assertAll();
     }
+
     // Bug in API: incorrect error message
     @Feature("Project Search")
     @Story("Search with pagination using negative count and start parameters")
@@ -202,7 +204,6 @@ public class ProjectSearchTest extends BaseApiTest {
         response.then().spec(IncorrectDataSpecs.badRequestNegativePaginationParameters());
         softy.assertAll();
     }
-
 
 
     // =================== LOCATOR-BASED SEARCH =================== //

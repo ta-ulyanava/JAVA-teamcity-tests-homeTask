@@ -1,10 +1,10 @@
 package com.example.teamcity.ui.helpers;
 
 import com.codeborne.selenide.Condition;
-import com.example.teamcity.api.models.BuildType;
-import com.example.teamcity.api.helpers.ApiBuildTypeHelper;
-import com.example.teamcity.api.requests.CheckedRequest;
 import com.example.teamcity.api.enums.WebRoute;
+import com.example.teamcity.api.helpers.ApiBuildTypeHelper;
+import com.example.teamcity.api.models.BuildType;
+import com.example.teamcity.api.requests.CheckedRequest;
 import com.example.teamcity.ui.pages.BuildTypePage;
 import com.example.teamcity.ui.pages.admin.CreateBuildTypePage;
 import io.qameta.allure.Step;

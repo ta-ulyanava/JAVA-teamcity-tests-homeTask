@@ -7,11 +7,9 @@ import com.example.teamcity.api.models.Roles;
 import com.example.teamcity.api.models.User;
 import com.example.teamcity.api.requests.CheckedRequest;
 import com.example.teamcity.api.requests.checked.CheckedBase;
-import com.example.teamcity.api.requests.unchecked.UncheckedBase;
 import com.example.teamcity.api.responses.ResponseExtractor;
 import io.qameta.allure.Step;
 import io.restassured.response.Response;
-import io.restassured.specification.RequestSpecification;
 
 import java.util.List;
 
@@ -31,11 +29,6 @@ public final class ApiUserHelper {
         return saveUser(user);
     }
 
-    @Step("Update user role to {role} with scope {scope}")
-    public User updateUserRole(CheckedRequest adminCheckedRequest, User existingUser, Role role, String projectId) {
-        assignRole(existingUser, role, projectId, adminCheckedRequest);
-        return updateUser(existingUser, adminCheckedRequest);
-    }
 
     @Step("Update user role to {role} with scope {scope}")
     /**
