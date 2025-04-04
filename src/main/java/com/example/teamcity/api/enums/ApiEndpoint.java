@@ -9,13 +9,13 @@ import lombok.Getter;
 
 @AllArgsConstructor
 @Getter
-
 public enum ApiEndpoint {
-    BUILD_TYPES("/app/rest/buildTypes", BuildType.class),
-    PROJECTS("/app/rest/projects", Project.class),
-    USERS("/app/rest/users", User.class);
-
+    BUILD_TYPES("/app/rest/buildTypes", BuildType.class, "buildType"),
+    PROJECTS("/app/rest/projects", Project.class, "project"),
+    USERS("/app/rest/users", User.class, "user");
 
     private final String url;
     private final Class<? extends BaseModel> modelClass;
+    private final String jsonListKey;
 }
+

@@ -6,14 +6,17 @@ import com.example.teamcity.api.requests.CheckedRequest;
 import com.example.teamcity.api.spec.request.RequestSpecs;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Listeners;
 import org.testng.asserts.SoftAssert;
 
 import static com.example.teamcity.api.generators.TestDataGenerator.generate;
 
+@Listeners({io.qameta.allure.testng.AllureTestNg.class})
 public class BaseTest {
     protected SoftAssert softy;
     protected TestData testData;
     protected CheckedRequest superUserCheckRequests = new CheckedRequest(RequestSpecs.superUserAuthSpec());
+
     @BeforeMethod(alwaysRun = true)
     public void beforeTest() {
         try {
@@ -24,7 +27,6 @@ public class BaseTest {
         }
     }
 
-
     @AfterMethod(alwaysRun = true)
     public void afterTest() {
         try {
@@ -34,7 +36,6 @@ public class BaseTest {
             System.err.println("Ошибка в softAssert.assertAll() " + e.getMessage());
         }
     }
-
 
 
 }

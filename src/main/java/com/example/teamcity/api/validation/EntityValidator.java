@@ -1,6 +1,7 @@
 package com.example.teamcity.api.validation;
 
 import org.testng.asserts.SoftAssert;
+
 import java.lang.reflect.Field;
 import java.util.List;
 
@@ -17,10 +18,25 @@ public class EntityValidator {
             try {
                 Object expectedValue = field.get(expected);
                 Object actualValue = field.get(actual);
-                softAssert.assertEquals(actualValue, expectedValue, "Поле " + field.getName() + " не совпадает");
+                softAssert.assertEquals(actualValue, expectedValue, "Field '" + field.getName() + "' does not match");
             } catch (IllegalAccessException e) {
-                throw new RuntimeException("Ошибка сравнения поля: " + field.getName(), e);
+                throw new RuntimeException(String.format(
+                        "Failed to access field '%s' in class %s. Expected value: [%s], Actual value: [%s]",
+                        field.getName(),
+                        expected.getClass().getSimpleName(),
+                        safeToString(field, expected),
+                        safeToString(field, actual)
+                ), e);
             }
+        }
+    }
+
+    private static <T> String safeToString(Field field, T obj) {
+        try {
+            Object value = field.get(obj);
+            return value != null ? value.toString() : "null";
+        } catch (Exception e) {
+            return "unavailable";
         }
     }
 }
